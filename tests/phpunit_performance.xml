@@ -1,0 +1,39 @@
+<phpunit bootstrap="./Bootstrap.php" colors="true">
+    <testsuites>
+        <testsuite name="Model Test Suite">
+            <directory>./ModelTest</directory>
+            <exclude>./ModelTest/_files/</exclude>
+        </testsuite>
+    </testsuites>
+
+    <filters>
+        <blacklist>
+             <directory suffix="Case.php">./</directory>
+        </blacklist>
+    </filters>
+
+    <groups>
+        <include>
+            <group>performance</group>
+        </include>
+        <exclude>
+            <group>performance</group>
+            <group>exclude</group>
+            <group>integration</group>
+            <group>integration-sqlserver</group>
+        </exclude>
+    </groups>
+
+    <php>
+
+        <!-- Integration Test Variables -->
+        <!--<var name="ZEND_DB_ADAPTER_DRIVER_SQLSRV_HOSTNAME" value="" />-->
+        <!--<var name="ZEND_DB_ADAPTER_DRIVER_SQLSRV_USERNAME" value="" />-->
+        <!--<var name="ZEND_DB_ADAPTER_DRIVER_SQLSRV_PASSWORD" value="" />-->
+        <!--<var name="ZEND_DB_ADAPTER_DRIVER_SQLSRV_DATABASE" value="" />-->
+
+    </php>
+
+
+
+</phpunit>

@@ -1,0 +1,84 @@
+{
+    "name": "esteit/model",
+    "type": "library",
+    "description": "Database models for MySql",
+    "keywords": ["model","mysql", "orm"],
+    "homepage": "http://github.com/esteit/model",
+    "license": "MIT",
+    "authors": [
+        {
+        "name": "Eugene Myazin",
+        "email": "meniam@gmail.com",
+        "homepage": "http://meniam.ru",
+        "role": "Maintainer"
+        },
+        {
+            "name": "Yaroslav Kiseliov",
+            "email": "slkxmail@gmail.com",
+            "role": "Developer"
+        }
+    ],
+    "require":{
+        "php"           :">=5.4.0,<5.6",
+        "ext-pdo"       : "~1.0.0",
+        "ext-mbstring"  : "*",
+        "ext-pdo_mysql" : "*",
+        "lib-libxml"    : "*",
+        "lib-iconv"     : "~1.14",
+        "lib-pcre"      : "*",
+        "esteit/app"    : "~2.0.0",
+
+        "doctrine/annotations": ">=1.0",
+        "ircmaxell/random-lib": "dev-master",
+        "ircmaxell/security-lib": "dev-master",
+        "phpunit/PHPUnit": "3.7.*",
+        "zendframework/zendframework": "2.*"
+
+    },
+
+    "suggest": {
+        "ext-intl": "ext/intl for i18n features (included in default builds of PHP)",
+        "doctrine/annotations": "Doctrine Annotations >=1.0 for annotation features",
+        "ircmaxell/random-lib": "Fallback random byte generator for Zend\\Math\\Rand if OpenSSL/Mcrypt extensions are unavailable",
+        "ocramius/proxy-manager": "ProxyManager to handle lazy initialization of services",
+        "zendframework/zendpdf": "ZendPdf for creating PDF representations of barcodes",
+        "zendframework/zendservice-recaptcha": "ZendService\\ReCaptcha for rendering ReCaptchas in Zend\\Captcha and/or Zend\\Form"
+    },
+
+    "extra": {
+        "branch-alias": {
+            "dev-master": "2.2-dev",
+            "dev-develop": "2.3-dev"
+        }
+    },
+
+    "repositories":[
+        {
+            "type":"package",
+            "package":{
+                "name":"esteit/app",
+                "version":"v2.0.0",
+                "source":{
+                    "type":"git",
+                    "url":"git@github.com:esteit/app.git",
+                    "reference":"v2"
+                },
+
+                "autoload": {
+                    "psr-0": {
+                        "App": "/library/"
+                    }
+                }
+            }
+        },
+        {
+            "type": "composer",
+            "url": "https://packages.zendframework.com/"
+        }
+    ],
+    "autoload": {
+        "psr-0": {
+            "Model": "/library/"
+        }
+    }
+}

@@ -1,0 +1,28 @@
+<phpunit bootstrap="./Bootstrap.php" colors="true">
+    <testsuites>
+        <testsuite name="Model Test Suite">
+            <directory>./ModelTest</directory>
+            <exclude>./ModelTest/_files/</exclude>
+        </testsuite>
+	</testsuites>
+
+	<filters>
+		<blacklist>
+             <directory suffix="Case.php">./</directory>
+        </blacklist>
+	</filters>
+
+    <groups>
+        <exclude>
+            <group>disable</group>
+            <group>performance</group>
+            <group>exclude</group>
+            <group>integration</group>
+            <group>integration-sqlserver</group>
+        </exclude>
+    </groups>
+    <!--logging>
+		<log type="coverage-html" target="./report/log/" charset="UTF-8" yui="true" highlight="true" lowUpperBound="50" highUpperBound="80" />
+		<log type="testdox-html" target="./report/testdox.html" />
+	</logging-->
+</phpunit>
