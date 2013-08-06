@@ -1001,12 +1001,12 @@ class AbstractModel extends Singleton implements ModelInterface
      * @throws ErrorException
      * @return array of ids
      */
-    protected static function getIdsFromMixed($data, $callbackPrepare = 'intval')
+    public static function getIdsFromMixed($data, $callbackPrepare = 'intval')
     {
         $ids = array();
 
         if (is_null($data)) {
-            $ids[] = null;
+            $ids = array();
         } elseif (is_scalar($data) && $callbackPrepare == 'intval') { // speed up
             return array((int)$data);
         } elseif ($data instanceof Entity) {

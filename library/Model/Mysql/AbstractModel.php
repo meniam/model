@@ -11,6 +11,7 @@ use Model\Db\Expr;
 use Model\Entity\EntityInterface as Entity;
 use Model\Collection\CollectionInterface as Collection;
 use Model\Exception\ErrorException;
+use Model\Paginator\Paginator;
 use Model\Result\Result;
 
 /**
@@ -82,7 +83,6 @@ class AbstractModel extends \Model\AbstractModel
             // Каскад разрешен
             $cascadeAllowed    = (!$id || $cond->isCascadeAllowed());
             $foreignEntityName = $rel['foreign_entity'];
-            $foreignTableName = $rel['foreign_table'];
 
             $localColumnName   = $rel['local_column'];
             /** @var $foreignModel \Model\Mysql\AbstractModel */
@@ -167,7 +167,6 @@ class AbstractModel extends \Model\AbstractModel
                 $foreignModelInstance = $foreignModel::getInstance();
                 $foreignEntityName    = $key;
                 $foreignColumnName    = $rel['foreign_column'];
-                $foreignTableName     = $rel['foreign_table'];
 
                 if (isset($data['_' . $foreignEntityName])) {
                     $innerData = $this->prepareData($data['_' . $foreignEntityName]);
@@ -267,9 +266,9 @@ class AbstractModel extends \Model\AbstractModel
     }
 
     /**
-     * @param                          $data
-     * @param \Model\Cond\AbstractCond $cond
-     * @return \Model\Result\Result
+     * @param mixed $data
+     * @param Cond $cond
+     * @return Result
      */
     public function importCollection($data, Cond $cond = null)
     {
@@ -292,6 +291,11 @@ class AbstractModel extends \Model\AbstractModel
         return $result;
     }
 
+    /**
+     * Truncate table
+     *
+     * @return void
+     */
     public function truncate()
     {
         $sql = "DELETE FROM `" . $this->getRawName() . "`";
@@ -402,6 +406,10 @@ class AbstractModel extends \Model\AbstractModel
         return $result;
     }
 
+    /**
+     * @param $data
+     * @return array
+     */
     private function prepareData($data)
     {
         if ($data instanceof Entity) {
@@ -448,13 +456,13 @@ class AbstractModel extends \Model\AbstractModel
             $cond->checkCond(Cond::FILTER_CASCADE_ON_ADD, true) && $data = $this->applyFilterCascadeRules($data, $this->getFilterCascadeRulesOnAdd());
 
             // Применяем умолчания
-            $cond->getCond(Cond::APPLY_DEFAULT_VALUES, true) && $data = $this->applyDefaultValues($data);
+            $cond->checkCond(Cond::APPLY_DEFAULT_VALUES, true) && $data = $this->applyDefaultValues($data);
 
             // Фильтруем входные данные
-            $cond->getCond(Cond::FILTER_ON_ADD, true) && $data = $this->filterOnAdd($data);
+            $cond->checkCond(Cond::FILTER_ON_ADD, true) && $data = $this->filterOnAdd($data);
 
             $isValid = true;
-            if ($cond->getCond(Cond::VALIDATE_ON_ADD, true)) {
+            if ($cond->checkCond(Cond::VALIDATE_ON_ADD, true)) {
                 $validator = $this->validateOnAdd($data);
                 $isValid = $validator->isValid();
                 $result->setValidator($validator);
@@ -508,10 +516,10 @@ class AbstractModel extends \Model\AbstractModel
             }
 
             // Фильтруем входные данные
-            $cond->getCond(Cond::FILTER_ON_UPDATE, true) && $data = $this->filterOnUpdate($data);
+            $cond->checkCond(Cond::FILTER_ON_UPDATE, true) && $data = $this->filterOnUpdate($data);
 
             $isValid = true;
-            if ($cond->getCond(Cond::VALIDATE_ON_UPDATE, true)) {
+            if ($cond->checkCond(Cond::VALIDATE_ON_UPDATE, true)) {
                 $validator = $this->validateOnUpdate($data);
                 $isValid = $validator->isValid();
                 $result->setValidator($validator);
@@ -536,14 +544,14 @@ class AbstractModel extends \Model\AbstractModel
     /**
      * Удаление данные
      *
-     * @param \Model\Cond\AbstractCond $cond
-     * @throws \Model\Exception\ErrorException
-     * @return \Model\Result\Result
+     * @param array|Cond $cond
+     * @throws ErrorException
+     * @return Result
      */
     public function delete($cond = null)
     {
         if (!is_array($cond) && !$cond instanceof Cond && !is_null($cond)) {
-            throw new \Model\Exception\ErrorException('Unknown Cond type');
+            throw new ErrorException('Unknown Cond type');
         }
 
         if (is_array($cond)) {
@@ -649,7 +657,7 @@ class AbstractModel extends \Model\AbstractModel
         $entity = $cond->getEntityName() ? $cond->getEntityName() : $this->getRawName();
         $select = $this->prepareSelect($cond->limit(1), $entity);
 
-        if ($cond->checkCond(\Model\Cond\AbstractCond::SHOW_QUERY) || $cond->checkCond(\Model\Cond\AbstractCond::SHOW_QUERY_EXTENDED)) {
+        if ($cond->checkCond(Cond::SHOW_QUERY) || $cond->checkCond(Cond::SHOW_QUERY_EXTENDED)) {
             echo '<!--' . $select . "-->\n";
         }
 
@@ -666,7 +674,7 @@ class AbstractModel extends \Model\AbstractModel
     {
         $entity = $cond->getEntityName() ? $cond->getEntityName() : $this->getRawName();
         $select = $this->prepareSelect($cond->limit(1), $entity);
-        if ($cond->checkCond(\Model\Cond\AbstractCond::SHOW_QUERY) || $cond->checkCond(\Model\Cond\AbstractCond::SHOW_QUERY_EXTENDED)) {
+        if ($cond->checkCond(Cond::SHOW_QUERY) || $cond->checkCond(Cond::SHOW_QUERY_EXTENDED)) {
             echo '<!--' . $select . "-->\n";
         }
         $item = $this->db->fetchPairs($select->__toString(), $select->getBind());
@@ -678,7 +686,7 @@ class AbstractModel extends \Model\AbstractModel
     {
         $entity = $cond->getEntityName() ? $cond->getEntityName() : $this->getRawName();
         $select = $this->prepareSelect($cond->limit(1), $entity);
-        if ($cond->checkCond(\Model\Cond\AbstractCond::SHOW_QUERY) || $cond->checkCond(\Model\Cond\AbstractCond::SHOW_QUERY_EXTENDED)) {
+        if ($cond->checkCond(Cond::SHOW_QUERY) || $cond->checkCond(Cond::SHOW_QUERY_EXTENDED)) {
             echo '<!--' . $select . "-->\n";
         }
         $item = $this->db->fetchOne($select->getCountSelect(), $select->getBind());
@@ -694,29 +702,32 @@ class AbstractModel extends \Model\AbstractModel
     {
         $entity = $cond->getEntityName() ? $cond->getEntityName() : $this->getRawName();
         $select = $this->prepareSelect($cond->limit(1), $entity);
-        if ($cond->checkCond(\Model\Cond\AbstractCond::SHOW_QUERY) || $cond->checkCond(\Model\Cond\AbstractCond::SHOW_QUERY_EXTENDED)) {
+        if ($cond->checkCond(Cond::SHOW_QUERY) || $cond->checkCond(Cond::SHOW_QUERY_EXTENDED)) {
             echo '<!--' . $select . "-->\n";
         }
 
         return $this->db->fetchOne($select->__toString(), $select->getBind());
     }
 
+    /**
+     * @param Cond $cond
+     * @return array|mixed|string
+     */
     public function fetchAll(Cond $cond = null)
     {
         $entity = $cond->getEntityName();
         $entity = $entity ? $entity : $this->getRawName();
-        $entityCamelCase = $this->_underscoreToCamelCaseFilter($entity);
 
         $prepareCallbackFunction = 'prepareCollection';
         $pager = null;
 
         try {
             $select = $this->prepareSelect($cond, $entity);
-            if ($cond->checkCond(\Model\Cond\AbstractCond::SHOW_QUERY) || $cond->checkCond(\Model\Cond\AbstractCond::SHOW_QUERY_EXTENDED)) {
+            if ($cond->checkCond(Cond::SHOW_QUERY) || $cond->checkCond(Cond::SHOW_QUERY_EXTENDED)) {
                 echo '<!--' . $select . "-->\n";
             }
             if ($cond->checkCond('page')) {
-                $pager = new \Model\Paginator\Paginator(new \Model\Paginator\Adapter\Mysql($select));
+                $pager = new Paginator(new \Model\Paginator\Adapter\Mysql($select));
                 $pager->setCurrentPageNumber($cond->getCond('page', 1));
                 $pager->setItemCountPerPage($cond->getCond('items_per_page', 25));
 

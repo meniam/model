@@ -1,2 +1,3 @@
-reports/*
 report/*
+composer.lock
+composer.phar

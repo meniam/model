@@ -1,16 +1,16 @@
 {
     "name": "esteit/model",
     "type": "library",
-    "description": "Database models for MySql",
+    "description": "PHP Database Models for MySql",
     "keywords": ["model","mysql", "orm"],
-    "homepage": "http://github.com/esteit/model",
+    "homepage": "http://github.com/meniam/model",
     "license": "MIT",
     "authors": [
         {
-        "name": "Eugene Myazin",
-        "email": "meniam@gmail.com",
-        "homepage": "http://meniam.ru",
-        "role": "Maintainer"
+            "name": "Eugene Myazin",
+            "email": "meniam@gmail.com",
+            "homepage": "http://meniam.ru",
+            "role": "Maintainer"
         },
         {
             "name": "Yaroslav Kiseliov",

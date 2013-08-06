@@ -4,4 +4,4 @@
 
 #phpunit --group Model --configuration phpunit.xml
 #phpunit --configuration phpunit.xml
-phpunit --coverage-html=./report --configuration phpunit.xml
+./vendor/bin/phpunit --configuration phpunit.xml
