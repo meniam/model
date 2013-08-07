@@ -14,16 +14,15 @@
  * @package    Model
  * @author     Eugene Myazin <eugene.myazin@gmail.com>
  * @copyright  2008-20013 Eugene Myazin <eugene.myazin@gmail.com>
- * @license    https://github.com/menaim/model/blob/master/MIT-LICENSE.txt  MIT License
+ * @license    https://github.com/meniam/model/blob/master/MIT-LICENSE.txt  MIT License
  */
 
 namespace Model\Cond\Exception;
 
 /**
- * @category   Zend
- * @package    Zend_Db
+ * @category   Cond
+ * @package    Model
  * @subpackage Exception
  */
 class ErrorException extends \Exception
-{
-}
+{ }

@@ -1,13 +1,25 @@
 <?php
-
-defined('PROJECT_PATH') || define('PROJECT_PATH', dirname(__FILE__) . '/../');
-
-// Папка с App
-defined('ZENDLIB_PATH')  || define('ZENDLIB_PATH',   (getenv('ZENDLIB_PATH')   ?: PROJECT_PATH . '/vendor' ));
+/**
+ * Model Tests Bootstrap
+ *
+ * LICENSE: THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NON INFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+ * LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+ * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
+ * @category   Bootstrap
+ * @package    ModelTest
+ * @author     Eugene Myazin <eugene.myazin@gmail.com>
+ * @copyright  2008-20013 Eugene Myazin <eugene.myazin@gmail.com>
+ * @license    https://github.com/meniam/model/blob/master/MIT-LICENSE.txt  MIT License
+ */
 
 define('FIXTURES_PATH',   realpath(__DIR__ . '/_fixtures'));
 
-include __DIR__ . '/_autoload.php';
+include __DIR__ . '/autoload.php';
 
 $db = new Model\Db\Mysql('mysql:host=localhost;dbname=model_test;charset=UTF8', 'root', 'macbook');
 
@@ -16,7 +28,7 @@ $cache = \Zend\Cache\StorageFactory::factory(array(
     'adapter' => array(
         'name' => 'filesystem',
         'options' => array(
-            'cache_dir' => __DIR__ . '/cache'),
+        'cache_dir' => __DIR__ . '/cache'),
         'dir_level' => 3,
         'dir_permission' => 0777,
         'file_permission' => 0666,

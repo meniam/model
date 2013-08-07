@@ -3,6 +3,9 @@
         <testsuite name="Model Test Suite">
             <directory>./ModelTest</directory>
             <exclude>./ModelTest/_files/</exclude>
+            <exclude>./report</exclude>
+            <exclude>./_fixtures</exclude>
+            <exclude>./_init</exclude>
         </testsuite>
 	</testsuites>
 

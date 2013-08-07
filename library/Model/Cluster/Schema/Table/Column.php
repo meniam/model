@@ -715,10 +715,6 @@ class Column extends ArrayObject
      */
     public function setupDefaultValidators()
     {
-        /*if ($this->isNullable()) {
-            $this->addValidator('\App\Validator\Null');
-        }*/
-
         switch ($this->getColumnType()) {
             case 'char':
             case 'varchar':
