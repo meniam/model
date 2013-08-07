@@ -562,7 +562,9 @@ class AbstractModel extends \Model\AbstractModel
 
         try {
             $select = $this->prepareSelect($cond);
-            $stmt = $this->getDb()->delete($this->getRawName(), $select);
+
+            $table = $cond->getCond('from', $this->getRawName());
+            $stmt = $this->getDb()->delete($table, $select);
             $result->setResult($stmt->rowCount());
         } catch (\Exception $ex) {
             $result->setResult(false);

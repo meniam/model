@@ -1,4 +1,21 @@
 <?php
+/**
+ * Link method generator for Model
+ *
+ * LICENSE: THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NON INFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+ * LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+ * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
+ * @category   Cond
+ * @package    Model
+ * @author     Eugene Myazin <eugene.myazin@gmail.com>
+ * @copyright  2008-20013 Eugene Myazin <eugene.myazin@gmail.com>
+ * @license    https://github.com/meniam/model/blob/master/MIT-LICENSE.txt  MIT License
+ */
 
 namespace Model\Generator\Part\Plugin\Model;
 
@@ -13,8 +30,8 @@ use Zend\Code\Generator\ValueGenerator;
 /**
  * Плагин для генерации методов linkSomething
  *
- * @category   CategoryName
- * @package    PackageName
+ * @category   Generator
+ * @package    Model
  * @author     Eugene Myazin <meniam@gmail.com>
  * @copyright  2008-2012 ООО "Америка"
  * @version    SVN: $Id$
@@ -74,7 +91,6 @@ class Link extends AbstractModel
         $localEntityAsCamelCase = $link->getLocalEntityAsCamelCase();
 
         $foreignTableAsCamelCase = $link->getForeignTable()->getNameAsCamelCase();
-        $foreignTableAsVar = $link->getForeignTable()->getNameAsVar();
         $foreignEntity = $link->getForeignEntity();
         $foreignEntityAsVar = $link->getForeignEntityAsVar();
         $foreignEntityAsCamelCase = $link->getForeignEntityAsCamelCase();
@@ -180,10 +196,10 @@ EOS
     }
 
     /**
-     * @param \Model\Cluster\Schema\Table\Link\AbstractLink $link
-     * @return \Zend\Code\Generator\MethodGenerator
+     * @param AbstractLink $link
+     * @return MethodGenerator
      */
-    protected function getDeleteLinkMethodUsedLinkTable(\Model\Cluster\Schema\Table\Link\AbstractLink $link)
+    protected function getDeleteLinkMethodUsedLinkTable(AbstractLink $link)
     {
         $localEntity = $link->getLocalEntity();
         $localEntityAsVar = $link->getLocalEntityAsVar();
@@ -259,9 +275,9 @@ if (count(\${$foreignEntityAsVar}Ids) != 0) {
 }
 
 try {
-    \$this->delete('{$linkTableName}', \$cond);
+    \$this->delete(\$cond->from('{$linkTableName}'));
 } catch (\Exception \$e) {
-    \$result->addChild('add_link_failed', \$this->getGeneralErrorResult("Add link {$localEntity} to {$foreignEntity} failed"));
+    \$result->addChild('delete_link_failed', \$this->getGeneralErrorResult("Delete link {$localEntity} to {$foreignEntity} failed"));
     \$resultFlag = false;
 }
 
@@ -292,15 +308,11 @@ EOS
         $localEntityAsCamelCase = $link->getLocalEntityAsCamelCase();
 
         $foreignTableAsCamelCase = $link->getForeignTable()->getNameAsCamelCase();
-        $foreignTableAsVar = $link->getForeignTable()->getNameAsVar();
         $foreignEntity = $link->getForeignEntity();
         $foreignEntityAsVar = $link->getForeignEntityAsVar();
         $foreignEntityAsCamelCase = $link->getForeignEntityAsCamelCase();
 
         $localColumn = $link->getLocalColumn()->getName();
-        $foreignColumn = $link->getForeignColumn()->getName();
-
-        $localTableName = $link->getLocalTable()->getName();
 
         $tags = array(
             array(
@@ -413,8 +425,6 @@ EOS
         $localColumn = $link->getLocalColumn()->getName();
         $foreignColumn = $link->getForeignColumn()->getName();
 
-        $localTableName = $link->getLocalTable()->getName();
-
         $tags = array(
             array(
                 'name'        => 'param',
@@ -467,7 +477,7 @@ if (count(\${$foreignEntityAsVar}Ids) != 0) {
 try {
     \$this->getDb()->update(\$this->getRawName(), array('{$localColumn}' => null), \$cond);
 } catch (\Exception \$e) {
-    \$result->addChild('add_link_failed', \$this->getGeneralErrorResult("Add link {$localEntity} to {$foreignEntity} failed"));
+    \$result->addChild('delete_link_failed', \$this->getGeneralErrorResult("Delete link {$localEntity} to {$foreignEntity} failed"));
     \$resultFlag = false;
 }
 

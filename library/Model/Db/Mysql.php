@@ -2,6 +2,7 @@
 
 namespace Model\Db;
 
+use Model\Db\Exception\ErrorException;
 use \PDO;
 
 /**
@@ -329,7 +330,7 @@ class Mysql
      * @param      $cond
      * @param null $bind
      * @return \PDOStatement
-     * @throws \Model\Exception\ErrorException
+     * @throws ErrorException
      */
     public function delete($table, $cond, $bind = null)
     {
@@ -338,7 +339,7 @@ class Mysql
         $where  = $this->prepareWhere($cond, $bind);
 
         if (!$where) {
-            throw new \Model\Exception\ErrorException('Where cannot be an empty');
+            throw new ErrorException('Where cannot be an empty');
         }
 
         $sql = "DELETE FROM `" . $table . '`';
