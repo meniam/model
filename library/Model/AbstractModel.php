@@ -388,7 +388,7 @@ class AbstractModel extends Singleton implements ModelInterface
                     case AbstractModel::ONE_TO_MANY:
                             $fetchId = $itemArray[$relation['local_column']];
                             $localEntityAliasAsCamelCase = implode('', array_map('ucfirst', explode('_', $relation['local_entity_alias'])));
-                            $method = 'getBy' . $localEntityAliasAsCamelCase;
+                            $method = 'get' . $type . 'By' . $localEntityAliasAsCamelCase;
                         break;
                     case AbstractModel::MANY_TO_MANY:
                         $fetchId = $itemArray[$relation['local_column']];
