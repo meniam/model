@@ -656,7 +656,7 @@ class Column extends ArrayObject
             case 'float':
             case 'decimal':
             case 'double':
-                $this->addFilter('\Zend\Filter\Float');
+                $this->addFilter('\App\Filter\Float');
                 break;
         }
 
