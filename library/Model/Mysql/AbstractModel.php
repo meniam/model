@@ -315,7 +315,7 @@ class AbstractModel extends \Model\AbstractModel
         $cond->columns(array('id'))
               ->type(Cond::FETCH_ONE);
 
-        $data = $this->prepareData($data);
+        $data = $this->prepareDataOnAdd($data);
 
         $uniqueKeyList = array(AbstractModel::INDEX_UNIQUE, AbstractModel::INDEX_PRIMARY);
         $availableIndexList = array();
@@ -412,7 +412,9 @@ class AbstractModel extends \Model\AbstractModel
      */
     private function prepareData($data)
     {
-        if ($data instanceof Entity) {
+        if (is_array($data)) {
+            return $data;
+        } elseif ($data instanceof Entity) {
             $data = $data->toArray();
         } elseif ($data instanceof Collection) {
             $data = $data->current()->toArray();
@@ -420,7 +422,7 @@ class AbstractModel extends \Model\AbstractModel
             $data = $data->toArray();
         }
 
-        return $data;
+        return (array)$data;
     }
 
     public function get(Cond $cond = null)
@@ -430,6 +432,30 @@ class AbstractModel extends \Model\AbstractModel
         $cond->type($cond->getType());
 
         return $this->execute($cond, $cond->getEntityClassName());
+    }
+
+    /**
+     * Подготавливаем данные перед добавлением
+     *
+     * @param      $data
+     * @param Cond $cond
+     * @return array
+     */
+    protected function prepareDataOnAdd($data, Cond $cond = null)
+    {
+        $data = $this->prepareData($data);
+        $cond = $this->prepareCond($cond);
+
+        // Если каскад разрешен, то применяем его
+        $cond->checkCond(Cond::FILTER_CASCADE_ON_ADD, true) && $data = $this->applyFilterCascadeRules($data, $this->getFilterCascadeRulesOnAdd());
+
+        // Применяем умолчания
+        $cond->checkCond(Cond::APPLY_DEFAULT_VALUES, true) && $data = $this->applyDefaultValues($data);
+
+        // Фильтруем входные данные
+        $cond->checkCond(Cond::FILTER_ON_ADD, true) && $data = $this->filterOnAdd($data);
+
+        return $data;
     }
 
     /**
@@ -451,15 +477,7 @@ class AbstractModel extends \Model\AbstractModel
 
         if ($data) {
             $cond = $this->prepareCond($cond);
-
-            // Если каскад разрешен, то применяем его
-            $cond->checkCond(Cond::FILTER_CASCADE_ON_ADD, true) && $data = $this->applyFilterCascadeRules($data, $this->getFilterCascadeRulesOnAdd());
-
-            // Применяем умолчания
-            $cond->checkCond(Cond::APPLY_DEFAULT_VALUES, true) && $data = $this->applyDefaultValues($data);
-
-            // Фильтруем входные данные
-            $cond->checkCond(Cond::FILTER_ON_ADD, true) && $data = $this->filterOnAdd($data);
+            $data = $this->prepareDataOnAdd($data, $cond);
 
             $isValid = true;
             if ($cond->checkCond(Cond::VALIDATE_ON_ADD, true)) {
