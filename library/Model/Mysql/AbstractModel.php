@@ -380,7 +380,7 @@ class AbstractModel extends \Model\AbstractModel
         $cond->from($this->getRawName());
 
         foreach ($data as $k => $v) {
-            $cond->where(array('`' . $this->getRawName() . '`.`' . $k . '`' => $this->filterValue($v, $k)));
+            $cond->where(array('`' . $this->getRawName() . '`.`' . $k . '`' => $v));
         }
 
         $result = $this->execute($cond);
