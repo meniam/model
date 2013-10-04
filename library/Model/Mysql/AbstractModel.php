@@ -118,7 +118,8 @@ class AbstractModel extends \Model\AbstractModel
                 unset($data['_' . $foreignEntityName]);
             }
         }
-
+        // $data могла поменятся ищем еще раз
+        $id = $this->getExistedIdByUniqueIndex($data, $existsCond);
         // Если не нашли
         if (!$id) {
             try {
