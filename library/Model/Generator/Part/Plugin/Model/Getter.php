@@ -87,12 +87,13 @@ class Getter extends AbstractModel
                     $indexColumnName = $link->getForeignEntity();
                     $indexColumnNameAsVar = $link->getForeignEntityAsVar();
                     $indexColumnNameAsCamelCase = $link->getForeignEntityAsCamelCase();
-
                 } else {
                     $indexColumnName = $column->getName();
                     $indexColumnNameAsVar = $column->getNameAsVar();
                     $indexColumnNameAsCamelCase = $column->getNameAsCamelCase();
                 }
+
+                $indexColumnField = $column->getName();
 
                 $params[] = new \Zend\Code\Generator\ParameterGenerator($indexColumnNameAsVar);
                 $getBy[]  = $indexColumnNameAsCamelCase;
@@ -113,7 +114,7 @@ EOS;
                 }
                 $checkForEmpty .= "empty(\${$indexColumnNameAsVar}Ids) || ";
 
-                $where .= "'`$tableName`.`{$indexColumnName}`' => \${$indexColumnNameAsVar}Ids,\n";
+                $where .= "'`$tableName`.`{$indexColumnField}`' => \${$indexColumnNameAsVar}Ids,\n";
             }
 
             $paramNamesStr = implode(', ', $paramNames);
@@ -164,7 +165,7 @@ EOS;
 
 {$prepare}
 if ({$checkForEmpty}) {
-    \$this->getEmptySelectResult();
+    return \$cond->getEmptySelectResult();
 }
 
 \$cond->where({$where});
