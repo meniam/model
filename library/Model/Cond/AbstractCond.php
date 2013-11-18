@@ -520,7 +520,7 @@ abstract class AbstractCond
             $name = $this->getName();
         }
 
-        $this->entityVar = preg_replace('#(Collection|_collection|Count|_count)$#si', '', $name);
+        $this->entityVar = preg_replace('#(Collection|_collection|Count|_count)$#s', '', $name);
         $this->entityName = implode('', array_map('ucfirst', explode('_', $this->entityVar)));
         return $this;
     }
