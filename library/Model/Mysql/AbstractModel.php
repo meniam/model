@@ -486,7 +486,6 @@ class AbstractModel extends \Model\AbstractModel
                 $isValid = $validator->isValid();
                 $result->setValidator($validator);
             }
-
             // Если валидация отключена (входим), если включена и валидна то, тоже входим
             if ($isValid) {
                 try {

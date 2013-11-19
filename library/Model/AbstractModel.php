@@ -305,7 +305,7 @@ class AbstractModel extends Singleton implements ModelInterface
             $relationArray = $this->getRelation();
 
             foreach ($withParams as $withEntity => $withParam) {
-                $strippedWithEntity = preg_replace('#(Collection|_collection|Count|_count)$#si', '', $withEntity);
+                $strippedWithEntity = preg_replace('#(Collection|_collection|Count|_count)$#s', '', $withEntity);
                 if (!isset($relationArray[$strippedWithEntity])) {
                     throw new ErrorException('Unknown relation "' . $strippedWithEntity . '"');
                 }
@@ -520,7 +520,7 @@ class AbstractModel extends Singleton implements ModelInterface
                 $class = '\\Model\\Cond\\' . $class;
             }
         } else {
-            $strippedEntityName = preg_replace('#(Collection|_collection|Count|_count)$#si', '', $name);
+            $strippedEntityName = preg_replace('#(Collection|_collection|Count|_count)$#s', '', $name);
             $camelCase = implode('', array_map('ucfirst', explode('_', $strippedEntityName)));
 
             /** @var $class Cond */
