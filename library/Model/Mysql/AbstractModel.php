@@ -390,6 +390,47 @@ class AbstractModel extends \Model\AbstractModel
     }
 
     /**
+     * Выбираем нужную структуру из $inputData
+     *
+     * @param array $data
+     * @param array $treeData
+     * @param array $result
+     * @return array
+     */
+    public static function filterArrayByKeyListRecursive($data, $treeData, &$result = array())
+    {
+        if (!is_array($data)) {
+            return $result;
+        }
+
+        foreach ($treeData as $k => &$v) {
+            if ("___list" === $k && is_array($v)) {
+                foreach ($data as $_k => &$_v) {
+                    if (is_numeric($_k) && is_array($_v)) {
+                        $result[$_k] = array();
+                        self::filterArrayByKeyListRecursive($_v, $v, $result[$_k]);
+                    }
+                }
+            } elseif (is_numeric($k)
+                && is_scalar($v)
+                && array_key_exists($v, $data)
+                && is_scalar($data[$v])
+            ) {
+                $result[$v] = $data[$v];
+            } elseif (is_scalar($k)
+                && is_array($v)
+                && array_key_exists($k, $data)
+                && is_array($data[$k])
+            ) {
+                $result[$k] = array();
+                self::filterArrayByKeyListRecursive($data[$k], $v, $result[$k]);
+            }
+        }
+
+        return $result;
+    }
+
+    /**
      * @param       $data
      * @param array $keyList
      * @return array
@@ -486,6 +527,7 @@ class AbstractModel extends \Model\AbstractModel
                 $isValid = $validator->isValid();
                 $result->setValidator($validator);
             }
+
             // Если валидация отключена (входим), если включена и валидна то, тоже входим
             if ($isValid) {
                 try {
