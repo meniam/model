@@ -31,6 +31,7 @@ class Model extends AbstractPart
 
         $class->setName('Abstract' . $table->getNameAsCamelCase() . 'Model');
         $class->setExtendedClass('\Model\Mysql\AbstractModel');
+        $class->setAbstract(true);
 
 		$this->_runPlugins(self::PART_MODEL, self::RUNTIME_POST);
 

@@ -773,18 +773,18 @@ class AbstractModel extends Singleton implements ModelInterface
     /**
      * Инициализация правил валидации
      *
-     * @param bool $optionalPresence
+     * @param bool $required
      * @return void
      */
-    public function initValidatorRules($optionalPresence = false)
+    public function initValidatorRules($required = false)
     {
-        $this->setupValidatorRules($optionalPresence);
+        $this->setupValidatorRules($required);
     }
 
     /**
-     * @param bool $optionalPresence
+     * @param bool $required
      */
-    public function setupValidatorRules($optionalPresence = false)
+    public function setupValidatorRules($required = false)
     {
     }
 
@@ -842,7 +842,7 @@ class AbstractModel extends Singleton implements ModelInterface
     public function getFilterCascadeRulesOnAdd()
     {
         if (!$this->filterCascadeRulesOnAdd) {
-            $this->setupFilterCascadeRules();
+            $this->setupFilterCascadeRulesOnAdd();
         }
 
         return $this->filterCascadeRulesOnAdd;
@@ -931,7 +931,7 @@ class AbstractModel extends Singleton implements ModelInterface
             // если поля во входных данных есть, а запись о каскаде присутствует
             // то пытаемся найти замену
             if (!isset($inputData[$field]) || empty($inputData[$field])) {
-                foreach ($analogList as $analog) {
+                foreach ((array)$analogList as $analog) {
                     if (isset($inputData[$analog])) {
                         $inputData[$field] = $inputData[$analog];
                         continue;

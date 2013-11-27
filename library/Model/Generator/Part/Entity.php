@@ -25,8 +25,10 @@ class Entity extends AbstractPart
         $class->setNamespaceName('Model\Entity');
         $class->setName('Abstract' . $table->getNameAsCamelCase() . 'Entity');
         $class->setExtendedClass('AbstractEntity');
+        $class->setAbstract(true);
 
-		$this->_runPlugins(self::PART_ENTITY, self::RUNTIME_POST);
+
+        $this->_runPlugins(self::PART_ENTITY, self::RUNTIME_POST);
 
         if ($outputFilename) {
             file_put_contents($outputFilename, $file->generate());
