@@ -261,7 +261,17 @@ class AbstractEntity extends \ArrayObject implements EntityInterface
      */
     public function toArray()
     {
-        return $this->getArrayCopy();
+        $resultArray = $this->getArrayCopy();
+        foreach($resultArray as $key => $value) {
+            if ($key[0] == '_') {
+                if (isset($this[$key])) {
+                    $resultArray[$key] = $this[$key]->toArray();
+                } else {
+                    unset($resultArray[$key]);
+                }
+            }
+        }
+        return $resultArray;
     }
 
     /**
