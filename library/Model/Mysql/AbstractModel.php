@@ -120,6 +120,7 @@ class AbstractModel extends \Model\AbstractModel
         }
         // $data могла поменятся ищем еще раз
         $id = $this->getExistedIdByUniqueIndex($data, $existsCond);
+
         // Если не нашли
         if (!$id) {
             try {
@@ -140,7 +141,17 @@ class AbstractModel extends \Model\AbstractModel
             // Если разрешено обновление, то обновляем данные
             $_cond = clone $cond;
             $_cond->where(array('`' . $this->getRawName() . '`.`id`' => $id));
+            print_r($data);
             $_result = $this->update($data, $_cond);
+
+            if (!$_result->getResult())
+
+
+            {
+                print_r($data);
+                print_r($_result->getErrors());
+                die;
+            }
 
             $result->setValidator($_result->getValidator());
         } elseif (!empty($_data) && $cond->isCascadeAllowed()) {
