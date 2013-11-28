@@ -58,13 +58,12 @@ class AbstractModel extends \Model\AbstractModel
         $cond = $this->prepareCond($cond);
 
         $tableName = $this->getRawName();
-        $result = new Result();
-        $data = $this->prepareData($data);
-        $_data = array();
+        $result    = new Result();
+        $data      = $this->prepareData($data);
+        $_data     = array();
 
         if (empty($data)) {
-            $result->addChild('general', $this->getGeneralErrorResult("Import {$tableName} failed; Import data is empty", "import_{$tableName}_failed"));
-            return $result;
+            return $result->addChild('general', $this->getGeneralErrorResult("Import {$tableName} failed; Import data is empty", "import_{$tableName}_failed"));
         }
 
         $id = null;

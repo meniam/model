@@ -116,7 +116,26 @@ class Result
         }
 
         $this->childs[$name . '.' . $i] = $child;
+
         return $this;
+    }
+
+    /**
+     * @return array
+     */
+    public function getChildList()
+    {
+        return (array)$this->childs;
+    }
+
+    /**
+     * @return array
+     */
+    public function addChildList(array $childList = array())
+    {
+        foreach ($childList as $n => $v) {
+            $this->addChild($n, $v);
+        }
     }
 
     /**

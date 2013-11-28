@@ -849,6 +849,20 @@ class AbstractModel extends Singleton implements ModelInterface
     }
 
     /**
+     * Получить правила каскада при добавлении
+     *
+     * @return array
+     */
+    public function getFilterCascadeRulesOnUpdate()
+    {
+        if (!$this->filterCascadeRulesOnUpdate) {
+            $this->setupFilterCascadeRulesOnUpdate();
+        }
+
+        return $this->filterCascadeRulesOnAdd;
+    }
+
+    /**
      * Инициализация значений по-умолчанию
      */
     protected function initDefaultsRules()
