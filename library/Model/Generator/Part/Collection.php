@@ -26,8 +26,9 @@ class Collection extends AbstractPart
 
         $class->setName('Abstract' . $table->getNameAsCamelCase() . 'Collection');
         $class->setExtendedClass('AbstractCollection');
+        $class->setAbstract(true);
 
-		$this->_runPlugins(self::PART_COLLECTION, self::RUNTIME_POST);
+        $this->_runPlugins(self::PART_COLLECTION, self::RUNTIME_POST);
 
         if ($outputFilename) {
             file_put_contents($outputFilename, $file->generate());
