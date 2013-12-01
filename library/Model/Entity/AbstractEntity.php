@@ -4,6 +4,7 @@ namespace Model\Entity;
 
 use Model\Entity\EntityInterface;
 use Model\Exception\ErrorException;
+use Zend\Form\Element\Collection;
 
 /**
  * Абстрактный класс Entity
@@ -262,15 +263,17 @@ class AbstractEntity extends \ArrayObject implements EntityInterface
     public function toArray()
     {
         $resultArray = $this->getArrayCopy();
-        foreach($resultArray as $key => $value) {
-            if ($key[0] == '_') {
-                if (isset($this[$key])) {
-                    $resultArray[$key] = $this[$key]->toArray();
-                } else {
-                    unset($resultArray[$key]);
-                }
+
+        foreach($resultArray as $key => &$value) {
+            if ($key[0] == '_' && is_object($value)) {
+                $value = $value->toArray();
+            }
+
+            if ($key[0] == '_' && !isset($this[$key])) {
+                unset($resultArray[$key]);
             }
         }
+
         return $resultArray;
     }
 

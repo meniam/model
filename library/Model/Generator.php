@@ -59,7 +59,7 @@ class Generator
 		$this->_outDir = rtrim($outDir, '/');
 
 		if (!is_dir($outDir) || !is_writeable($outDir)) {
-			throw new \Model\Exception\ErrorException('Directory is not writable');
+			throw new \Model\Exception\ErrorException('Directory is not writable: ' . $outDir);
 		}
 
         @mkdir($outDir . '/abstract');

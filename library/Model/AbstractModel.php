@@ -10,6 +10,7 @@ use Model\Cond\AbstractCond as Cond;
 use Model\Entity\AbstractEntity as Entity;
 use Model\Exception\ErrorException;
 use Model\Result\Result;
+use Model\Validator\ValidatorSet;
 use Zend\Db\Sql\Select;
 use Zend\InputFilter\Factory;
 use Zend\InputFilter\InputFilter;
@@ -195,7 +196,7 @@ class AbstractModel extends Singleton implements ModelInterface
             $type = 'exists';
             $shift = 6;
         } else {
-            throw new ErrorException('Unknown __call type');
+            throw new ErrorException('Unknown __call type: ' . $method);
         }
 
 
@@ -544,11 +545,7 @@ class AbstractModel extends Singleton implements ModelInterface
      */
     public function prepareCond(Cond $cond = null, $entity = null, $type = null)
     {
-        if (!$cond) {
-            return $this->getCond($entity, $type);
-        } else {
-            return clone $cond;
-        }
+        return !$cond ? $this->getCond($entity, $type) : (clone $cond);
     }
 
     /**
@@ -567,18 +564,43 @@ class AbstractModel extends Singleton implements ModelInterface
         return implode('', array_map('ucfirst', explode('_', $str)));
     }
 
+
+    /**
+     * Получить объект FilterInput для валидации данных
+     *
+     * @param bool $required
+     * @return ValidatorSet
+     */
+    private function getValidateSet($required = false)
+    {
+        $validatorSet = (bool)$required ? $this->filterInputOnAdd : $this->filterInputOnUpdate;
+
+        if (!$validatorSet) {
+            $validatorRules = $this->getValidatorRules($required);
+            $validatorSet = ValidatorSet::create($validatorRules);
+
+            if ($required) {
+                $this->filterInputOnAdd = $validatorSet;
+            } else {
+                $this->filterInputOnUpdate = $validatorSet;
+            }
+        }
+
+        return $validatorSet;
+    }
+
     /**
      * Проверить данные на добавлении
      *
      * @param array $data
      * @param Cond  $cond
-     * @return InputFilter
+     * @return ValidatorSet
      */
     public function validateOnAdd(array $data, Cond $cond = null)
     {
-        $inputFilter = $this->getInputFilter(true);
-        $inputFilter->setData($data);
-        return $inputFilter;
+        $validatorSet = $this->getValidateSet(true);
+        $validatorSet->setData($data);
+        return $validatorSet;
     }
 
     /**
@@ -586,11 +608,11 @@ class AbstractModel extends Singleton implements ModelInterface
      *
      * @param array $data
      * @param Cond  $cond
-     * @return \Zend\InputFilter\InputFilterInterface
+     * @return ValidatorSet
      */
     public function validateOnUpdate(array $data, Cond $cond = null)
     {
-        $inputFilter = $this->getInputFilter(false);
+        $inputFilter = $this->getValidateSet(false);
         $inputFilter->setData($data);
 
         return $inputFilter;
@@ -848,6 +870,9 @@ class AbstractModel extends Singleton implements ModelInterface
         return $this->filterCascadeRulesOnAdd;
     }
 
+    public function setupFilterCascadeRulesOnAdd()
+    {}
+
     /**
      * Получить правила каскада при добавлении
      *
@@ -994,17 +1019,16 @@ class AbstractModel extends Singleton implements ModelInterface
         }
 
         // Настраиваем InputFilter и передаем ему поле general и валидатор
-        $factory = new Factory();
-        $inputFilter = $factory->createInputFilter(array(
+        $validatorSet = ValidatorSet::create(array(
             $key => array(
                 'name'       => $key,
                 'validators' => array($vd)
             )
         ));
 
-        $inputFilter->setData(array($key => true))->isValid();
+        $validatorSet->setData(array($key => true))->isValid();
 
-        return new Result(null, $inputFilter);
+        return new Result(null, $validatorSet);
     }
 
     /**

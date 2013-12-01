@@ -60,17 +60,17 @@ class AbstractModel extends \Model\AbstractModel
         $tableName = $this->getRawName();
         $result    = new Result();
         $data      = $this->prepareData($data);
-        $_data     = array();
+        $relatedData     = array();
 
         if (empty($data)) {
-            return $result->addChild('general', $this->getGeneralErrorResult("Import {$tableName} failed; Import data is empty", "import_{$tableName}_failed"));
+            return $result->addError("Import {$tableName} failed; Import data is empty", "import_{$tableName}_failed");
         }
 
         $id = null;
         // Ищем по различным параметрам, может данные уже есть в базе
 
+        // Ищем данные в базе по уникальным полям
         $existsCond = clone $cond;
-        $existsCond->columns(array('id'))->type(Cond::FETCH_ONE);
         $id = $this->getExistedIdByUniqueIndex($data, $existsCond);
 
         // Идем по всем связям и ищем обязательные связи
@@ -84,6 +84,7 @@ class AbstractModel extends \Model\AbstractModel
             $foreignEntityName = $rel['foreign_entity'];
 
             $localColumnName   = $rel['local_column'];
+
             /** @var $foreignModel \Model\Mysql\AbstractModel */
             $foreignModel = $rel['foreign_model'];
 
@@ -91,7 +92,7 @@ class AbstractModel extends \Model\AbstractModel
                 /**
                  * Вложенная сущность сушествует
                  */
-                $_data[$localColumnName] = $data[$localColumnName];
+                $relatedData[$localColumnName] = $data[$localColumnName];
             } elseif ($cascadeAllowed && isset($data['_' . $foreignEntityName]))  {
                 /**
                  * Здесь мы проверяем наличие вложенной сущности,
@@ -102,21 +103,22 @@ class AbstractModel extends \Model\AbstractModel
                 /** @var $foreignModelInstance \Model\Mysql\AbstractModel */
                 $foreignModelInstance = $foreignModel::getInstance();
 
-                $_result = $foreignModelInstance->import($data['_' . $foreignEntityName], $cond->getChild($foreignEntityName));
+                $importChildResult = $foreignModelInstance->import($data['_' . $foreignEntityName], $cond->getChild($foreignEntityName));
+                $result->addChild($foreignEntityName, $importChildResult);
 
-                $result->addChild($foreignEntityName, $_result);
-
-                if ($_result->isError() && $cond->isIgnoreErrors()) {
+                // Если есть ошибки, то выходим
+                if ($importChildResult->isError() && $cond->isIgnoreErrors()) {
                     return $result;
                 }
 
-                if ($_result->isValid()) {
-                    $_data[$localColumnName] = $data[$localColumnName] = $_result->getResult();
+                if ($importChildResult->isValid()) {
+                    $relatedData[$localColumnName] = $data[$localColumnName] = $importChildResult->getResult();
                 }
 
                 unset($data['_' . $foreignEntityName]);
             }
         }
+
         // $data могла поменятся ищем еще раз
         $id = $this->getExistedIdByUniqueIndex($data, $existsCond);
 
@@ -124,41 +126,54 @@ class AbstractModel extends \Model\AbstractModel
         if (!$id) {
             try {
                 /** @var $_result Result */
-                $_result = $this->add($data, $cond);
+                $addResult = $this->add($data, $cond);
 
-                if (!$_result->isValid()) {
-                    $result->addChild('add_in_import', $this->getGeneralErrorResult($_result->getErrors(), 'import_add_failed'));
-                    //throw new \Exception($_result->getErrors(true)->toString());
-                }
-
-                $id = $_result->getResult();
-                $result->setValidator($_result->getValidator());
-            } catch (\Exception $e) {
-                $result->addChild('general', $this->getGeneralErrorResult('Import(add) failed ' . $e->getMessage(), 'import_add_failed'));
+                // Передаем результат добавления в общий результат и берем значение
+                $id = $result->setResult($addResult)->getResult();
+            } catch (\PDOException $e) {
+                // Если ошибка, то добавляем ошибку с кодом import_add_failed в global
+                $result->addError('Import add operation failed: ' . $e->getMessage(), 'import_add_failed');
             }
         } elseif ($cond->isUpdateAllowed()) {
-            // Если разрешено обновление, то обновляем данные
-            $_cond = clone $cond;
-            $_cond->where(array('`' . $this->getRawName() . '`.`id`' => $id));
-            $_result = $this->update($data, $_cond);
-            $result->setValidator($_result->getValidator());
-        } elseif (!empty($_data) && $cond->isCascadeAllowed()) {
+            try {
+                // Если разрешено обновление, то обновляем данные
+                $_cond = clone $cond;
+                $_cond->where(array('`' . $this->getRawName() . '`.`id`' => $id));
+
+                $updateAllowedResult = $this->update($data, $_cond);
+                $result->setResult($updateAllowedResult);
+                unset($_cond);
+            } catch (\PDOException $e) {
+                // Если ошибка, то добавляем ошибку с кодом import_update_failed в global
+                $result->addError('Import update operation failed: ' . $e->getMessage(), 'import_update_failed');
+            }
+        }
+
+        // relatedData - мы в первом проходе, смотрим,
+        // какие связанные сущности есть
+        //
+        //
+        if (!empty($relatedData) && $cond->isCascadeAllowed()) {
             // Если не разрешено обновление, и разрешен каскад, то обновляем только связи
             $_cond = clone $cond;
             $_cond->where(array('`' . $this->getRawName() . '`.`id`' => $id));
-            $_result = $this->update($data, $_cond);
+            $relatedDataUpdateResult  = $this->update($relatedData, $_cond);
 
-            $result->setValidator($_result->getValidator());
+            if (!$relatedDataUpdateResult->isValid()) {
+                $result->addErrorList($relatedDataUpdateResult->getErrorList());
+            }
         }
 
+        // Установить значение результата
         $result->setResult((string) $id);
 
         // Если ничего не добавилось и опция игнора ошибок отключена, то выходим
-        if (!$id && !$cond->isIgnoreErrors()) {
+        if (!$result->getResult() && !$cond->isIgnoreErrors()) {
             return $result;
         }
 
-        if (($id || $cond->isIgnoreErrors()) && $cond->isCascadeAllowed()) {
+        $isIgnoreErrors = $cond->isIgnoreErrors();
+        if (($id || $isIgnoreErrors) && $cond->isCascadeAllowed()) {
             foreach ($this->relation as $key => $rel) {
                 /** @var $foreignModel \Model\Mysql\AbstractModel */
                 $foreignModel         = $rel['foreign_model'];
@@ -171,6 +186,7 @@ class AbstractModel extends \Model\AbstractModel
                 if (isset($data['_' . $foreignEntityName])) {
                     $innerData = $this->prepareData($data['_' . $foreignEntityName]);
 
+
                     if (!isset($rel['link_table']) && $rel['local_column'] == 'id' && is_array($innerData) && $id) {
                         $innerData[$foreignColumnName] = $id;
                     }
@@ -179,41 +195,47 @@ class AbstractModel extends \Model\AbstractModel
                     // Если основная сущность добавлена, а у вложенной стоит что нельзя добавлять связи,
                     // то эти связи нужно удалить
                     if ($id && !$cond->getChild($foreignEntityName)->isAppendLink()) {
+                        // Удаляем связи перед обновлением
                         $unlinkMethod = $rel['unlink_method'];
 
                         /** @var $_result Result */
-                        $_result = $this->$unlinkMethod($id);
+                        $unlinkResult = $this->$unlinkMethod($id);
 
-                        if ($_result->isError()) {
-                            $result->addChild($foreignEntityName, $_result);
-                            if (!$cond->isIgnoreErrors()) {
+                        if (!$unlinkResult->isValid()) {
+                            $result->addChild($foreignEntityName, $unlinkResult);
+                            if (!$isIgnoreErrors) {
                                 return $result;
                             }
                         }
                     }
 
-
-                    if (is_null($_result) || $_result->isValid()) {
+                    if ($id && $cond->getChild($foreignEntityName)->isAppendLink()) {
                         if (empty($innerData)) {
                             $result->addChild($foreignEntityName, new Result());
                         } else {
-                            $_result = $foreignModelInstance->import($innerData, $cond->getChild($foreignEntityName));
-                            $result->addChild($foreignEntityName, $_result);
+                            $importInnerDataResult = $foreignModelInstance->import($innerData, $cond->getChild($foreignEntityName));
+                            $result->addChild($foreignEntityName, $importInnerDataResult);
 
-                            if (!$cond->isIgnoreErrors() && $_result->isError()) {
+                            // Если ошибка и пропускать их нельзя
+                            if ($result->isError() && !$isIgnoreErrors) {
                                 return $result;
                             }
 
-                            if (!$_result->isError()) {
+                            // Если при импорте ошибок не было
+                            // то линкуем данные с текущей сущностью
+                            if (!$importInnerDataResult->isError()) {
                                 $linkMethod = $rel['link_method'];
-                                $this->$linkMethod(array($id), $_result->getResult(), $cond->isAppendLink());
+                                $this->$linkMethod(array($id), $importInnerDataResult->getResult(), $cond->getChild($foreignEntityName)->isAppendLink());
                             }
                         }
                     }
                 }
 
                 // Если связь много ко многим или один ко многим
-                if (($rel['type'] = AbstractModel::MANY_TO_MANY || $rel['type'] = AbstractModel::ONE_TO_MANY) && isset($data['_' . $foreignEntityName . '_collection'])) {
+                if (($rel['type'] = AbstractModel::MANY_TO_MANY
+                    || $rel['type'] = AbstractModel::ONE_TO_MANY)
+                    && isset($data['_' . $foreignEntityName . '_collection'])){
+
                     $innerData = $this->prepareData($data['_' . $foreignEntityName . '_collection']);
 
                     // Если нет таблицы связи и существую данные для обработки
@@ -223,17 +245,15 @@ class AbstractModel extends \Model\AbstractModel
                         }
                     }
 
-                    $_result = new Result();
-
                     // Если основная сущность добавлена, а у вложенной стоит что нельзя добавлять связи,
                     // то эти связи нужно удалить
                     if ($id && !$cond->getChild($foreignEntityName . '_collection')->isAppendLink()) {
                         $unlinkMethod = $rel['unlink_method'];
 
                         /** @var $_result Result */
-                        $_result = $this->$unlinkMethod($id);
+                        $unlinkResult = $this->$unlinkMethod($id);
 
-                        if ($_result->isError()) {
+                        if ($unlinkResult->isError()) {
                             $result->addChild($foreignEntityName . '_collection', $_result);
                             if (!$cond->isIgnoreErrors()) {
                                 return $result;
@@ -241,20 +261,21 @@ class AbstractModel extends \Model\AbstractModel
                         }
                     }
 
-                    if ($_result->isValid()) {
+                    if ($id && $cond->getChild($foreignEntityName . '_collection')->isAppendLink()) {
                         if (empty($data['_' . $foreignEntityName . '_collection'])) {
                             $result->addChild($foreignEntityName . '_collection', new Result());
                         } else {
-                            $_result = $foreignModelInstance->importCollection($innerData, $cond->getChild($foreignEntityName . '_collection'));
-                            $result->addChild($foreignEntityName . '_collection', $_result);
+                            $importCollectionResult = $foreignModelInstance->importCollection($innerData, $cond->getChild($foreignEntityName . '_collection'));
+                            $result->addChild($foreignEntityName . '_collection', $importCollectionResult);
 
-                            if (!$cond->isIgnoreErrors() && $_result->isError()) {
+                            // Если есть ошибки и допускать их нельзя выходим
+                            if ($importCollectionResult->isError() && !$isIgnoreErrors) {
                                 return $result;
                             }
 
-                            if (isset($rel['link_table']) && $_result->isValid()) {
+                            if (isset($rel['link_table']) && $importCollectionResult->isValid()) {
                                 $linkMethod = $rel['link_method'];
-                                $this->$linkMethod(array($id), $_result->getResult(), $cond->isAppendLink());
+                                $this->$linkMethod(array($id), $importCollectionResult->getResult(), $cond->isAppendLink());
                             }
                         }
                     }
@@ -508,40 +529,51 @@ class AbstractModel extends \Model\AbstractModel
      */
     public function add($data, Cond $cond = null)
     {
+        // Если коллекция, то добавим только текущий
+        // элемент. Недочет, но и хер с ним!
         if ($data instanceof AbstractCollection) {
             $data = $data->current();
         }
 
-        $id = null;
+        $id     = null;
         $result = new Result();
-        $data = (array)$data;
 
-        if ($data) {
-            $cond = $this->prepareCond($cond);
-            $data = $this->prepareDataOnAdd($data, $cond);
+        $cond = $this->prepareCond($cond);
+        $data = $this->prepareDataOnAdd((array)$data, $cond);
 
-            $isValid = true;
-            if ($cond->checkCond(Cond::VALIDATE_ON_ADD, true)) {
-                $validator = $this->validateOnAdd($data);
-                $isValid = $validator->isValid();
-                $result->setValidator($validator);
-            }
+        $isValid = true;
+        if ($cond->checkCond(Cond::VALIDATE_ON_ADD, true)) {
+            // Получаем валидатор добавления
+            $validator = $this->validateOnAdd($data);
 
-            // Если валидация отключена (входим), если включена и валидна то, тоже входим
-            if ($isValid) {
-                try {
-                    $id = $this->insert($this->getRawName(), $data);
-                    if (!$id) {
-                        $result->addChild('general', $this->getGeneralErrorResult('Add ' . $this->getRawName() . ' failed', 'add_' .  $this->getRawName()  . '_failed'));
-                    }
-                } catch (\Exception $ex) {
-                    $result->addChild('exception', $this->getGeneralErrorResult($ex->getMessage(), $ex->getCode()));
-                }
+            // Проверяем данные и если есть ошибки
+            // то добавляем их в результат
+            if (!$isValid = $validator->isValid()) {
+                $result->addErrorFromValidatorSet($validator);
             }
         }
 
-        $result->setResult((int)$id);
-        return $result;
+        // Если валидация отключена (входим),
+        // если включена и валидна то, тоже входим
+        if ($isValid) {
+            try {
+                // Вставляем запись
+                $id = $this->insert($this->getRawName(), $data);
+
+                // Если не вставилась, то добавляем глобальную
+                // ошибку в результат
+                if (!$id) {
+                    $result->addError('Add ' . $this->getRawName() . ' failed', 'add_' .  $this->getRawName()  . '_failed');
+                }
+            } catch (\PDOException $ex) {
+                // Что-то пошло не так, выкинуто исключение
+                // записываем это тоже в результат
+                $result->addError($ex->getMessage(), $ex->getCode());
+            }
+        }
+
+        // Устанавливаем идентификатор добавленной записи
+        return $result->setResult((int)$id);
     }
 
     /**
@@ -577,23 +609,24 @@ class AbstractModel extends \Model\AbstractModel
             // Фильтруем входные данные
             $cond->checkCond(Cond::FILTER_ON_UPDATE, true) && $data = $this->filterOnUpdate($data);
 
-            $isValid = true;
+            // Если валидация включена
             if ($cond->checkCond(Cond::VALIDATE_ON_UPDATE, true)) {
                 $validator = $this->validateOnUpdate($data);
-                $isValid = $validator->isValid();
-                $result->setValidator($validator);
+
+                // Проверяем данные и если есть ошибки
+                // то добавляем их в результат
+                if (!$isValid = $validator->isValid()) {
+                    $result->addErrorFromValidatorSet($validator);
+                    return $result;
+                }
             }
 
-            // Если валидация отключена (входим), если включена и валидна то, тоже входим
-            if ($isValid) {
-                try {
-                    $select = $this->prepareSelect($cond);
-                    $this->getDb()->update($this->getRawName(), $data, $select);
-                    $result->setResult(true);
-                } catch (\Exception $ex) {
-                    $result->setResult(false);
-                    $result->addChild('exception', $this->getGeneralErrorResult($ex->getMessage(), $ex->getCode()));
-                }
+            try {
+                $select = $this->prepareSelect($cond);
+                $this->getDb()->update($this->getRawName(), $data, $select);
+            } catch (\Exception $ex) {
+                $result->setResult(false);
+                $result->addError($ex->getMessage(), $ex->getCode());
             }
         }
 
@@ -626,8 +659,7 @@ class AbstractModel extends \Model\AbstractModel
             $stmt = $this->getDb()->delete($table, $select);
             $result->setResult($stmt->rowCount());
         } catch (\Exception $ex) {
-            $result->setResult(false);
-            $result->addChild('exception', $this->getGeneralErrorResult($ex->getMessage(), $ex->getCode()));
+            $result->addError($ex->getMessage(), $ex->getCode());
         }
 
         return $result;

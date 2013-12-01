@@ -68,7 +68,7 @@ class PrepareTest extends \ModelTest\Model\TestCase
             ),
         );
 
-        $tagModel->import($baseTagData);
+        $result = $tagModel->import($baseTagData);
 
         $cond = TopicCond::init()
             ->with(TopicCond::WITH_BASE_TAG)

@@ -28,7 +28,6 @@ require_once __DIR__ . '/vendor/autoload.php';
 /**
  * Setup autoloading
  */
-require_once 'Zend/Loader/StandardAutoloader.php';
 $loader = new \Zend\Loader\StandardAutoloader(
     array(
         'autoregister_zf' => true,
