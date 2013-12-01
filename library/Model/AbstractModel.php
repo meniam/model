@@ -842,7 +842,7 @@ class AbstractModel extends Singleton implements ModelInterface
     public function getFilterCascadeRulesOnAdd()
     {
         if (!$this->filterCascadeRulesOnAdd) {
-            $this->setupFilterCascadeRulesOnAdd();
+            $this->setupFilterCascadeRules();
         }
 
         return $this->filterCascadeRulesOnAdd;
