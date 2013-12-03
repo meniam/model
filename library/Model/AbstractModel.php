@@ -2,17 +2,13 @@
 
 namespace Model;
 
-use App\Filter\Filter;
 use App\ServiceManager\ServiceManager;
-use App\Validator\Validator;
 use Model\Collection\AbstractCollection as Collection;
 use Model\Cond\AbstractCond as Cond;
 use Model\Entity\AbstractEntity as Entity;
 use Model\Exception\ErrorException;
-use Model\Result\Result;
 use Model\Validator\ValidatorSet;
-use Zend\Db\Sql\Select;
-use Zend\InputFilter\Factory;
+use Zend\Filter\FilterInterface;
 use Zend\InputFilter\InputFilter;
 use Zend\Validator\AbstractValidator;
 
@@ -61,7 +57,7 @@ class AbstractModel extends Singleton implements ModelInterface
     /**
      * @var string
      */
-    private $collenction;
+    private $collection;
 
     /**
      * @var string
@@ -78,34 +74,6 @@ class AbstractModel extends Singleton implements ModelInterface
      * @var string
      */
     private $rawName;
-
-    /**
-     * Правила фильтрации
-     *
-     * @var array
-     */
-    protected $filterRules;
-
-    /**
-     * Правила валидации
-     *
-     * @var array
-     */
-    protected $validatorRules;
-
-    /**
-     * Правила валидации
-     *
-     * @var array
-     */
-    protected $validatorRulesPresence;
-
-    /**
-     * @var array
-     */
-    protected $relation;
-
-    private static $serviceManager;
 
     /**
      * Значения по-умолчанию для полей Entity
@@ -130,16 +98,42 @@ class AbstractModel extends Singleton implements ModelInterface
     protected $filterCascadeRulesOnUpdate = array();
 
     /**
-     * Объект валидатора на добавлении
-     * @var InputFilter
+     * Правила фильтрации
+     *
+     * @var array
      */
-    protected $filterInputOnAdd;
+    private $filterRules;
 
     /**
-     * Объект валидатора на изменении данных
-     * @var InputFilter
+     * @var array
      */
-    protected $filterInputOnUpdate;
+    protected $relation;
+
+    /**
+     * Правила валидации при добавлении
+     *
+     * @var array
+     */
+    private $validatorRulesOnAdd;
+
+    /**
+     * Правила валидации при обновлении
+     *
+     * @var array
+     */
+    private $validatorRulesOnUpdate;
+
+    /**
+     * @var ValidatorSet|null
+     */
+    private $validatorOnAdd;
+
+    /**
+     * @var ValidatorSet|null
+     */
+    private $validatorOnUpdate;
+
+    private static $serviceManager;
 
     /**
      * @return ServiceManager
@@ -169,8 +163,8 @@ class AbstractModel extends Singleton implements ModelInterface
             $this->entity = $this->_name . 'Entity';
         }
 
-        if (empty($this->collenction)) {
-            $this->collenction = $this->_name . 'Collection';
+        if (empty($this->collection)) {
+            $this->collection = $this->_name . 'Collection';
         }
 
         if (empty($this->cond)) {
@@ -180,12 +174,21 @@ class AbstractModel extends Singleton implements ModelInterface
 
     public function __call($method, $params)
     {
+        $view = null;
         if (count($segments = explode('By', $method, 2)) == 2) {
             list($basePart, $by) = $segments;
+            if (count($segments = explode('As', $method, 2)) == 2) {
+                list($by, $view) = $segments;
+            }
         } else {
             $basePart = $method;
             $by = '';
+
+            if (count($segments = explode('As', $basePart, 2)) == 2) {
+                list($by, $view) = $segments;
+            }
         }
+
 
         $isGet  = false;
         if (substr($basePart, 0, 3) == 'get') {
@@ -233,6 +236,10 @@ class AbstractModel extends Singleton implements ModelInterface
             $callMethod = 'getBy' . $by;
         }
 
+        if ($view) {
+            $callMethod .= 'As' . $view;
+        }
+
         return call_user_func_array(array($this, $callMethod), $params);
     }
 
@@ -256,21 +263,21 @@ class AbstractModel extends Singleton implements ModelInterface
      * @param        $itemArray
      * @param Cond   $cond
      * @return mixed
-     */
-    public function beforePrepare($itemArray, Cond $cond = null)
+    protected function beforePrepare($itemArray, Cond $cond = null)
     {
         return $itemArray;
     }
+     */
 
     /**
      * @param                   $itemArray
      * @param Cond              $cond
      * @return mixed
-     */
     public function afterPrepare($itemArray, Cond $cond = null)
     {
         return $itemArray;
     }
+     */
 
     /**
      * @param      $itemArray
@@ -293,7 +300,9 @@ class AbstractModel extends Singleton implements ModelInterface
         /**
          * Before prepare hook
          */
-        $itemArray = $this->beforePrepare($itemArray, $cond);
+        if (method_exists($this, 'beforePrepare') && is_array($itemArray)) {
+            $itemArray = $this->beforePrepare($itemArray, $cond);
+        }
 
         if (empty($itemArray)) {
             // return empty value in right type
@@ -415,7 +424,9 @@ class AbstractModel extends Singleton implements ModelInterface
         /**
          * Before prepare hook
          */
-        $itemArray = $this->afterPrepare($itemArray, $cond);
+        if (method_exists($this, 'afterPrepare') && is_array($itemArray)) {
+            $itemArray = $this->afterPrepare($itemArray, $cond);
+        }
 
         switch ($returnType) {
             // return as entity
@@ -549,81 +560,10 @@ class AbstractModel extends Singleton implements ModelInterface
     }
 
     /**
-     *
-     */
-    public function execute()
-    {
-    }
-
-    /**
-     * @param $str
-     * @return string
-     */
-    protected function _underscoreToCamelCaseFilter($str)
-    {
-        return implode('', array_map('ucfirst', explode('_', $str)));
-    }
-
-
-    /**
-     * Получить объект FilterInput для валидации данных
-     *
-     * @param bool $required
-     * @return ValidatorSet
-     */
-    private function getValidateSet($required = false)
-    {
-        $validatorSet = (bool)$required ? $this->filterInputOnAdd : $this->filterInputOnUpdate;
-
-        if (!$validatorSet) {
-            $validatorRules = $this->getValidatorRules($required);
-            $validatorSet = ValidatorSet::create($validatorRules);
-
-            if ($required) {
-                $this->filterInputOnAdd = $validatorSet;
-            } else {
-                $this->filterInputOnUpdate = $validatorSet;
-            }
-        }
-
-        return $validatorSet;
-    }
-
-    /**
-     * Проверить данные на добавлении
-     *
-     * @param array $data
-     * @param Cond  $cond
-     * @return ValidatorSet
-     */
-    public function validateOnAdd(array $data, Cond $cond = null)
-    {
-        $validatorSet = $this->getValidateSet(true);
-        $validatorSet->setData($data);
-        return $validatorSet;
-    }
-
-    /**
-     * Проверить данные при обновлении полей в базе данных
-     *
-     * @param array $data
-     * @param Cond  $cond
-     * @return ValidatorSet
-     */
-    public function validateOnUpdate(array $data, Cond $cond = null)
-    {
-        $inputFilter = $this->getValidateSet(false);
-        $inputFilter->setData($data);
-
-        return $inputFilter;
-    }
-
-    /**
      * Получить объект FilterInput для валидации данных
      *
      * @param bool $required
      * @return InputFilter
-     */
     private function getInputFilter($required = false)
     {
         $inputFilter = (bool)$required ? $this->filterInputOnAdd : $this->filterInputOnUpdate;
@@ -641,6 +581,7 @@ class AbstractModel extends Singleton implements ModelInterface
 
         return $inputFilter;
     }
+     */
 
     /**
      * Фильтрация данных при добавлении в базу данных
@@ -745,31 +686,70 @@ class AbstractModel extends Singleton implements ModelInterface
     }
 
     /**
-     * Проверить значение поля на правильность
+     * Проверить данные на добавлении
      *
-     * @param $value
-     * @param $field
-     * @return bool|AbstractValidator
+     * @param array $data
+     * @return ValidatorSet
      */
-    public function validateValue($value, $field)
+    public function validateOnAdd(array $data)
     {
-        if (!isset($this->validatorRules['not_required'])) {
-            $this->getValidatorRules(false);
-        }
+        $validatorSet = $this->getValidatorSet(true);
+        $validatorSet->setData($data);
+        return $validatorSet;
+    }
 
-        $isValid = true;
-        if (isset($this->validatorRules['not_required'][$field]['validators'])) {
-            /** @var $validatorRules InputFilter[] */
-            $validatorRules = $this->validatorRules['not_required'][$field]['validators'];
+    /**
+     * Проверить данные при обновлении полей в базе данных
+     *
+     * @param array             $data
+     * @return ValidatorSet
+     */
+    public function validateOnUpdate(array $data)
+    {
+        $validatorSet = $this->getValidatorSet(false);
+        $validatorSet->setData($data);
 
-            foreach ($validatorRules as $validator) {
-                if (!($isValid = $validator->isValid($value))) {
-                    return $validator;
-                }
+        return $validatorSet;
+    }
+
+    /**
+     * Получить объект FilterInput для валидации данных
+     *
+     * @param bool $required
+     * @return ValidatorSet
+     */
+    private function getValidatorSet($required = false)
+    {
+        $validatorSet = (bool)$required ? $this->validatorOnAdd : $this->validatorOnUpdate;
+
+        if (!$validatorSet) {
+            $validatorRules = $this->getValidatorRules($required);
+            $validatorSet = ValidatorSet::create($validatorRules);
+
+            if ($required) {
+                $this->validatorOnAdd = $validatorSet;
+            } else {
+                $this->validatorOnUpdate = $validatorSet;
             }
         }
 
-        return $isValid;
+        return $validatorSet;
+    }
+
+    /**
+     * @return array
+     */
+    protected function getValidatorOnAdd()
+    {
+        return $this->validatorOnAdd;
+    }
+
+    /**
+     * @return array
+     */
+    protected function getValidatorOnUpdate()
+    {
+        return $this->validatorOnUpdate;
     }
 
     /**
@@ -780,16 +760,17 @@ class AbstractModel extends Singleton implements ModelInterface
      */
     protected function getValidatorRules($required = false)
     {
-        $r = $required ? 'required' : 'not_required';
-
-        if (isset($this->validatorRules[$r])) {
-            return $this->validatorRules[$r];
+        if ($required && !empty($this->validatorRulesOnAdd)) {
+            return $this->validatorRulesOnAdd;
+        } elseif (!$required && !empty($this->validatorRulesOnUpdate)) {
+            return $this->validatorRulesOnUpdate;
         }
 
-        $this->validatorRules[$r] = array();
-        $this->initValidatorRules($r);
+        $this->validatorRulesOnAdd = array();
+        $this->validatorRulesOnUpdate = array();
+        $this->initValidatorRules($required);
 
-        return $this->validatorRules[$r];
+        return $required ? $this->validatorRulesOnAdd : $this->validatorRulesOnUpdate;
     }
 
     /**
@@ -807,7 +788,64 @@ class AbstractModel extends Singleton implements ModelInterface
      * @param bool $required
      */
     protected function setupValidatorRules($required = false)
+    { }
+
+    /**
+     *
+     * @param      $field
+     * @param      $validator
+     * @param bool $required Обязательно должно быть при добавлении
+     *
+     * @return $this
+     */
+    protected function addValidatorRule($field, $validator, $required = true)
     {
+        $field = (string)$field;
+
+        $this->validatorRulesOnAdd[$field]['name']         = $field;
+        $this->validatorRulesOnAdd[$field]['validators'][] = $validator;
+        $this->validatorRulesOnAdd[$field]['required']     = $required;
+
+        $this->validatorRulesOnUpdate[$field]['name']         = $field;
+        $this->validatorRulesOnUpdate[$field]['validators'][] = $validator;
+        $this->validatorRulesOnUpdate[$field]['required']     = false;
+
+        return $this;
+    }
+
+
+    /**
+     * Проверить значение поля на правильность
+     *
+     * @param $value
+     * @param $field
+     * @return bool|AbstractValidator
+     */
+    public function validateValue($value, $field)
+    {
+        $value = $this->filterValue($value, $field);
+        $validatorRules = $this->getValidatorRules(false);
+
+        if (isset($validatorRules[$field]['validators'])) {
+            /** @var $validatorRules InputFilter[] */
+            $validatorRules = $validatorRules[$field]['validators'];
+
+            foreach ($validatorRules as $validator) {
+                if (!$validator->isValid($value)) {
+                    return $validator;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * @return bool
+     */
+    protected function isFilterRules()
+    {
+        return !empty($this->filterRules);
     }
 
     /**
@@ -828,6 +866,20 @@ class AbstractModel extends Singleton implements ModelInterface
     }
 
     /**
+     * Добавить правило фильтрации для поля
+     *
+     * @param $field
+     * @param FilterInterface $filter
+     *
+     * @return $this
+     */
+    protected function addFilterRule($field, FilterInterface $filter)
+    {
+        $this->filterRules[(string) $field][] = $filter;
+        return $this;
+    }
+
+    /**
      * Инициализация правил фильтрации
      */
     protected function initFilterRules()
@@ -839,8 +891,7 @@ class AbstractModel extends Singleton implements ModelInterface
      * Настройка правил фильтрации пользователем
      */
     protected function setupFilterRules()
-    {
-    }
+    { }
 
 
     /**
@@ -857,21 +908,46 @@ class AbstractModel extends Singleton implements ModelInterface
         return $this->filterCascadeRulesOnAdd;
     }
 
-    protected function setupFilterCascadeRulesOnAdd()
-    {}
-
     /**
      * Получить правила каскада при добавлении
      *
      * @return array
      */
-    protected function getFilterCascadeRulesOnUpdate()
+    protected  function getFilterCascadeRulesOnUpdate()
     {
         if (!$this->filterCascadeRulesOnUpdate) {
             $this->setupFilterCascadeRules();
         }
 
-        return $this->filterCascadeRulesOnAdd;
+        return $this->filterCascadeRulesOnUpdate;
+    }
+
+    protected function setupFilterCascadeRulesOnAdd()
+    {}
+
+    protected function setupFilterCascadeRulesOnUpdate()
+    {}
+
+    /**
+     * @param $name
+     * @param $parentName
+     * @param $allowedOnUpdate
+     *
+     * @return $this
+     */
+    protected function addFilterCascadeParent($name, $parentName, $allowedOnUpdate)
+    {
+        if (!is_array($parentName)) {
+            $parentName = array($parentName);
+        }
+
+        foreach ($parentName as $pName) {
+            $this->filterCascadeRulesOnAdd[$name][] = $pName;
+            if ($allowedOnUpdate) {
+                $this->filterCascadeRulesOnUpdate[$name][] = $pName;
+            }
+        }
+        return $this;
     }
 
     /**
@@ -942,6 +1018,7 @@ class AbstractModel extends Singleton implements ModelInterface
             return $inputData;
         }
 
+        $result = array_merge($result, $inputData);
 
         $field = null;
         $default = null;
@@ -954,9 +1031,9 @@ class AbstractModel extends Singleton implements ModelInterface
                 $default = $v;
             }
 
-            if (array_key_exists($field, $inputData)) {
+            if (array_key_exists($field, $result)) {
                 if ($replace || (!$replace && !array_key_exists($field, $result))) {
-                    $result[$field] = $inputData[$field];
+                    $result[$field] = $result[$field];
                 }
             } else if (isset($default)) {
                 $result[$field] = $default;
@@ -1002,25 +1079,6 @@ class AbstractModel extends Singleton implements ModelInterface
 
         return $inputData;
     }
-
-    /**
-     * Настройка каскада пользователем
-     *
-     * Каскад прописывается следующим образом:
-     * array(
-     *     'name' => array('title', 'param'),
-     * )
-     *
-     * Это означает, что если поле name пустое, оно
-     * берется из title, если и title пустой то из param
-     *
-     * Записывать нужно в переменные $this->addFilterCascadeRules
-     * и $this->updateFilterCascadeRules
-     */
-    protected function setupFilterCascadeRules()
-    {
-    }
-
 
     /**
      * Return array of ids from mixed data
@@ -1074,5 +1132,14 @@ class AbstractModel extends Singleton implements ModelInterface
         }
 
         return $ids;
+    }
+
+    /**
+     * @param $str
+     * @return string
+     */
+    protected function _underscoreToCamelCaseFilter($str)
+    {
+        return implode('', array_map('ucfirst', explode('_', $str)));
     }
 }

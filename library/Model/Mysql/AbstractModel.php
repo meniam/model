@@ -514,14 +514,32 @@ class AbstractModel extends \Model\AbstractModel
         $data = $this->prepareData($data);
         $cond = $this->prepareCond($cond);
 
-        // Если каскад разрешен, то применяем его
-        $cond->checkCond(Cond::FILTER_CASCADE_ON_ADD, true) && $data = $this->applyFilterCascadeRules($data, $this->getFilterCascadeRulesOnAdd());
+        if (method_exists($this, 'beforePrepareOnAdd')) {
+            $data = $this->beforePrepareOnAdd($data, $cond);
+        }
+
+        if (method_exists($this, 'beforePrepareOnAddOrUpdate')) {
+            $data = $this->beforePrepareOnAddOrUpdate($data, $cond);
+        }
 
         // Применяем умолчания
         $cond->checkCond(Cond::APPLY_DEFAULT_VALUES, true) && $data = $this->applyDefaultValues($data);
 
+        // Если каскад разрешен, то применяем его
+        $cond->checkCond(Cond::FILTER_CASCADE_ON_ADD, true) && $data = $this->applyFilterCascadeRules($data, $this->getFilterCascadeRulesOnAdd());
+
         // Фильтруем входные данные
         $cond->checkCond(Cond::FILTER_ON_ADD, true) && $data = $this->filterOnAdd($data);
+
+        if (method_exists($this, 'afterPrepareOnAdd')) {
+            // Вносить изменения в данные нельзя
+            $this->afterPrepareOnAdd($data, $cond);
+        }
+
+        if (method_exists($this, 'afterPrepareOnAddOrUpdate')) {
+            // Вносить изменения в данные нельзя
+            $this->afterPrepareOnAddOrUpdate($data, $cond);
+        }
 
         return $data;
     }
@@ -583,6 +601,45 @@ class AbstractModel extends \Model\AbstractModel
     }
 
     /**
+     * Подготавливаем данные перед добавлением
+     *
+     * @param      $data
+     * @param Cond $cond
+     * @return array
+     */
+    protected function prepareDataOnUpdate($data, Cond $cond = null)
+    {
+        $data = $this->prepareData($data);
+        $cond = $this->prepareCond($cond);
+
+        if (method_exists($this, 'beforePrepareOnUpdate')) {
+            $data = $this->beforePrepareOnUpdate($data, $cond);
+        }
+
+        if (method_exists($this, 'beforePrepareOnAddOrUpdate')) {
+            $data = $this->beforePrepareOnAddOrUpdate($data, $cond);
+        }
+
+        // Если каскад разрешен, то применяем его
+        $cond->checkCond(Cond::FILTER_CASCADE_ON_UPDATE, true) && $data = $this->applyFilterCascadeRules($data, $this->getFilterCascadeRulesOnUpdate());
+
+        // Фильтруем входные данные
+        $cond->checkCond(Cond::FILTER_ON_UPDATE, true) && $data = $this->filterOnUpdate($data);
+
+        if (method_exists($this, 'afterPrepareOnUpdate')) {
+            // Вносить изменения в данные нельзя
+            $this->afterPrepareOnUpdate($data, $cond);
+        }
+
+        if (method_exists($this, 'afterPrepareOnAddOrUpdate')) {
+            // Вносить изменения в данные нельзя
+            $this->afterPrepareOnAddOrUpdate($data, $cond);
+        }
+
+        return $data;
+    }
+
+    /**
      * Добавить сущьность в базу
      *
      * @param mixed      $data
@@ -612,8 +669,7 @@ class AbstractModel extends \Model\AbstractModel
                 throw new ErrorException('Unknown cond type');
             }
 
-            // Фильтруем входные данные
-            $cond->checkCond(Cond::FILTER_ON_UPDATE, true) && $data = $this->filterOnUpdate($data);
+            $data = $this->prepareDataOnUpdate($data, $cond);
 
             // Если валидация включена
             if ($cond->checkCond(Cond::VALIDATE_ON_UPDATE, true)) {

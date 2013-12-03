@@ -56,7 +56,9 @@ class InitValidatorRules extends AbstractModel
         /** @var $column Column */
         foreach ($columnCollection as $column) {
             $name = $column->getName();
-            $template .= "    '{$name}' => array(\n";
+            //$template .= "    '{$name}' => array(\n";
+
+            $requiredFlag = !($column->isNullable() || $column->getName() == 'id');
 
             if ($column->isNullable() || $column->getName() == 'id') {
                 $required = "        'required' => false,\n";
@@ -64,27 +66,24 @@ class InitValidatorRules extends AbstractModel
                 $required = "        'required' => \$required,\n";
             }
 
-            $template .= "        'name' => '{$name}',\n" . $required;
-            $template .= "        'validators' => array(\n";
+            //$template .= "        'name' => '{$name}',\n" . $required;
+            //$template .= "        'validators' => array(\n";
 
             $validatorArray = $column->getValidator();
 
             foreach ($validatorArray as $validator) {
                 $validatorParams = $this->varExportMin($validator['params'], true);
                 if ($validatorParams && $validatorParams != 'NULL') {
-                    $template .= "              Validator::getValidatorInstance('{$validator['name']}', {$validatorParams}),\n";
+
+                    $template .= "\$this->addValidatorRule('{$name}', Validator::getValidatorInstance('{$validator['name']}', {$validatorParams}), " . ($requiredFlag ? 'true' : 'false') . ");\n";
                 } else {
-                    $template .= "              Validator::getValidatorInstance('{$validator['name']}'),\n";
+                    $template .= "\$this->addValidatorRule('{$name}', Validator::getValidatorInstance('{$validator['name']}'), " . ($requiredFlag ? 'true' : 'false') . ");\n";
                 }
             }
-
-            $template .= "        )\n";
-
-            $template = rtrim($template, "\r\n, ") . "\n    ),\n";
-        }
+      }
 
         $template = rtrim($template, "\r\n, ");
-        $tableNameAsCamelCase = $part->getTable()->getNameAsCamelCase();
+        //$tableNameAsCamelCase = $part->getTable()->getNameAsCamelCase();
 
         $tags = array(
             array(
@@ -112,15 +111,9 @@ class InitValidatorRules extends AbstractModel
         $method->setParameter($p);
 
         $method->setBody(<<<EOS
-\$r = \$required ? 'required' : 'not_required';
-
-\$this->validatorRules[\$r] = array(
 {$template}
-);
-
 \$this->setupValidatorRules(\$required);
-
-return \$this->validatorRules[\$r];
+return \$required ? \$this->getValidatorOnAdd() : \$this->getValidatorOnUpdate();
 EOS
         );
 

@@ -36,24 +36,25 @@ class Stubs extends AbstractFrontModel
          * @var $file \Zend\Code\Generator\FileGenerator
          */
         $file = $part->getFile();
+        $table = $part->getTable();
+        $tableNameAsCamelCase = $table->getNameAsCamelCase();
+        $file->setUse('Model\\Cond\\' . $tableNameAsCamelCase . 'Cond', 'Cond');
+        $file->setUse('Model\\Entity\\' . $tableNameAsCamelCase . 'Entity');
+        $file->setUse('Model\\Collection\\' . $tableNameAsCamelCase . 'Collection');
+        $file->setUse('Model\\Result\\Result');
 
         $this->defaultStub($file);
-        $this->setupFilterRulesStub($file);
         $this->setupCascadeRulesStub($file);
+        $this->setupFilterRulesStub($file);
         $this->validatorStub($file);
+        $this->prepareStub($file);
+        $this->viewStub($part);
 
         return $file;
     }
 
     protected function defaultStub($file)
     {
-        /*$tags = array(
-            array(
-                'name'        => 'return',
-                'description' => 'void'
-            ),
-        );*/
-
         $docblock = new DocBlockGenerator('Инициализация значений по-умолчанию при добавлении записей
 
 Данные по-умолчанию накладываются только при добавлении данных.
@@ -102,6 +103,10 @@ EOS
 У фильтрации нет разделения на фильры при добавлении и фильтры при обновлении
 Фильтры едины для поля. Если нужны связки фильтров, то лучше это делать
 за пределами модели и не усложнять логику :)
+
+Для добавления фильтра к полю используется @method self::addFilterRule
+Если нужно удалить или изменить правила фильтрации, то этих методов пока нет,
+попросите меня их добавить: meniam@gmail.com
 ');
 
         $method = new MethodGenerator();
@@ -111,9 +116,147 @@ EOS
         $method->setDocBlock($docblock);
 
         $method->setBody(<<<EOS
-// \$this->filterRules['field'][] = Filter::getFilterInstance('App\Filter\Id');
+// \$this->addFilterRule('field', Filter::getFilterInstance('App\Filter\Id'));
+// \$this->addFilterRule('field', Filter::getFilterInstance('App\Filter\Null'));
 EOS
         );
+
+        $file->getClass()->addMethodFromGenerator($method);
+    }
+
+
+    protected function validatorStub($file)
+    {
+        $tags = array(
+            array(
+                'name'        => 'param',
+                'description' => 'boolean $required true - при добавлении, в остальных случаях false'
+            ),
+            array(
+                'name'        => 'return',
+                'description' => 'void'
+            ),
+        );
+
+        $docblock = new DocBlockGenerator('Инициализация правил валидации
+
+Третий параметр у addValidatorRule это обязателен ли этот валидатор
+при добавлении данных в базу.
+');
+        $docblock->setTags($tags);
+
+        $p = new \Zend\Code\Generator\ParameterGenerator('required');
+        $p->setDefaultValue(true);
+        $params[] = $p;
+
+        $method = new MethodGenerator();
+        $method->setName('setupValidatorRules');
+        $method->setVisibility(AbstractMemberGenerator::VISIBILITY_PROTECTED);
+        $method->setFinal(false);
+        $method->setParameters($params);
+        $method->setDocBlock($docblock);
+
+        $method->setBody(<<<EOS
+// \$this->addValidatorRule('field', Validator::getValidatorInstance('Zend\Filter\Int'), true or false);
+EOS
+        );
+
+        $file->getClass()->addMethodFromGenerator($method);
+    }
+
+
+    protected function prepareStub(\Zend\Code\Generator\FileGenerator $file)
+    {
+        $p = new \Zend\Code\Generator\ParameterGenerator('data');
+        $p->setType('array');
+        $p->setDefaultValue(null);
+        $params[] = $p;
+
+        $p = new \Zend\Code\Generator\ParameterGenerator('cond');
+        $p->setType('\Model\Cond\AbstractCond');
+        $p->setDefaultValue(null);
+        $params[] = $p;
+
+        $docblock = new DocBlockGenerator('Хук вызываемый перед обработкой данных при выборках
+
+        ОСТОРОЖНО! Данные будут обрабатываться при каждой выборке!
+
+        ');
+
+        $method = new MethodGenerator();
+        $method->setName('beforePrepare');
+        $method->setVisibility(AbstractMemberGenerator::VISIBILITY_PROTECTED);
+        $method->setFinal(false);
+        $method->setDocBlock($docblock);
+        $method->setParameters($params);
+
+        $method->setBody(<<<EOS
+return \$data;
+EOS
+        );
+
+        $file->getClass()->addMethodFromGenerator($method);
+
+        $docblock = new DocBlockGenerator('Хук вызываемый после обработки данных при выборках
+
+        ОСТОРОЖНО! Данные будут обрабатываться при каждой выборке!
+
+        ');
+
+        $method = new MethodGenerator();
+        $method->setName('afterPrepare');
+        $method->setVisibility(AbstractMemberGenerator::VISIBILITY_PROTECTED);
+        $method->setFinal(false);
+        $method->setDocBlock($docblock);
+        $method->setParameters($params);
+        $method->setBody(<<<EOS
+return \$data;
+EOS
+        );
+
+
+        $file->getClass()->addMethodFromGenerator($method);
+
+
+        $docblock = new DocBlockGenerator('Хук вызываемый перед обработкой данных при добавлении или изменении
+
+Подобным образом работают следующие методы:
+ - beforePrepareOnAdd - выполняется только перед добавлением
+ - beforePrepareOnUpdate - выполняется только перед обновлением данных
+');
+
+        $method = new MethodGenerator();
+        $method->setName('beforePrepareOnAddOrUpdate');
+        $method->setVisibility(AbstractMemberGenerator::VISIBILITY_PROTECTED);
+        $method->setFinal(false);
+        $method->setDocBlock($docblock);
+        $method->setParameters($params);
+
+        $method->setBody(<<<EOS
+// \$data['modify_date'] = date('Y-m-d H:i:s');
+//
+// if (array_key_exists('phrase', \$data)) {
+//     \$data['word_count'] = count(explode(' ', \$data['phrase']));
+// };
+return \$data;
+EOS
+        );
+
+        $file->getClass()->addMethodFromGenerator($method);
+
+        $docblock = new DocBlockGenerator('Хук вызываемый после обработки данных при добавлении или изменении
+
+Подобным образом работают следующие методы:
+ - afterPrepareOnAdd - выполняется после обработки данных только при добавлении
+ - afterPrepareOnUpdate - выполняется после обработки данных только при обновлении
+        ');
+
+        $method = new MethodGenerator();
+        $method->setName('afterPrepareOnAddOrUpdate');
+        $method->setVisibility(AbstractMemberGenerator::VISIBILITY_PROTECTED);
+        $method->setFinal(false);
+        $method->setDocBlock($docblock);
+        $method->setParameters($params);
 
         $file->getClass()->addMethodFromGenerator($method);
     }
@@ -133,11 +276,13 @@ EOS
 // Эти фильтры работают только при добавлении, для фильтров на update используйте updateFilterCascade
 // Если имя прийдет пустое попробовать взять по-очереди из h1, title, meta_title
 
-// \$this->addFilterCascadeRules['name'] => array('h1', 'title', 'meta_title');
-// \$this->addFilterCascadeRules['h1'] => array('name', 'title', 'meta_title');
-// \$this->addFilterCascadeRules['title'] => array('name', 'h1', 'title');
-// \$this->addFilterCascadeRules['meta_title'] => array('name', 'h1', 'meta_title');
-// \$this->addFilterCascadeRules['slug'] => array('name', 'h1', 'title', 'meta_title');
+// Третье значение отвечает за каскад при добавлении: true - использовать при обновлении
+
+// \$this->addFilterCascadeParent('name', 'h1', true);
+// \$this->addFilterCascadeParent('name', 'title', true);
+// \$this->addFilterCascadeParent('name', 'meta_title', true);
+
+// \$this->addFilterCascadeParent('h1', array('name', 'title', 'meta_title'), true);
 
 EOS
         );
@@ -145,33 +290,100 @@ EOS
         $file->getClass()->addMethodFromGenerator($method);
     }
 
-    protected function validatorStub($file)
+    protected function viewStub($part)
     {
-        $tags = array(
-            array(
-                'name'        => 'return',
-                'description' => 'void'
-            ),
-        );
+        /**
+         * @var $part \Model\Generator\Part\Model
+         */
 
-        $docblock = new DocBlockGenerator('Инициализация правил валидации при добавлении');
-        $docblock->setTags($tags);
+        /**
+         * @var $file \Zend\Code\Generator\FileGenerator
+         */
+        $file = $part->getFile();
+        $table = $part->getTable();
+        $tableNameAsCamelCase = $table->getNameAsCamelCase();
+        $entity = $tableNameAsCamelCase . 'Entity';
+        $collection = $tableNameAsCamelCase . 'Collection';
+
+
+        $p = new \Zend\Code\Generator\ParameterGenerator('cond');
+        $p->setType('Cond');
+        $p->setDefaultValue(null);
+        $params[] = $p;
+
+        $docblock = new DocBlockGenerator('Получить объект условий в виде представления \'Extended\'
+
+$param Cond $cond
+$return Cond
+        ');
 
         $method = new MethodGenerator();
-        $method->setName('setupValidatorRulesOnAdd');
-        $method->setVisibility(AbstractMemberGenerator::VISIBILITY_PROTECTED);
+        $method->setName('getCondAsExtendedView');
+        $method->setVisibility(AbstractMemberGenerator::VISIBILITY_PUBLIC);
         $method->setFinal(false);
         $method->setDocBlock($docblock);
+        $method->setParameters($params);
 
         $method->setBody(<<<EOS
-/**
- * В этом методе устанавливаются валидаторы,
-   на поля при добавлении
- */
+\$cond = \$this->prepareCond(\$cond);
+\$cond->where(array('status' => 'active'));
+return \$cond;
 EOS
         );
 
         $file->getClass()->addMethodFromGenerator($method);
-    }
+
+        $p = new \Zend\Code\Generator\ParameterGenerator('cond');
+        $p->setType('Cond');
+        $p->setDefaultValue(null);
+        $params[] = $p;
+
+        $docblock = new DocBlockGenerator('Получить элемент в виде представления \'Extended\'
+
+@param Cond $cond
+@return ' . $entity);
+
+        $method = new MethodGenerator();
+        $method->setName('getAsExtendedView');
+        $method->setVisibility(AbstractMemberGenerator::VISIBILITY_PUBLIC);
+        $method->setFinal(false);
+        $method->setDocBlock($docblock);
+        $method->setParameters($params);
+
+        $method->setBody(<<<EOS
+\$cond = \$this->getCondAsExtendedView(\$cond);
+return \$this->get(\$cond);
+EOS
+        );
+
+        $file->getClass()->addMethodFromGenerator($method);
+
+
+        $p = new \Zend\Code\Generator\ParameterGenerator('cond');
+        $p->setType('Cond');
+        $p->setDefaultValue(null);
+        $params[] = $p;
+
+        $docblock = new DocBlockGenerator('Получить коллекцию в виде представления \'Extended\'
+
+@param Cond $cond
+@return ' . $collection);
+
+        $method = new MethodGenerator();
+        $method->setName('getCollectionAsExtendedView');
+        $method->setVisibility(AbstractMemberGenerator::VISIBILITY_PUBLIC);
+        $method->setFinal(false);
+        $method->setDocBlock($docblock);
+        $method->setParameters($params);
+
+        $method->setBody(<<<EOS
+\$cond = \$this->getCondAsExtendedView(\$cond);
+return \$this->getCollection(\$cond);
+EOS
+        );
+
+        $file->getClass()->addMethodFromGenerator($method);
+
+   }
 
 }

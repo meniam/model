@@ -34,33 +34,28 @@ class InitFilterRules extends AbstractModel
 
         $columnCollection = $part->getTable()->getColumn();
 
-        $templates = array();
+        $template = '';
         /** @var $column Column */
         foreach ($columnCollection as $column) {
             $name = $column->getName();
-            $template = "    '{$name}' => array(\n";
 
             $filterArray = $column->getFilter();
 
             foreach ($filterArray as $filter) {
                 if (empty($filter['params'])) {
-                    $template .= "          Filter::getFilterInstance('{$filter['name']}'),\n";
+                    $template .= "\$this->addFilterRule('$name', Filter::getFilterInstance('{$filter['name']}'));\n";
                 } else {
                     $filterParams = $this->varExportMin($filter['params'], true);
-                    $template .= "          Filter::getFilterInstance('{$filter['name']}', {$filterParams}),\n";
+                    $template .= "\$this->addFilterRule('$name', Filter::getFilterInstance('{$filter['name']}', {$filterParams}));\n";
                 }
             }
 
             if ($column->isNullable()) {
-                $template .= "        Filter::getFilterInstance('\\Zend\\Filter\\Null'),\n";
+                $template .= "\$this->addFilterRule('$name', Filter::getFilterInstance('\\Zend\\Filter\\Null'));\n";
             }
-
-            $template = rtrim($template, "\r\n, ") . "\n    ),";
-            $templates[] = $template;
         }
 
-        $template = rtrim(implode("\n", $templates), "\r\n, ");
-        $tableNameAsCamelCase = $part->getTable()->getNameAsCamelCase();
+        //$tableNameAsCamelCase = $part->getTable()->getNameAsCamelCase();
 
         $tags = array(
             array(
@@ -79,17 +74,13 @@ class InitFilterRules extends AbstractModel
         $method->setDocBlock($docblock);
 
         $method->setBody(<<<EOS
-if (\$this->filterRules) {
-    return \$this->filterRules;
+if (\$this->isFilterRules()) {
+    return \$this->getFilterRules();
 }
 
-\$this->filterRules = array(
 {$template}
-);
-
 \$this->setupFilterRules();
-
-return \$this->filterRules;
+return \$this->getFilterRules();
 EOS
         );
 

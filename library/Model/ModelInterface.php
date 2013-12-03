@@ -11,6 +11,7 @@ interface ModelInterface
     public function filterOnAdd($data, Cond $cond = null);
     public function filterOnUpdate($data, Cond $cond = null);
 
-    public function validateOnUpdate(array $data, Cond $cond = null);
+    public function validateOnAdd(array $data);
+    public function validateOnUpdate(array $data);
 
 }

@@ -43,13 +43,14 @@ class Getter extends AbstractModel
         $table = $part->getTable();
         $tableName = $table->getName();
         $tableNameAsCamelCase = $table->getNameAsCamelCase();
+        $file->setUse('Model\\Cond\\' . $tableNameAsCamelCase . 'Cond', 'Cond');
+
         $indexList = $part->getTable()->getIndex();
         /*$methods = $this->generateMethodsByLink($part);
 
         foreach ($methods as $method) {
             $file->getClass()->addMethodFromGenerator($method);
         }*/
-        $file->setUse('Model\\Cond\\' . $tableNameAsCamelCase . 'Cond', 'Cond');
 
         $this->generateMethodsByRelated($part);
         $this->generateMethodsByIndex($part);
