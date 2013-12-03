@@ -140,21 +140,6 @@ class Result
         return (array)$this->childs;
     }
 
-
-
-/*    public function getMessages()
-    {
-        $this->getValidator()->isValid();
-        $errors = $this->getValidator()->getMessages();
-
-        foreach ($this->childs as &$childResult) {
-            $errors = array_merge($errors, $childResult->getMessages());
-        }
-
-        return $errors;
-    }
-*/
-
     /**
      * @param        $message
      * @param string $code

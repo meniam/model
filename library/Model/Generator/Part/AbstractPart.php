@@ -17,7 +17,7 @@ use \Model\Generator\Log;
 abstract class AbstractPart implements PartInterface
 {
 	const PART_MODEL                 = 'Model\Generator\Part\Plugin\Model\ModelInterface';
-    const PART_FRONT_MODEL           = 'Model\Generator\Part\Plugin\Front\Model\FrontModelInterface';
+    const PART_FRONT_MODEL           = 'Model\Generator\Part\Plugin\FrontModel\FrontModelInterface';
 
 	const PART_ENTITY                = 'Model\Generator\Part\Plugin\Entity\EntityInterface';
 	const PART_FRONT_ENTITY          = 'Model\Generator\Part\Plugin\FrontEntity\FrontEntityInterface';

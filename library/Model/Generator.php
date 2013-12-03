@@ -256,6 +256,8 @@ class Generator
         AbstractPart::addPlugin(new \Model\Generator\Part\Plugin\Model\GetInstance(), \Model\Generator\Part\AbstractPart::PART_MODEL);
         AbstractPart::addPlugin(new \Model\Generator\Part\Plugin\Model\Link(), \Model\Generator\Part\AbstractPart::PART_MODEL);
 
+        AbstractPart::addPlugin(new \Model\Generator\Part\Plugin\FrontModel\Stubs(), \Model\Generator\Part\AbstractPart::PART_FRONT_MODEL);
+
 
         /**
          * Generate Alias cond

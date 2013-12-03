@@ -52,6 +52,12 @@ class AbstractModel extends \Model\AbstractModel
      */
     protected $db;
 
+    /**
+     * @param      $data
+     * @param Cond $cond
+     *
+     * @return $this|Result
+     */
     public function import($data, Cond $cond = null)
     {
         /** @var $cond \Model\Cond\AbstractCond */
@@ -198,7 +204,7 @@ class AbstractModel extends \Model\AbstractModel
                         // Удаляем связи перед обновлением
                         $unlinkMethod = $rel['unlink_method'];
 
-                        /** @var $_result Result */
+                        /** @var $unlinkResult Result */
                         $unlinkResult = $this->$unlinkMethod($id);
 
                         if (!$unlinkResult->isValid()) {
@@ -665,7 +671,9 @@ class AbstractModel extends \Model\AbstractModel
         return $result;
     }
 
-
+    /**
+     * @param $dbName
+     */
     protected function setDbAdapterName($dbName)
     {
         $this->dbAdapterName = (string)$dbName;

@@ -34,15 +34,14 @@ class Adapter extends AbstractModel
                 $id = $this->insert($this->getName(), $data);
 
                 if (!$id) {
-                    $result->addChild('general', $this->getGeneralErrorResult('Add ' . $this->getName() . ' failed', 'add_product_failed'));
+                    $result->addError('Add ' . $this->getName() . ' failed', 'add_product_failed');
                 }
             } catch (Exception $e) {
-                $result->addChild('exception',  $this->getGeneralErrorResult($e->getMessage()));
+                $result->addError($e->getMessage(), $e->getCode());
             }
         }
 
-        return $result->setResult($id)
-               ->setValidator($validator);
+        return $result->setResult($id);
     }
 
     /**

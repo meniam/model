@@ -113,7 +113,7 @@ class AbstractModel extends Singleton implements ModelInterface
      * @see https://github.com/esteit/model/wiki/%D0%94%D0%BE%D0%B1%D0%B0%D0%B2%D0%BB%D0%B5%D0%BD%D0%B8%D0%B5-%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85
      * @var array
      */
-    protected $defaultsRules = array();
+    private $defaultsRules = array();
 
     /**
      * Каскад значений для фильтра при добавлении
@@ -778,7 +778,7 @@ class AbstractModel extends Singleton implements ModelInterface
      * @param bool $required указывает, что нужно проверять отсутствующие поля или нет
      * @return array
      */
-    public function getValidatorRules($required = false)
+    protected function getValidatorRules($required = false)
     {
         $r = $required ? 'required' : 'not_required';
 
@@ -798,7 +798,7 @@ class AbstractModel extends Singleton implements ModelInterface
      * @param bool $required
      * @return void
      */
-    public function initValidatorRules($required = false)
+    protected function initValidatorRules($required = false)
     {
         $this->setupValidatorRules($required);
     }
@@ -806,7 +806,7 @@ class AbstractModel extends Singleton implements ModelInterface
     /**
      * @param bool $required
      */
-    public function setupValidatorRules($required = false)
+    protected function setupValidatorRules($required = false)
     {
     }
 
@@ -815,7 +815,7 @@ class AbstractModel extends Singleton implements ModelInterface
      *
      * @return array
      */
-    public function getFilterRules()
+    protected function getFilterRules()
     {
         if ($this->filterRules) {
             return $this->filterRules;
@@ -830,7 +830,7 @@ class AbstractModel extends Singleton implements ModelInterface
     /**
      * Инициализация правил фильтрации
      */
-    public function initFilterRules()
+    protected function initFilterRules()
     {
         $this->setupFilterRules();
     }
@@ -838,8 +838,40 @@ class AbstractModel extends Singleton implements ModelInterface
     /**
      * Настройка правил фильтрации пользователем
      */
-    public function setupFilterRules()
+    protected function setupFilterRules()
     {
+    }
+
+
+    /**
+     * Получить правила каскада при добавлении
+     *
+     * @return array
+     */
+    protected  function getFilterCascadeRulesOnAdd()
+    {
+        if (!$this->filterCascadeRulesOnAdd) {
+            $this->setupFilterCascadeRulesOnAdd();
+        }
+
+        return $this->filterCascadeRulesOnAdd;
+    }
+
+    protected function setupFilterCascadeRulesOnAdd()
+    {}
+
+    /**
+     * Получить правила каскада при добавлении
+     *
+     * @return array
+     */
+    protected function getFilterCascadeRulesOnUpdate()
+    {
+        if (!$this->filterCascadeRulesOnUpdate) {
+            $this->setupFilterCascadeRules();
+        }
+
+        return $this->filterCascadeRulesOnAdd;
     }
 
     /**
@@ -847,7 +879,7 @@ class AbstractModel extends Singleton implements ModelInterface
      *
      * @return array
      */
-    public function getDefaultsRules()
+    protected function getDefaultsRules()
     {
         if (!$this->defaultsRules) {
             $this->initDefaultsRules();
@@ -857,34 +889,23 @@ class AbstractModel extends Singleton implements ModelInterface
     }
 
     /**
-     * Получить правила каскада при добавлении
-     *
-     * @return array
+     * @return bool
      */
-    public function getFilterCascadeRulesOnAdd()
+    protected function isDefaultRules()
     {
-        if (!$this->filterCascadeRulesOnAdd) {
-            $this->setupFilterCascadeRulesOnAdd();
-        }
-
-        return $this->filterCascadeRulesOnAdd;
+        return (bool)$this->defaultsRules;
     }
 
-    public function setupFilterCascadeRulesOnAdd()
-    {}
-
     /**
-     * Получить правила каскада при добавлении
      *
-     * @return array
+     * @param $field
+     * @param $value
+     * @return $this
      */
-    public function getFilterCascadeRulesOnUpdate()
+    public function setDefaultRule($field, $value)
     {
-        if (!$this->filterCascadeRulesOnUpdate) {
-            $this->setupFilterCascadeRulesOnUpdate();
-        }
-
-        return $this->filterCascadeRulesOnAdd;
+        $this->defaultsRules[(string)$field] = (string) $value;
+        return $this;
     }
 
     /**
@@ -960,7 +981,7 @@ class AbstractModel extends Singleton implements ModelInterface
      * @param array $cascadeValues массив каскада
      * @return array
      */
-    public static function applyFilterCascadeRules($inputData, $cascadeValues)
+    protected static function applyFilterCascadeRules($inputData, $cascadeValues)
     {
         if (!is_array($inputData) || !is_array($cascadeValues) || empty($inputData) || empty($cascadeValues)) {
             return $inputData;
@@ -996,40 +1017,10 @@ class AbstractModel extends Singleton implements ModelInterface
      * Записывать нужно в переменные $this->addFilterCascadeRules
      * и $this->updateFilterCascadeRules
      */
-    public function setupFilterCascadeRules()
+    protected function setupFilterCascadeRules()
     {
     }
 
-    /**
-     * Получить результат General ошибки
-     *
-     * @param string $message
-     * @param string $key
-     * @return Result
-     */
-    public function getGeneralErrorResult($message = null, $key = null)
-    {
-        $key = $key ? : 'general';
-
-        // Настраиваем валидатор
-        $vd = Validator::getValidatorInstance('\App\Validator\GeneralError');
-
-        if ($message) {
-            $vd->setMessage($message, $key);
-        }
-
-        // Настраиваем InputFilter и передаем ему поле general и валидатор
-        $validatorSet = ValidatorSet::create(array(
-            $key => array(
-                'name'       => $key,
-                'validators' => array($vd)
-            )
-        ));
-
-        $validatorSet->setData(array($key => true))->isValid();
-
-        return new Result(null, $validatorSet);
-    }
 
     /**
      * Return array of ids from mixed data
