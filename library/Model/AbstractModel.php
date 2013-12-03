@@ -916,7 +916,7 @@ class AbstractModel extends Singleton implements ModelInterface
     protected  function getFilterCascadeRulesOnUpdate()
     {
         if (!$this->filterCascadeRulesOnUpdate) {
-            $this->setupFilterCascadeRules();
+            $this->setupFilterCascadeRulesOnUpdate();
         }
 
         return $this->filterCascadeRulesOnUpdate;
@@ -1031,11 +1031,7 @@ class AbstractModel extends Singleton implements ModelInterface
                 $default = $v;
             }
 
-            if (array_key_exists($field, $result)) {
-                if ($replace || (!$replace && !array_key_exists($field, $result))) {
-                    $result[$field] = $result[$field];
-                }
-            } else if (isset($default)) {
+            if (isset($default) && (!isset($result[$field]) || $replace)) {
                 $result[$field] = $default;
             }
         }
