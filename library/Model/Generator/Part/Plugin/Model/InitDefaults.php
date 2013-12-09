@@ -67,7 +67,9 @@ class InitDefaults extends AbstractModel
             $columnName = $column->getName();
             $defaultValue = $column->getColumnDefault();
 
-            if ($defaultValue == 'CURRENT_TIMESTAMP') {
+            if (substr($columnName, -5) == '_date') {
+                $defaults .= "\$this->setDefaultRule('" . $columnName ."', date('Y-m-d H:i:s'));\n";
+            } elseif ($defaultValue == 'CURRENT_TIMESTAMP') {
                 $defaults .= "\$this->setDefaultRule('" . $columnName ."', date('Y-m-d H:i:s'));\n";
             } elseif (!empty($defaultValue)) {
                 $defaults .= '$this->setDefaultRule(\'' . $columnName . '\', \'' . (string)$defaultValue . '\');' . "\n";

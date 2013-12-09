@@ -4,4 +4,4 @@
 
 #phpunit --group Model --configuration phpunit.xml
 /usr/local/app/bin/phpunit --configuration phpunit.xml
-#/usr/local/app/bin/phpunit --group run --configuration phpunit.xml
+#/usr/local/app/bin/phpunit --group itrun --configuration phpunit.xml

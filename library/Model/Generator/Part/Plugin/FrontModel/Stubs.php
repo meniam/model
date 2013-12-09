@@ -38,6 +38,7 @@ class Stubs extends AbstractFrontModel
         $file = $part->getFile();
         $table = $part->getTable();
         $tableNameAsCamelCase = $table->getNameAsCamelCase();
+
         $file->setUse('Model\\Cond\\' . $tableNameAsCamelCase . 'Cond', 'Cond');
         $file->setUse('Model\\Entity\\' . $tableNameAsCamelCase . 'Entity');
         $file->setUse('Model\\Collection\\' . $tableNameAsCamelCase . 'Collection');

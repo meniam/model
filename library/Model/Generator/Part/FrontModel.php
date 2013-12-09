@@ -17,10 +17,11 @@ class FrontModel extends AbstractPart
 
         $file = new \Zend\Code\Generator\FileGenerator();
         $this->setFile($file);
+        $file->setNamespace('Model');
 
         $class = new \Zend\Code\Generator\ClassGenerator();
         $file->setClass($class);
-        $class->setNamespaceName('Model');
+        //$class->setNamespaceName('Model');
 
         $this->_runPlugins(self::PART_FRONT_MODEL, self::RUNTIME_PRE);
 

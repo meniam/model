@@ -73,8 +73,8 @@ class InitValidatorRules extends AbstractModel
 
             foreach ($validatorArray as $validator) {
                 $validatorParams = $this->varExportMin($validator['params'], true);
-                if ($validatorParams && $validatorParams != 'NULL') {
 
+                if ($validatorParams && $validatorParams != 'NULL') {
                     $template .= "\$this->addValidatorRule('{$name}', Validator::getValidatorInstance('{$validator['name']}', {$validatorParams}), " . ($requiredFlag ? 'true' : 'false') . ");\n";
                 } else {
                     $template .= "\$this->addValidatorRule('{$name}', Validator::getValidatorInstance('{$validator['name']}'), " . ($requiredFlag ? 'true' : 'false') . ");\n";

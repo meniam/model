@@ -721,10 +721,14 @@ class Column extends ArrayObject
                 $maxLen = $this->getCharacterMaximumLength();
 
                 if (substr($this->getName(), -5) == '_hash') {
-                    $this->addValidator('\Zend\Validator\StringLength', array('min' => $maxLen, 'max' => $maxLen))
+                    $this->addValidator('\Zend\Validator\StringLength',
+                                    array('min' => $maxLen,
+                                          'max' => $maxLen))
                          ->addValidator('\Zend\Validator\Hex');
                 } elseif ($maxLen > 0) {
-                    $this->addValidator('\Zend\Validator\StringLength', array('min' => 0, 'max' => $maxLen));
+                    $this->addValidator('\Zend\Validator\StringLength',
+                            array('min' => 0,
+                                  'max' => $maxLen));
                 }
                 break;
             case 'enum':

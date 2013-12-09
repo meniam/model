@@ -20,7 +20,7 @@ abstract class Singleton
 	/**
 	 * Get instance of class
      * 
-     * @return AbstractModel
+     * @return $this
 	 */
 	public static function getInstance()
 	{

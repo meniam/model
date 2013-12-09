@@ -26,13 +26,19 @@
         "lib-libxml"    : "*",
         "lib-iconv"     : "~1.14",
         "lib-pcre"      : "*",
-        "esteit/app"    : "~2.0.0",
+        "meniam/app"    : "1.0.*",
 
-        "doctrine/annotations": ">=1.0",
-        "ircmaxell/random-lib": "dev-master",
-        "ircmaxell/security-lib": "dev-master",
+        "doctrine/annotations"   : ">=1.0",
+        "ircmaxell/random-lib"   : "dev-master",
+        "ircmaxell/security-lib" : "dev-master",
 
         "phpunit/phpunit": "3.7.22",
+        "phpunit/php-invoker" : "1.1.*",
+        "ocramius/proxy-manager" : "*",
+        "ocramius/generated-hydrator" : "*",
+        "zendframework/zendpdf" : "2.*",
+        "zendframework/zendservice-recaptcha" : "*",
+
         "phpunit/php-token-stream": "1.2.*@dev",
         "phpunit/php-timer": "1.0.5",
         "zendframework/zendframework": "2.*"
@@ -55,21 +61,21 @@
         }
     },
 
-    "repositories":[
+    "repositories": [
         {
             "type":"package",
             "package":{
-                "name":"esteit/app",
-                "version":"v2.0.0",
+                "name":"meniam/app",
+                "version":"v1.0.0",
                 "source":{
                     "type":"git",
-                    "url":"git@github.com:esteit/app.git",
-                    "reference":"v2"
+                    "url":"git@github.com:meniam/app.git",
+                    "reference":"master"
                 },
 
                 "autoload": {
                     "psr-0": {
-                        "App": "/library/"
+                        "App": "library/"
                     }
                 }
             }
