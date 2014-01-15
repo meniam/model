@@ -45,6 +45,9 @@ class AbstractCollection extends \ArrayIterator
             $this->setupDefaultEntityType();
 
             if (!empty($data)) {
+                if ($entityType === null && isset($this->_defaultEntityType) && !empty($this->_defaultEntityType)) {
+                    $entityType = $this->_defaultEntityType;
+                }
                 $array = $this->loadFromArray($data, $entityType);
             } else {
                 $array = array();
