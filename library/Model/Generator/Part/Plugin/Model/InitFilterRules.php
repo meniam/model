@@ -26,11 +26,11 @@ class InitFilterRules extends AbstractModel
          */
 
         /**
-         * @var $file \Zend\Code\Generator\FileGenerator
+         * @var $file \Model\Code\Generator\FileGenerator
          */
         $file = $part->getFile();
 
-        $file->setUse('App\\Filter\\Filter');
+        $file->addUse('App\\Filter\\Filter');
 
         $columnCollection = $part->getTable()->getColumn();
 

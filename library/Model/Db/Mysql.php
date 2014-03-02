@@ -2,6 +2,7 @@
 
 namespace Model\Db;
 
+use Model\Cond\AbstractCond;
 use Model\Db\Exception\ErrorException;
 use \PDO;
 
@@ -268,6 +269,11 @@ class Mysql
      */
     public function insert($table, array $bind = array())
     {
+        $start = 0;
+        if ($this->profilerEnable) {
+            $start = microtime(true);
+        }
+
         $this->connect();
 
         $stmt = $this->prepareInsert($table, $bind);
@@ -276,6 +282,12 @@ class Mysql
 
             /** @var $stmt \PDOStatement */
             $result = $stmt->execute($bind);
+
+            if ($this->profilerEnable) {
+                $this->profiler[] = array(
+                    'query' => $this->buildSql($stmt->queryString, $bind),
+                    'runtime' => (microtime(true) - $start));
+            }
 
             if ($result) {
                 return isset($bind['id']) ? $bind['id'] : $this->pdo->lastInsertId();

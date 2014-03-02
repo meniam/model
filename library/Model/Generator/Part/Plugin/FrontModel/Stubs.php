@@ -33,16 +33,16 @@ class Stubs extends AbstractFrontModel
          */
 
         /**
-         * @var $file \Zend\Code\Generator\FileGenerator
+         * @var $file \Model\Code\Generator\FileGenerator
          */
         $file = $part->getFile();
         $table = $part->getTable();
         $tableNameAsCamelCase = $table->getNameAsCamelCase();
 
-        $file->setUse('Model\\Cond\\' . $tableNameAsCamelCase . 'Cond', 'Cond');
-        $file->setUse('Model\\Entity\\' . $tableNameAsCamelCase . 'Entity');
-        $file->setUse('Model\\Collection\\' . $tableNameAsCamelCase . 'Collection');
-        $file->setUse('Model\\Result\\Result');
+        $file->addUse('Model\\Cond\\' . $tableNameAsCamelCase . 'Cond', 'Cond');
+        $file->addUse('Model\\Entity\\' . $tableNameAsCamelCase . 'Entity');
+        $file->addUse('Model\\Collection\\' . $tableNameAsCamelCase . 'Collection');
+        $file->addUse('Model\\Result\\Result');
 
         $this->defaultStub($file);
         $this->setupCascadeRulesStub($file);
@@ -166,7 +166,7 @@ EOS
     }
 
 
-    protected function prepareStub(\Zend\Code\Generator\FileGenerator $file)
+    protected function prepareStub(\Model\Code\Generator\FileGenerator $file)
     {
         $p = new \Zend\Code\Generator\ParameterGenerator('data');
         $p->setType('array');
@@ -298,7 +298,7 @@ EOS
          */
 
         /**
-         * @var $file \Zend\Code\Generator\FileGenerator
+         * @var $file \Model\Code\Generator\FileGenerator
          */
         $file = $part->getFile();
         $table = $part->getTable();

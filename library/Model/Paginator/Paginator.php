@@ -19,7 +19,7 @@ class Paginator implements \Countable
 
     private $pageRange;
 
-    private $defaultPageRange = 10;
+    private $defaultPageRange = 11;
 
     protected static $defaultScrollingStyle = 'Sliding';
 
@@ -34,13 +34,18 @@ class Paginator implements \Countable
         if (!$adapter) {
             $adapter = new \Model\Paginator\Adapter\Null();
         }
-
         $this->adapter = $adapter;
     }
 
+    /**
+     * @param int $itemCountPerPage
+     *
+     * @return $this
+     */
     public function setItemCountPerPage($itemCountPerPage = 10)
     {
         $this->itemCountPerPage = $itemCountPerPage;
+        return $this;
     }
 
     public function getItemCountPerPage()
@@ -88,6 +93,17 @@ class Paginator implements \Countable
     }
 
     /**
+     * @param int $totalItemCount
+     *
+     * @return $this
+     */
+    public function setTotalItemCount($totalItemCount = 0)
+    {
+        $this->totalItemCount = (int)$totalItemCount;
+        return $this;
+    }
+
+    /**
      * @return integer
      */
     public function getTotalItemCount()
@@ -99,6 +115,9 @@ class Paginator implements \Countable
         return $this->totalItemCount;
     }
 
+    /**
+     * @return \StdClass
+     */
     public function getPages()
     {
         if (!$this->pages) {

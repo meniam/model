@@ -169,7 +169,6 @@ class AbstractModel extends \Model\AbstractModel
                 $result->addErrorList($relatedDataUpdateResult->getErrorList());
             }
         }
-
         // Установить значение результата
         $result->setResult((string) $id);
 
@@ -191,7 +190,6 @@ class AbstractModel extends \Model\AbstractModel
 
                 if (isset($data['_' . $foreignEntityName])) {
                     $innerData = $this->prepareData($data['_' . $foreignEntityName]);
-
 
                     if (!isset($rel['link_table']) && $rel['local_column'] == 'id' && is_array($innerData) && $id) {
                         $innerData[$foreignColumnName] = $id;
@@ -395,6 +393,20 @@ class AbstractModel extends \Model\AbstractModel
     }
 
     /**
+     *
+     * @param  mixed $id
+     * @param Cond $cond
+     * @return array|mixed|null|string
+     */
+    public function getCollectionById($id, Cond $cond = null)
+    {
+        $cond = $this->prepareCond($cond);
+        $ids = $this->getIdsFromMixed($id);
+
+        return $this->getCollection($cond->where(array('`' . $this->getRawName() . '`.`id`' => $ids)));
+    }
+
+    /**
      * @param      $data
      * @param Cond $cond
      * @return array|mixed|null|string
@@ -405,6 +417,21 @@ class AbstractModel extends \Model\AbstractModel
         $data = $this->prepareData($data);
 
         $cond->from($this->getRawName());
+
+        $entityList = array();
+        $values = array();
+        foreach ($data as $k => $v) {
+            $entityList[] = $this->_underscoreToCamelCaseFilter(preg_replace('#_id$#si', '', $k));
+            $values[] = $v;
+        }
+        $values[] = $cond;
+
+        $columnAsComelCase = 'getBy' . implode('And', $entityList);
+
+        if (method_exists($this, $columnAsComelCase)) {
+            return call_user_func_array(array($this, $columnAsComelCase), $values);
+        }
+
 
         foreach ($data as $k => $v) {
             $cond->where(array('`' . $this->getRawName() . '`.`' . $k . '`' => $v));
@@ -498,6 +525,20 @@ class AbstractModel extends \Model\AbstractModel
         $cond = $this->prepareCond($cond);
 
         $cond->type($cond->getType());
+
+        return $this->execute($cond, $cond->getEntityClassName());
+    }
+
+    /**
+     * @param Cond $cond
+     *
+     * @return array|mixed|null|string
+     */
+    public function getCollection(Cond $cond = null)
+    {
+        $cond = $this->prepareCond($cond);
+
+        $cond->type(Cond::FETCH_ALL);
 
         return $this->execute($cond, $cond->getEntityClassName());
     }
@@ -795,7 +836,7 @@ class AbstractModel extends \Model\AbstractModel
      */
     public function insert($table, array $data = array())
     {
-        return $this->getDb()->insert($table, $data, true);
+        return $this->getDb()->insert($table, $data);
     }
 
     /**

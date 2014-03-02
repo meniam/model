@@ -29,7 +29,7 @@ class DecoratorMethod extends AbstractEntity
          */
 
         /**
-         * @var $file \Zend\Code\Generator\FileGenerator
+         * @var $file \Model\Code\Generator\FileGenerator
          */
         $file = $part->getFile();
 
@@ -53,10 +53,14 @@ class DecoratorMethod extends AbstractEntity
 
             foreach ($decoratorArray as $decorator) {
                 $methodName = 'get' . $column->getNameAsCamelCase() . 'As' . $decorator['name'] . 'Decorator';
-                $docBlock->setTag(array(
-                    'name' => 'method',
-                    'description' => "{$decorator['name']}Decorator {$methodName}() {$methodName}() Декорируем данные как {$decorator['name']}"
-                ));
+
+                if (class_exists('\\Model\\Entity\\Decorator\\' . "{$decorator['name']}Decorator")) {
+                    $file->addUse('\\Model\\Entity\\Decorator\\' . "{$decorator['name']}Decorator");
+                    $docBlock->setTag(array(
+                        'name' => 'method',
+                        'description' => "{$decorator['name']}Decorator {$methodName}() {$methodName}() Декорируем данные как {$decorator['name']}"
+                    ));
+                }
             }
         }
     }

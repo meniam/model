@@ -2,7 +2,7 @@
 
 namespace Model\Generator\Part;
 
-use \Zend\Code\Generator\FileGenerator;
+use \Model\Code\Generator\FileGenerator;
 use \Model\Generator\Log;
 
 /**

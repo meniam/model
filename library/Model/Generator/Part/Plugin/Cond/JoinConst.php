@@ -4,7 +4,7 @@ namespace Model\Generator\Part\Plugin\Cond;
 use Model\Cluster\Schema\Table;
 use Model\Generator\Part\PartInterface;
 use Model\Schema\Table\Link\AbstractLink;
-use Zend\Code\Generator\FileGenerator;
+use Model\Code\Generator\FileGenerator;
 use Zend\Code\Generator\PropertyGenerator;
 
 class JoinConst extends AbstractCond
@@ -35,7 +35,7 @@ class JoinConst extends AbstractCond
         $table = $part->getTable();
 
         /**
-         * @var $file \Zend\Code\Generator\FileGenerator
+         * @var $file \Model\Code\Generator\FileGenerator
          */
         $file = $part->getFile();
 

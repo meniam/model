@@ -177,15 +177,18 @@ class AbstractModel extends Singleton implements ModelInterface
         $view = null;
         if (count($segments = explode('By', $method, 2)) == 2) {
             list($basePart, $by) = $segments;
-            if (count($segments = explode('As', $method, 2)) == 2) {
-                list($by, $view) = $segments;
+
+            if (count($_segments = explode('As', end($segments), 2)) == 2) {
+                if (strpos('And', end($_segments)) === null) {
+                    list($by, $view) = $method;
+                }
             }
         } else {
             $basePart = $method;
             $by = '';
 
-            if (count($segments = explode('As', $basePart, 2)) == 2) {
-                list($by, $view) = $segments;
+            if (count($__segments = explode('As', $basePart, 2)) == 2) {
+                list($by, $view) = $__segments;
             }
         }
 
@@ -201,7 +204,6 @@ class AbstractModel extends Singleton implements ModelInterface
         } else {
             throw new ErrorException('Unknown __call type: ' . $method);
         }
-
 
         $basePartCount = strlen($basePart) - $shift;
 
@@ -317,7 +319,8 @@ class AbstractModel extends Singleton implements ModelInterface
             foreach ($withParams as $withEntity => $withParam) {
                 $strippedWithEntity = preg_replace('#(Collection|_collection|Count|_count)$#s', '', $withEntity);
                 if (!isset($relationArray[$strippedWithEntity])) {
-                    throw new ErrorException('Unknown relation "' . $strippedWithEntity . '"');
+                    continue;
+                    //throw new ErrorException('Unknown relation "' . $strippedWithEntity . '"');
                 }
 
                 $relation = $relationArray[$strippedWithEntity];

@@ -35,7 +35,7 @@ class Relationdefine extends AbstractModel
          */
 
         /**
-         * @var $file \Zend\Code\Generator\FileGenerator
+         * @var $file \Model\Code\Generator\FileGenerator
          */
         $file = $part->getFile();
         $table = $part->getTable();
@@ -51,6 +51,13 @@ class Relationdefine extends AbstractModel
         $docblock->setTags($tags);
 
         $linkList = $table->getLink();
+
+        /*if ($table->getColumn('parent_id')) {
+            echo $table->getName();
+
+            print_r($linkList);
+            die;
+        }*/
 
         $relation = array();
 

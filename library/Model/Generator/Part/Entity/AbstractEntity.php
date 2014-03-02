@@ -15,7 +15,7 @@ class AbstractEntity extends AbstractPart implements PartInterface
 		Log::info('Generate part entity ' . $table->getName());
         $this->_table = $table;
 
-        $file  = new \Zend\Code\Generator\FileGenerator();
+        $file  = new \Model\Code\Generator\FileGenerator();
         $class = new  \Zend\Code\Generator\ClassGenerator();
         $file->setClass($class);
         $this->setFile($file);

@@ -232,6 +232,7 @@ class Generator
     {
         AbstractPart::addPlugin(new \Model\Generator\Part\Plugin\Cond\JoinConst(), \Model\Generator\Part\AbstractPart::PART_COND);
         AbstractPart::addPlugin(new \Model\Generator\Part\Plugin\Cond\WithConst(), \Model\Generator\Part\AbstractPart::PART_COND);
+        AbstractPart::addPlugin(new \Model\Generator\Part\Plugin\Cond\Tree(), \Model\Generator\Part\AbstractPart::PART_COND);
         AbstractPart::addPlugin(new \Model\Generator\Part\Plugin\Cond\SetupEntity(), \Model\Generator\Part\AbstractPart::PART_COND);
 
 
@@ -255,6 +256,8 @@ class Generator
         AbstractPart::addPlugin(new \Model\Generator\Part\Plugin\Model\Getter(), \Model\Generator\Part\AbstractPart::PART_MODEL);
         AbstractPart::addPlugin(new \Model\Generator\Part\Plugin\Model\GetInstance(), \Model\Generator\Part\AbstractPart::PART_MODEL);
         AbstractPart::addPlugin(new \Model\Generator\Part\Plugin\Model\Link(), \Model\Generator\Part\AbstractPart::PART_MODEL);
+
+        AbstractPart::addPlugin(new \Model\Generator\Part\Plugin\Model\Tree(), \Model\Generator\Part\AbstractPart::PART_MODEL);
 
         AbstractPart::addPlugin(new \Model\Generator\Part\Plugin\FrontModel\Stubs(), \Model\Generator\Part\AbstractPart::PART_FRONT_MODEL);
 

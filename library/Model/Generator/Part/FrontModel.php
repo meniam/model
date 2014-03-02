@@ -15,7 +15,7 @@ class FrontModel extends AbstractPart
 
         $this->_table = $table;
 
-        $file = new \Zend\Code\Generator\FileGenerator();
+        $file = new \Model\Code\Generator\FileGenerator();
         $this->setFile($file);
         $file->setNamespace('Model');
 

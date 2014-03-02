@@ -20,7 +20,7 @@ class DefaultEntityType extends AbstractCollection
          */
 
         /**
-         * @var $file \Zend\Code\Generator\FileGenerator
+         * @var $file \Model\Code\Generator\FileGenerator
          */
         $file = $part->getFile();
 

@@ -6,7 +6,7 @@ use Model\Generator\Log;
 use Model\Cluster\Schema;
 use Model\Cluster\Schema\Table;
 
-use Zend\Code\Generator\FileGenerator;
+use Model\Code\Generator\FileGenerator;
 use Zend\Code\Generator\ClassGenerator;
 
 class Cond extends AbstractPart
@@ -30,7 +30,12 @@ class Cond extends AbstractPart
             $extendedClassName = 'Abstract' . $table->getNameAsCamelCase() . 'Cond';
         } else {
             $className = 'Abstract' . $table->getNameAsCamelCase() . 'Cond';
-            $extendedClassName = 'AbstractCond';
+
+            if ($table->getColumn('parent_id')) {
+                $extendedClassName = 'TreeCond';
+            } else {
+                $extendedClassName = 'AbstractCond';
+            }
         }
 
         Log::info('Generate part cond ' . ($alias ? $alias : $table->getName()));

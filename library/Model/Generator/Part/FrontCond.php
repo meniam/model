@@ -6,7 +6,7 @@ use Model\Generator\Log;
 use Model\Cluster\Schema;
 use Model\Cluster\Schema\Table;
 
-use Zend\Code\Generator\FileGenerator;
+use Model\Code\Generator\FileGenerator;
 use Zend\Code\Generator\ClassGenerator;
 
 class FrontCond extends AbstractPart

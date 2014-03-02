@@ -39,7 +39,7 @@ class InitDefaults extends AbstractModel
          */
 
         /**
-         * @var $file \Zend\Code\Generator\FileGenerator
+         * @var $file \Model\Code\Generator\FileGenerator
          */
         $file = $part->getFile();
         $table = $part->getTable();

@@ -80,7 +80,7 @@ class Schema extends \ArrayIterator
                 $this->_tableNameListByTableFieldNameRegistry[$column->getName()][] = $table->getName(); 
             }
         }
-        
+
         parent::__construct($tables);
         
         $this->initIndex();
@@ -154,83 +154,7 @@ class Schema extends \ArrayIterator
                     $foreignColumn = $foreignTable->getColumn($foreignKey['referenced_column_name']);
                     
                     $link = $this->getLinkByColumns($foreignColumn, $foreignColumn, $ruleUpdate, $ruleDelete);
-/*
-                    // Если локальный связь прямая и локальный с внешним полем уникальты - то OneToOne
-                    if ($localColumn->isUnique() 
-                       && $foreignColumn->isUnique() 
-                       && !$foreignTable->isLinkTable() && !$localTable->isLinkTable()) 
-                    {
-                        if ($localTable->getName() == $tableName) {
-                            $link = new OneToOne($foreignKey['key_name'], $localColumn, $foreignColumn, $ruleDelete, $ruleUpdate);
-                        } elseif ($foreignTable->getName() == $tableName) {
-                            $link = new OneToOne($foreignKey['key_name'], $foreignColumn, $localColumn, $ruleDelete, $ruleUpdate);
-                        }
-                    } elseif ($localColumn->isUnique()
-                              && !$foreignColumn->isUnique()
-                              && $localTable->getName() == $tableName
-                              && !$foreignTable->isLinkTable() && !$localTable->isLinkTable()) 
-                    {  // OneToMany Direct
-                        $link = new OneToMany($foreignKey['key_name'], $localColumn, $foreignColumn, $ruleDelete, $ruleUpdate);
-                    } elseif (!$localColumn->isUnique()
-                              && $foreignColumn->isUnique()
-                              && $localTable->getName() == $tableName
-                              && !$foreignTable->isLinkTable() && !$localTable->isLinkTable()) 
-                    { // ManyToOne Direct
-                        $link = new ManyToOne($foreignKey['key_name'], $localColumn, $foreignColumn, $ruleDelete, $ruleUpdate);
-                    } elseif ($localColumn->isUnique()
-                              && !$foreignColumn->isUnique()
-                              && $foreignTable->getName() == $tableName
-                              && !$foreignTable->isLinkTable() && !$localTable->isLinkTable()) 
-                    {  // OneToMany Direct
-                        $link = new ManyToOne($foreignKey['key_name'], $foreignColumn, $localColumn,  $ruleDelete, $ruleUpdate);
-                    }  elseif (!$localColumn->isUnique()
-                              && $foreignColumn->isUnique()
-                              && $foreignTable->getName() == $tableName
-                              && !$foreignTable->isLinkTable() && !$localTable->isLinkTable()) 
-                    {  // OneToMany Direct
-                        $link = new OneToMany($foreignKey['key_name'], $foreignColumn, $localColumn,  $ruleDelete, $ruleUpdate);
-                    } elseif ($localTable->isLinkTable() || $foreignTable->isLinkTable()) {
-                        $linkTable  = $localTable->isLinkTable() ? $localTable : $foreignTable;
-                        
-                        if ($localTable->isLinkTable()) {
-                            $localTable = $foreignTable;
-                            $localColumn = $foreignColumn;
-                        }
-                        
-                        / **
-                         * Тут мы выясняем сколько внешних ключей у таблицы связки
-                         * Если их больше двух или меньше двух, то значит это хреновая связь
-                         * 
-                         * Потом мы выясняем внешнюю таблицку и создаем связь
-                         * /
-                        $linkTableForeignKeys = $this->getForeignKeyArray($linkTable);
-                        
-                        if (count($linkTableForeignKeys) == 2) {
-                            foreach ($linkTableForeignKeys as $linkTableForeignKey) {
-                                if ($linkTableForeignKey['table_name'] == $localTable->getName() || $linkTableForeignKey['referenced_table_name'] == $localTable->getName()) {
-                                    $linkTableLocalColumnName = ($linkTableForeignKey['table_name'] == $localTable->getName()) ? $linkTableForeignKey['referenced_column_name'] : $linkTableForeignKey['column_name'];
-                                    $linkTableLocalColumn = $this->getTable($linkTable->getName())->getColumn($linkTableLocalColumnName);
-                                    continue;
-                                } else {
-                                    // Пытаемся найти внешнее поле foreignColumn
-                                    if ($linkTableForeignKey['table_name'] == $linkTable->getName()) { 
-                                        $foreignTableName = $linkTableForeignKey['referenced_table_name']; 
-                                        $foreignColumnName = $linkTableForeignKey['referenced_column_name']; 
-                                        $linkTableForeignColumnName = $linkTableForeignKey['column_name']; 
-                                    } else {
-                                        $foreignTableName = $linkTableForeignKey['table_name']; 
-                                        $foreignColumnName = $linkTableForeignKey['column_name']; 
-                                        $linkTableForeignColumnName = $linkTableForeignKey['referenced_column_name']; 
-                                    }
-                                    
-                                    $linkTableForeignColumn = $this->getTable($linkTable->getName())->getColumn($linkTableForeignColumnName);
-                                    $foreignColumn = $this->getTable($foreignTableName)->getColumn($foreignColumnName);
-                                }
-                            }
-                            $link = new ManyToMany($foreignKey['key_name'], $localColumn, $foreignColumn, $ruleDelete, $ruleUpdate, $linkTableLocalColumn, $linkTableForeignColumn);
-                        }
-                    }
-                    */
+
                     if ($link && !isset($tableLinkRegistry[$link->getLocalTable()->getName()][$link->getUniqId()])) {
                         $tableLinkRegistry[$link->getLocalTable()->getName()][$link->getUniqId()] = $link;
                         $link->getLocalTable()->addLink($link);

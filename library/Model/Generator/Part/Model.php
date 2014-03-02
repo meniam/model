@@ -15,22 +15,29 @@ class Model extends AbstractPart
 
         $this->_table = $table;
 
-        $file = new \Zend\Code\Generator\FileGenerator();
+        $file = new \Model\Code\Generator\FileGenerator();
         $this->setFile($file);
 
         $file->setNamespace('Model');
 
         $class = new \Zend\Code\Generator\ClassGenerator();
         $file->setClass($class);
-        $file->setUse('Model\\Result\\Result');
-/*        $file->setUse('Model\\Entity\\' . $table->getNameAsCamelCase() . 'Entity');
-        $file->setUse('Model\\Cond\\' . $table->getNameAsCamelCase() . 'Cond');
-        $file->setUse('Model\\Collection\\' . $table->getNameAsCamelCase() . 'Collection');*/
+        $file->addUse('Model\\Result\\Result');
+        $file->addUse('Model\\Entity\\' . $table->getNameAsCamelCase() . 'Entity');
+        $file->addUse('Model\\Cond\\' . $table->getNameAsCamelCase() . 'Cond', 'Cond');
+        $file->addUse('Model\\Cond\\AbstractCond');
+        $file->addUse('Model\\Cond\\' . $table->getNameAsCamelCase() . 'Cond');
+        $file->addUse('Model\\Collection\\' . $table->getNameAsCamelCase() . 'Collection');
 
 		$this->_runPlugins(self::PART_MODEL, self::RUNTIME_PRE);
 
         $class->setName('Abstract' . $table->getNameAsCamelCase() . 'Model');
-        $class->setExtendedClass('\Model\Mysql\AbstractModel');
+
+        if ($table->getColumn('parent_id')) {
+            $class->setExtendedClass('\Model\Mysql\TreeModel');
+        } else {
+            $class->setExtendedClass('\Model\Mysql\AbstractModel');
+        }
         $class->setAbstract(true);
 
 		$this->_runPlugins(self::PART_MODEL, self::RUNTIME_POST);

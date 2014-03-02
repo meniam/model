@@ -54,7 +54,7 @@ class Link extends AbstractModel
          */
 
         /**
-         * @var $file \Zend\Code\Generator\FileGenerator
+         * @var $file \Model\Code\Generator\FileGenerator
          */
         $file = $part->getFile();
 
@@ -113,7 +113,7 @@ class Link extends AbstractModel
 
             array(
                 'name'        => 'param',
-                'description' => "\$isAppend Если false, сначала очищяются по {$localEntityAsVar}, потом добавляются"
+                'description' => "boolean \$isAppend Если false, сначала очищяются по {$localEntityAsVar}, потом добавляются"
             ),
 
             array(
@@ -319,7 +319,7 @@ EOS
 
             array(
                 'name'        => 'param',
-                'description' => "\$isAppend Если false, сначала очищяются по {$localEntityAsVar}, потом добавляются"
+                'description' => "boolean \$isAppend Если false, сначала очищяются по {$localEntityAsVar}, потом добавляются"
             ),
 
             array(

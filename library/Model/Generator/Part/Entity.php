@@ -14,15 +14,20 @@ class Entity extends AbstractPart
 
         $this->_table = $table;
 
-        $file = new \Zend\Code\Generator\FileGenerator();
+        $file = new \Model\Code\Generator\FileGenerator();
         $this->setFile($file);
+        $file->setNamespace('Model\\Entity');
 
         $class = new \Zend\Code\Generator\ClassGenerator();
         $file->setClass($class);
 
+        $file->addUse('Model\\Result\\Result');
+        $file->addUse('Model\\Entity\\' . $table->getNameAsCamelCase() . 'Entity');
+        $file->addUse('Model\\Cond\\' . $table->getNameAsCamelCase() . 'Cond');
+        $file->addUse('Model\\Collection\\' . $table->getNameAsCamelCase() . 'Collection');
+
 		$this->_runPlugins(self::PART_ENTITY, self::RUNTIME_PRE);
 
-        $class->setNamespaceName('Model\Entity');
         $class->setName('Abstract' . $table->getNameAsCamelCase() . 'Entity');
         $class->setExtendedClass('AbstractEntity');
         $class->setAbstract(true);

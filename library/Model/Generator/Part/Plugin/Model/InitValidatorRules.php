@@ -44,11 +44,11 @@ class InitValidatorRules extends AbstractModel
          */
 
         /**
-         * @var $file \Zend\Code\Generator\FileGenerator
+         * @var $file \Model\Code\Generator\FileGenerator
          */
         $file = $part->getFile();
 
-        $file->setUse('App\\Validator\\Validator');
+        $file->addUse('App\\Validator\\Validator');
 
         $columnCollection = $part->getTable()->getColumn();
 
