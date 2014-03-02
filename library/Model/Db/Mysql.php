@@ -270,12 +270,27 @@ class Mysql
     {
         $this->connect();
 
+        /** @var $stmt \PDOStatement */
         $stmt = $this->prepareInsert($table, $bind);
         if ($stmt) {
+            if (!empty($bind)) {
+                foreach ($bind as $paramName => $paramValue) {
+                    if ($paramValue === null) {
+                        $stmt->bindValue($paramName, $paramValue, PDO::PARAM_INT);
+                        unset($bind[$paramName]);
+                    }
+                }
+            }
+
             $bind = $this->prepareBindParams($bind);
 
-            /** @var $stmt \PDOStatement */
-            $result = $stmt->execute($bind);
+            if (!empty($bind)) {
+                foreach ($bind as $paramName => $paramValue) {
+                    $stmt->bindValue($paramName, $paramValue, PDO::PARAM_STR);
+                }
+            }
+
+            $result = $stmt->execute();
 
             if ($result) {
                 return isset($bind['id']) ? $bind['id'] : $this->pdo->lastInsertId();
@@ -316,11 +331,27 @@ class Mysql
         $sql = rtrim($sql, ", ");
         $sql .= " WHERE " . $where;
 
+        /** @var $stmt \PDOStatement */
         $stmt = $this->pdo->prepare($sql);
+
+        if (!empty($bind)) {
+            foreach ($bind as $paramName => $paramValue) {
+                if ($paramValue === null) {
+                    $stmt->bindValue($paramName, $paramValue, PDO::PARAM_INT);
+                    unset($bind[$paramName]);
+                }
+            }
+        }
+
         $bind = $this->prepareBindParams($bind);
 
-        /** @var $stmt \PDOStatement */
-        return $stmt->execute($bind);
+        if (!empty($bind)) {
+            foreach ($bind as $paramName => $paramValue) {
+                $stmt->bindValue($paramName, $paramValue, PDO::PARAM_STR);
+            }
+        }
+
+        return $stmt->execute();
     }
 
     /**

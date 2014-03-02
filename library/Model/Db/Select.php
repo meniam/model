@@ -964,7 +964,17 @@ class Select
         }
 
         if ($bindParams !== null) {
-            $this->_bind = $bindParams;
+            if (is_array($bindParams)) {
+                foreach ($bindParams as $bindKey => $bindParam) {
+                    if (is_string($bindKey)) {
+                        $this->_bind[$bindKey] = $bindParam;
+                    } else {
+                        $this->_bind[] = $bindParam;
+                    }
+                }
+            } else {
+                $this->_bind = $bindParams;
+            }
         }
 
         $cond = "";
