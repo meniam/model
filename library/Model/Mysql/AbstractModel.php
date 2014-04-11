@@ -10,7 +10,7 @@ use Model\Db\Select;
 use Model\Db\Expr;
 use Model\Entity\EntityInterface as Entity;
 use Model\Collection\CollectionInterface as Collection;
-use Model\Exception\ErrorException;
+use Model\Paginator\Adapter\Mysql;
 use Model\Paginator\Paginator;
 use Model\Result\Result;
 
@@ -56,6 +56,8 @@ class AbstractModel extends \Model\AbstractModel
      * @param      $data
      * @param Cond $cond
      *
+     * @throws Exception\ErrorException
+     * @throws \Model\Exception\ErrorException
      * @return $this|Result
      */
     public function import($data, Cond $cond = null)
@@ -292,7 +294,10 @@ class AbstractModel extends \Model\AbstractModel
 
     /**
      * @param mixed $data
-     * @param Cond $cond
+     * @param Cond  $cond
+     *
+     * @throws Exception\ErrorException
+     * @throws \Model\Exception\ErrorException
      * @return Result
      */
     public function importCollection($data, Cond $cond = null)
@@ -332,6 +337,8 @@ class AbstractModel extends \Model\AbstractModel
      *
      * @param      $data
      * @param Cond $cond
+     *
+     * @throws \Model\Exception\ErrorException
      * @return array|int|mixed|null|string
      */
     public function getExistedIdByUniqueIndex($data, Cond $cond = null)
@@ -381,21 +388,25 @@ class AbstractModel extends \Model\AbstractModel
     /**
      *
      * @param  mixed $id
-     * @param Cond $cond
+     * @param Cond   $cond
+     *
+     * @throws \Model\Exception\ErrorException
      * @return array|mixed|null|string
      */
     public function getById($id, Cond $cond = null)
     {
-        $cond = $this->prepareCond($cond);
-        $ids = $this->getIdsFromMixed($id);
+        $cond = $this->prepareCond($cond)
+                        ->where(array('`' . $this->getRawName() . '`.`id`' => $this->getIdsFromMixed($id)));
 
-        return $this->get($cond->where(array('`' . $this->getRawName() . '`.`id`' => $ids)));
+        return $this->get($cond);
     }
 
     /**
      *
      * @param  mixed $id
-     * @param Cond $cond
+     * @param Cond   $cond
+     *
+     * @throws \Model\Exception\ErrorException
      * @return array|mixed|null|string
      */
     public function getCollectionById($id, Cond $cond = null)
@@ -409,6 +420,8 @@ class AbstractModel extends \Model\AbstractModel
     /**
      * @param      $data
      * @param Cond $cond
+     *
+     * @throws \Model\Exception\ErrorException
      * @return array|mixed|null|string
      */
     public function getByDataArray($data, Cond $cond = null)
@@ -520,6 +533,12 @@ class AbstractModel extends \Model\AbstractModel
         return (array)$data;
     }
 
+    /**
+     * @param Cond $cond
+     *
+     * @throws \Model\Exception\ErrorException
+     * @return null|mixed
+     */
     public function get(Cond $cond = null)
     {
         $cond = $this->prepareCond($cond);
@@ -532,6 +551,7 @@ class AbstractModel extends \Model\AbstractModel
     /**
      * @param Cond $cond
      *
+     * @throws \Model\Exception\ErrorException
      * @return array|mixed|null|string
      */
     public function getCollection(Cond $cond = null)
@@ -548,6 +568,8 @@ class AbstractModel extends \Model\AbstractModel
      *
      * @param      $data
      * @param Cond $cond
+     *
+     * @throws \Model\Exception\ErrorException
      * @return array
      */
     protected function prepareDataOnAdd($data, Cond $cond = null)
@@ -590,6 +612,9 @@ class AbstractModel extends \Model\AbstractModel
      *
      * @param mixed $data
      * @param Cond  $cond
+     *
+     * @throws \Model\Validator\Exception\InvalidArgumentException
+     * @throws \Model\Exception\ErrorException
      * @return Result
      */
     public function add($data, Cond $cond = null)
@@ -646,6 +671,8 @@ class AbstractModel extends \Model\AbstractModel
      *
      * @param      $data
      * @param Cond $cond
+     *
+     * @throws \Model\Exception\ErrorException
      * @return array
      */
     protected function prepareDataOnUpdate($data, Cond $cond = null)
@@ -684,7 +711,10 @@ class AbstractModel extends \Model\AbstractModel
      * Добавить сущьность в базу
      *
      * @param mixed      $data
-     * @param Cond|array $cond
+     * @param Cond|array|null  $cond
+     *
+     * @throws Exception\ErrorException
+     * @throws \Model\Validator\Exception\InvalidArgumentException
      * @throws \Model\Exception\ErrorException
      * @return Result
      */
@@ -694,59 +724,79 @@ class AbstractModel extends \Model\AbstractModel
             $data = $data->current();
         }
 
-        $id = null;
+        $data = $this->prepareData($data);
         $result = new Result();
-        $data = (array)$data;
 
-        if ($data) {
+        if (empty($data)) {
+            return $result;
+        }
+
+        if (!$cond instanceof Cond) {
             if ($cond == null) {
                 $cond = $this->prepareCond($cond);
             } elseif (is_array($cond)) {
                 $_cond = $this->prepareCond(null);
-                $cond = $_cond->where($cond);
-            } elseif ($cond instanceof Cond) {
-                $cond = $this->prepareCond($cond);
+                $cond  = $_cond->where($cond);
             } else {
-                throw new ErrorException('Unknown cond type');
+                throw new Exception\ErrorException('Unknown cond type');
             }
+        }
 
-            $data = $this->prepareDataOnUpdate($data, $cond);
+        $data = $this->prepareDataOnUpdate($data, $cond);
 
-            // Если валидация включена
-            if ($cond->checkCond(Cond::VALIDATE_ON_UPDATE, true)) {
-                $validator = $this->validateOnUpdate($data);
+        // Если валидация включена
+        if ($cond->checkCond(Cond::VALIDATE_ON_UPDATE, true)) {
+            $validator = $this->validateOnUpdate($data);
 
-                // Проверяем данные и если есть ошибки
-                // то добавляем их в результат
-                if (!$isValid = $validator->isValid()) {
-                    $result->addErrorFromValidatorSet($validator);
-                    return $result;
-                }
+            // Проверяем данные и если есть ошибки
+            // то добавляем их в результат
+            if (!$isValid = $validator->isValid()) {
+                $result->addErrorFromValidatorSet($validator);
+                return $result;
             }
+        }
 
-            try {
-                $select = $this->prepareSelect($cond);
-                $this->getDb()->update($this->getRawName(), $data, $select);
-            } catch (\Exception $ex) {
-                $result->setResult(false);
-                $result->addError($ex->getMessage(), $ex->getCode());
-            }
+        try {
+            $select = $this->prepareSelect($cond);
+            $this->getDb()->update($this->getRawName(), $data, $select);
+        } catch (\Exception $ex) {
+            $result->setResult(false);
+            $result->addError($ex->getMessage(), $ex->getCode());
         }
 
         return $result;
     }
 
     /**
+     * @param      $data
+     * @param      $id
+     * @param Cond $cond
+     *
+     * @return Result
+     * @throws Exception\ErrorException
+     * @throws \Model\Exception\ErrorException
+     */
+    public function updateById($data, $id, Cond $cond = null)
+    {
+        $cond = $this->prepareCond($cond)
+            ->where(array('`' . $this->getRawName() . '`.`id`' => $this->getIdsFromMixed($id)));
+
+        return $this->update($data, $cond);
+    }
+
+    /**
      * Удаление данные
      *
      * @param array|Cond $cond
-     * @throws ErrorException
+     *
+     * @throws Exception\ErrorException
+     * @throws \Model\Exception\ErrorException
      * @return Result
      */
     public function delete($cond = null)
     {
         if (!is_array($cond) && !$cond instanceof Cond && !is_null($cond)) {
-            throw new ErrorException('Unknown Cond type');
+            throw new Exception\ErrorException('Unknown Cond type');
         }
 
         if (is_array($cond)) {
@@ -801,6 +851,14 @@ class AbstractModel extends \Model\AbstractModel
         return $this->db;
     }
 
+    /**
+     * @param Cond $cond
+     * @param null $entity
+     *
+     * @return array|mixed|null|string
+     * @throws \Model\Db\Exception\ErrorException
+     * @throws \Model\Exception\ErrorException
+     */
     public function execute(Cond $cond = null, $entity = null)
     {
         if (!$cond) {
@@ -843,6 +901,9 @@ class AbstractModel extends \Model\AbstractModel
      * @param string                   $table
      * @param array                    $data
      * @param \Model\Cond\AbstractCond $cond
+     *
+     * @throws \Model\Db\Exception\ErrorException
+     * @throws \Model\Exception\ErrorException
      * @return bool
      */
     public function _update($table, array $data = array(), Cond $cond)
@@ -868,6 +929,13 @@ class AbstractModel extends \Model\AbstractModel
         return $item;
     }
 
+    /**
+     * @param Cond $cond
+     *
+     * @return array
+     * @throws \Model\Db\Exception\ErrorException
+     * @throws \Model\Exception\ErrorException
+     */
     public function fetchPairs(Cond $cond = null)
     {
         $entity = $cond->getEntityName() ? $cond->getEntityName() : $this->getRawName();
@@ -880,6 +948,13 @@ class AbstractModel extends \Model\AbstractModel
         return $item;
     }
 
+    /**
+     * @param Cond $cond
+     *
+     * @return string
+     * @throws \Model\Db\Exception\ErrorException
+     * @throws \Model\Exception\ErrorException
+     */
     public function fetchCount(Cond $cond = null)
     {
         $entity = $cond->getEntityName() ? $cond->getEntityName() : $this->getRawName();
@@ -894,6 +969,9 @@ class AbstractModel extends \Model\AbstractModel
 
     /**
      * @param \Model\Cond\AbstractCond $cond
+     *
+     * @throws \Model\Db\Exception\ErrorException
+     * @throws \Model\Exception\ErrorException
      * @return mixed
      */
     public function fetchOne(Cond $cond = null)
@@ -909,6 +987,8 @@ class AbstractModel extends \Model\AbstractModel
 
     /**
      * @param Cond $cond
+     *
+     * @throws \Model\Exception\ErrorException
      * @return array|mixed|string
      */
     public function fetchAll(Cond $cond = null)
@@ -925,7 +1005,7 @@ class AbstractModel extends \Model\AbstractModel
                 echo '<!--' . $select . "-->\n";
             }
             if ($cond->checkCond('page')) {
-                $pager = new Paginator(new \Model\Paginator\Adapter\Mysql($select));
+                $pager = new Paginator(new Mysql($select));
                 $pager->setCurrentPageNumber($cond->getCond('page', 1));
                 $pager->setItemCountPerPage($cond->getCond('items_per_page', 25));
 
@@ -949,8 +1029,11 @@ class AbstractModel extends \Model\AbstractModel
     }
 
     /**
-     * @param Cond $cond
-     * @param mixed                    $entity
+     * @param Cond  $cond
+     * @param mixed $entity
+     *
+     * @throws \Model\Db\Exception\ErrorException
+     * @throws \Model\Exception\ErrorException
      * @internal param \Model\Cond\AbstractCond $opts
      * @return Select
      */
@@ -964,11 +1047,15 @@ class AbstractModel extends \Model\AbstractModel
          * FROM
          *********************************************************************/
         $from = $cond->getCond(Cond::FROM);
-        if ($from) {
-            $select->from($from);
-        } else {
-            $select->from($this->getRawName());
+
+        if (!$from) {
+            $from = $this->getRawName();
         }
+
+        if (!is_array($from)) {
+            $from = $this->getDb()->quoteTableAs($from);
+        }
+        $select->from($from);
 
         /**********************************************************************
          * DISTINCT

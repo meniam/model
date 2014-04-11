@@ -1,6 +1,6 @@
 <?php
 
-namespace Model\Db\Exception;
+namespace Model\Db\Mysql\Exception;
 
 /**
  * @category   Zend

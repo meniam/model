@@ -28,7 +28,6 @@ class ArraySet implements AdapterInterface
         return $this->data;
     }
 
-
     /**
      * Returns the total number of rows in the result set.
      *

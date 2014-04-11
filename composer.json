@@ -24,7 +24,7 @@
         "ext-mbstring"  : "*",
         "ext-pdo_mysql" : "*",
         "lib-libxml"    : "*",
-        "lib-iconv"     : "~1.14",
+        /*"lib-iconv"     : "~1.14",*/
         "lib-pcre"      : "*",
         "meniam/app"    : "1.0.*",
 

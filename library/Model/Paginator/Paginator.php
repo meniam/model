@@ -67,7 +67,7 @@ class Paginator implements \Countable
 
     public function getCurrentPageNumber()
     {
-        return $this->currentPage;
+        return $this->currentPage > 100 ? 100 : $this->currentPage;
     }
 
     /**
@@ -89,7 +89,8 @@ class Paginator implements \Countable
      */
     private function calculatePageCount()
     {
-        return ceil((integer) $this->getTotalItemCount() / $this->getItemCountPerPage());
+        $pageCount = ceil((integer) $this->getTotalItemCount() / $this->getItemCountPerPage());
+        return $pageCount > 100 ? 100 : $pageCount;
     }
 
     /**

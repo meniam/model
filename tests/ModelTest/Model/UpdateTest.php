@@ -45,4 +45,42 @@ class UpdateTest extends TestCase
         $this->assertEquals($id, $entity->getId());
         $this->assertEquals($name, $entity->getName());
     }
+
+
+    public function testUpdateById()
+    {
+        /** @var TagModel $tagModel */
+        $tagModel = TagModel::getInstance();
+        $tagModel->truncate();
+
+        $id = 98223;
+        $name = 'update test';
+        $tagData = array(
+            'id' => $id,
+            'name' => $name,
+            'unknown_field' => 'a-a-a-a'
+        );
+
+        $tagModel->import($tagData);
+        $entity = $tagModel->getById($id);
+        $this->assertEquals($id, $entity->getId());
+
+        $name = 'update2 test';
+        $updateTagData = array(
+            'name' => $name,
+        );
+
+        $tagModel->updateById($updateTagData, $id);
+        $entity = $tagModel->getById($id);
+        $this->assertEquals($name, $entity->getName());
+
+        $name = 'update2 test';
+        $updateTagData = array(
+            'name' => $name,
+        );
+
+        $tagModel->updateById($updateTagData, $entity);
+        $entity = $tagModel->getById($id);
+        $this->assertEquals($name, $entity->getName());
+    }
 }
