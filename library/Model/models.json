@@ -1,0 +1,99 @@
+{
+    "fields" : [
+        {
+            "match" : {
+                "regexp": "#^.*?\\._#",
+                "type"  : "varchar",
+                "length" : { ">" : 32 , "<" : 40 }
+            },
+            "skip" : true
+        },
+        {
+            "regexp" : "#^.*?\\..*?_(link|index)$#",
+            "skip" : true
+        },
+        {
+            "regexp" : "#.*?\\..*?#",
+            "type"  : [],
+            "length" : [],
+            "skip"   : true,
+            "validators" : [
+                {
+                    "name" : "App\\Validator\\Null"
+                },
+                {
+                    "name" : "App\\Validator\\Url"
+                }
+
+            ],
+            "filters" : [
+                {
+                    "name" : "App\\Validator\\Null"
+                },
+                {
+                    "name" : "App\\Validator\\Url"
+                }
+
+            ],
+            "decorators" : [
+                {
+                    "name" : "Model\\Entity\\Decorator\\SuperPrice"
+                },
+                {
+                    "name" : "App\\Validator\\Url"
+                }
+
+            ]
+        }
+    ],
+
+    "plugins" : {
+        "cond": {
+            "list" : [
+                {"name" : "JoinConst"},
+                {"name" : "WithConst"},
+                {"name" : "Tree" },
+                {"name" : "SetupEntity" }
+            ]
+        },
+        "entity": {
+            "list" : [
+                {"name" : "Dockblock"},
+                {"name" : "DecoratorMethod"},
+                {"name" : "DataTypes" },
+                {"name" : "Getter" },
+                {"name" : "GetterEnum" },
+                {"name" : "RelatedGetter" }
+            ]
+        },
+        "collection": {
+            "list" : [
+                {"name" : "DefaultEntityType"},
+                {"name" : "Dockblock"}
+            ]
+        },
+
+        "model": {
+            "list" : [
+                {"name" : "Dockblock"},
+                {"name" : "InitDefaults"},
+                {"name" : "Relationdefine"},
+                {"name" : "IndexList"},
+                {"name" : "Construct"},
+                {"name" : "InitFilterRules"},
+                {"name" : "InitValidatorRules"},
+                {"name" : "Getter"},
+                {"name" : "GetInstance"},
+                {"name" : "Link"},
+                {"name" : "Tree"}
+            ]
+        },
+
+        "front_model": {
+            "list" : [
+                {"name" : "Stubs"}
+            ]
+        }
+
+    }
+}

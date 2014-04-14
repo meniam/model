@@ -32,7 +32,6 @@ class Entity extends AbstractPart
         $class->setExtendedClass('AbstractEntity');
         $class->setAbstract(true);
 
-
         $this->_runPlugins(self::PART_ENTITY, self::RUNTIME_POST);
 
         if ($outputFilename) {

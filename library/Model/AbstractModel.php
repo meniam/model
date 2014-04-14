@@ -6,7 +6,7 @@ use App\ServiceManager\ServiceManager;
 use Model\Collection\AbstractCollection as Collection;
 use Model\Cond\AbstractCond as Cond;
 use Model\Entity\AbstractEntity as Entity;
-use Model\Exception\ErrorException;
+use Model\Exception\ErrorException as ErrorException;
 use Model\Validator\ValidatorSet;
 use Zend\Filter\FilterInterface;
 use Zend\InputFilter\InputFilter;
@@ -925,9 +925,15 @@ class AbstractModel extends Singleton implements ModelInterface
         return $this->filterCascadeRulesOnUpdate;
     }
 
+    /**
+     *
+     */
     protected function setupFilterCascadeRulesOnAdd()
     {}
 
+    /**
+     *
+     */
     protected function setupFilterCascadeRules()
     {}
 

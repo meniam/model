@@ -2,9 +2,8 @@
 
 namespace Model\Entity;
 
-use Model\Entity\EntityInterface;
+use Model\Collection\AbstractCollection;
 use Model\Exception\ErrorException;
-use Zend\Form\Element\Collection;
 
 /**
  * Абстрактный класс Entity
@@ -264,7 +263,10 @@ class AbstractEntity extends \ArrayObject implements EntityInterface
     {
         $resultArray = $this->getArrayCopy();
 
+        /** @var AbstractEntity|AbstractCollection $value */
         foreach($resultArray as $key => &$value) {
+            $value = $this->get($key);
+
             if ($key[0] == '_' && is_object($value)) {
                 $value = $value->toArray();
             }
@@ -286,7 +288,7 @@ class AbstractEntity extends \ArrayObject implements EntityInterface
     {
         $array = $this->toArray();
 
-        foreach ($array as $k => &$null) {
+        foreach (array_keys($array) as $k) {
             if ($k[0] == '_') {
                 unset($array[$k]);
             }

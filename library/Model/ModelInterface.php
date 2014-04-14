@@ -2,8 +2,6 @@
 
 namespace Model;
 
-use Model\Cond\AbstractCond as Cond;
-
 interface ModelInterface
 {
     /*

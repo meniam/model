@@ -17,6 +17,7 @@ class EntityTest extends \ModelTest\Model\TestCase
 {
     /**
      * @group Model
+     * @group speed
      */
     public function testCreateEntity()
     {
@@ -37,15 +38,17 @@ class EntityTest extends \ModelTest\Model\TestCase
         for ($i=0; $i<1000; $i++) {
             $data = array('id' => $i+1,
                           'something_else' => '',
-                          'name' => '=================================================================');
+                          'name' => '=================================================================',
+                          '_tag' => array('id' => 1));
 
             $entity = new EntityTestEntity($data);
             $entity->getId(); // need for test
             $entity->getName(); // need for test
             $entity->getStatus(); // need for test
             $entity->getPrice();
+            $entity->getTag();
+            $this->assertInstanceOf('Model\Entity\TagEntity', $entity->getTag());
         }
-        echo (microtime(true) - $start);
-         /SPEEDTEST */
+        SPEEDTEST */
     }
 }

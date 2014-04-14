@@ -105,19 +105,25 @@ class Cluster extends ArrayObject
 
         $cluster = new Cluster();
         foreach ($schemaArrayList as $schemaArray) {
-            $schema = \Model\Cluster\Schema::fromXml($schemaArray, $db);
+            $schema = Schema::fromXml($schemaArray, $db);
             $cluster->addSchema($schema);
         }
 
         return $cluster;
     }
 
+    /**
+     * @param bool $withHeader
+     * @param int  $tabStep
+     *
+     * @return string
+     */
     public function toXml($withHeader = true, $tabStep = 0)
     {
         $tab = '    ';
         $shift = str_repeat($tab, $tabStep);
 
-        $xml = $withHeader ? \Model\Cluster::XML_HEADER . "\n" : '';
+        $xml = $withHeader ? Cluster::XML_HEADER . "\n" : '';
 
 
         $xml .= $shift . "<cluster>" . "\n";

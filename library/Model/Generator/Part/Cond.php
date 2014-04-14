@@ -2,24 +2,28 @@
 
 namespace Model\Generator\Part;
 
+use Model\Cluster;
 use Model\Generator\Log;
 use Model\Cluster\Schema;
 use Model\Cluster\Schema\Table;
 
 use Model\Code\Generator\FileGenerator;
 use Zend\Code\Generator\ClassGenerator;
+use Model\Exception\ErrorException;
 
 class Cond extends AbstractPart
 {
-  	public function __construct(\Model\Cluster\Schema\Table $table,  \Model\Cluster $cluster, $outputFilename = null)
+    protected $options = array();
+
+  	public function __construct(Table $table, Cluster $cluster, $outputFilename = null, array $options = array())
 	{
         $this->_table = $table;
         $this->outputFilename = $outputFilename;
-    }
 
-    public function generate(array $options = array())
-    {
-        $this->setOptions($options);
+        if (!empty($options)) {
+            $this->setOptions($options);
+        }
+
         $table = $this->getTable();
 
         $alias = $this->getOption('alias', null);
@@ -55,7 +59,10 @@ class Cond extends AbstractPart
         $this->_runPlugins(self::PART_COND, self::RUNTIME_POST);
 
         if ($filename = $this->getOutputFilename()) {
-            file_put_contents($filename, $file->generate());
+            $result = file_put_contents($filename, $file->generate());
+            if (!$result) {
+                throw new ErrorException('File is not writeable: ' . $filename);
+            }
         }
     }
 }

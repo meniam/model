@@ -8,6 +8,7 @@ use Model\Db\Mysql as DbAdapter;
 use Model\Cond\AbstractCond as Cond;
 use Model\Db\Select;
 use Model\Db\Expr;
+use Model\Entity\AbstractEntity;
 use Model\Entity\EntityInterface as Entity;
 use Model\Collection\CollectionInterface as Collection;
 use Model\Paginator\Adapter\Mysql;
@@ -62,6 +63,9 @@ class AbstractModel extends \Model\AbstractModel
      */
     public function import($data, Cond $cond = null)
     {
+        if (is_null($cond)) {
+        }
+
         /** @var $cond \Model\Cond\AbstractCond */
         $cond = $this->prepareCond($cond);
 
@@ -552,13 +556,12 @@ class AbstractModel extends \Model\AbstractModel
      * @param Cond $cond
      *
      * @throws \Model\Exception\ErrorException
-     * @return array|mixed|null|string
+     * @return array|mixed|null|string|AbstractCollection|AbstractEntity[]
      */
     public function getCollection(Cond $cond = null)
     {
-        $cond = $this->prepareCond($cond);
-
-        $cond->type(Cond::FETCH_ALL);
+        $cond = $this->prepareCond($cond)
+                     ->type(Cond::FETCH_ALL);
 
         return $this->execute($cond, $cond->getEntityClassName());
     }

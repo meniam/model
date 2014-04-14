@@ -2,8 +2,9 @@
 
 namespace Model\Mysql;
 
-use Model\Collection\EbayRubricCollection;
+use Model\Collection\AbstractCollection;
 use Model\Cond\AbstractCond;
+use Model\Entity\AbstractEntity;
 
 /**
  *
@@ -44,7 +45,7 @@ class TreeModel extends AbstractModel
      * @param              $id
      * @param AbstractCond $cond
      *
-     * @return EbayRubricCollection
+     * @return AbstractCollection|AbstractEntity[]
      */
     public function getParentCollectionById($id, AbstractCond $cond = null)
     {
@@ -68,7 +69,12 @@ class TreeModel extends AbstractModel
         return $this->prepareCollection($result, $cond);
     }
 
-
+    /**
+     * @param              $data
+     * @param AbstractCond $cond
+     *
+     * @return null
+     */
     public function getChildCollectionByData($data, AbstractCond $cond = null)
     {
         if (isset($data['id'])) {

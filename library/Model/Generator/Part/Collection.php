@@ -2,22 +2,25 @@
 
 namespace Model\Generator\Part;
 
+use Model\Cluster;
+use Model\Code\Generator\FileGenerator;
 use Model\Generator\Log;
 use Model\Cluster\Schema;
 use Model\Cluster\Schema\Table;
+use Zend\Code\Generator\ClassGenerator;
 
 class Collection extends AbstractPart
 {
-    public function __construct(\Model\Cluster\Schema\Table $table, \Model\Cluster $cluster, $outputFilename = null)
+    public function __construct(Table $table, Cluster $cluster, $outputFilename = null)
 	{
 		Log::debug('Generate part list ' . $table->getName());
 
         $this->_table = $table;
 
-        $file = new \Model\Code\Generator\FileGenerator();
+        $file = new FileGenerator();
         $this->setFile($file);
 
-        $class = new \Zend\Code\Generator\ClassGenerator();
+        $class = new ClassGenerator();
         $file->setClass($class);
         $file->setNamespace('Model\\Collection');
         //$file->setUse('Model\ResultList');

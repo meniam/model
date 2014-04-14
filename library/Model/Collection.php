@@ -38,12 +38,18 @@ class Collection extends \ArrayIterator implements ListInterface
     /**
      * Pager
      *
-     * @var type
+     * @var Paginator\Adapter\AdapterInterface
      */
     protected $_pager;
 
+    /**
+     * @var null|int|string
+     */
     protected $_defaultEntityType = null;
 
+    /**
+     * @var null|int|string
+     */
     protected $_disableConstructInit = false;
 
     public function __construct($data = null, $entityType = null)

@@ -62,6 +62,7 @@ class Schema extends \ArrayIterator
 
         $tableNames = $dbAdapter->fetchCol($sql);
 
+        /** @var Table[] $tables */
         $tables = array();
         if (!empty($tableNames)) {
             foreach ($tableNames as $tableName) {
@@ -75,7 +76,8 @@ class Schema extends \ArrayIterator
         
         foreach ($tables as $table) {
             $this->_tableByTableNameRegistry[$table->getName()] = $table;
-            
+
+            /** @var Column $column */
             foreach($table as $column) {
                 $this->_tableNameListByTableFieldNameRegistry[$column->getName()][] = $table->getName(); 
             }
@@ -92,6 +94,7 @@ class Schema extends \ArrayIterator
         $schemaName = $this->getName();
         
         // Инициализируем индексы для таблицы
+        /** @var Table $table */
         foreach ($this as $table) {
             $tableName = $table->getName();
             
