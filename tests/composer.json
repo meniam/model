@@ -26,7 +26,7 @@
         "lib-libxml"    : "*",
         "lib-iconv"     : "~1.14",
         "lib-pcre"      : "*",
-        "esteit/app"    : "~2.0.0",
+        "meniam/app"    : "1.0.*",
 
         "doctrine/annotations": ">=1.0",
         "ircmaxell/random-lib": "dev-master",
@@ -59,21 +59,22 @@
         {
             "type":"package",
             "package":{
-                "name":"esteit/app",
-                "version":"v2.0.0",
+                "name":"meniam/app",
+                "version":"v1.0.0",
                 "source":{
                     "type":"git",
-                    "url":"git@github.com:esteit/app.git",
-                    "reference":"v2"
+                    "url":"git@github.com:meniam/app.git",
+                    "reference":"master"
                 },
 
                 "autoload": {
                     "psr-0": {
-                        "App": "/library/"
+                        "App": "library/"
                     }
                 }
             }
         },
+
         {
             "type": "composer",
             "url": "https://packages.zendframework.com/"

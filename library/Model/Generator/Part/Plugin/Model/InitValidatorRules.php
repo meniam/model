@@ -7,6 +7,8 @@ use Model\Code\Generator\DocBlockGenerator;
 use Zend\Code\Generator\MethodGenerator;
 use Zend\Code\Generator\AbstractMemberGenerator;
 use Model\Cluster\Schema\Table\Column;
+use Zend\Code\Generator\ParameterGenerator;
+use Zend\Code\Generator\ValueGenerator;
 
 class InitValidatorRules extends AbstractModel
 {
@@ -19,6 +21,12 @@ class InitValidatorRules extends AbstractModel
     {
     }
 
+    /**
+     * @param      $var
+     * @param bool $return
+     *
+     * @return mixed|string|null
+     */
     public function varExportMin($var, $return = false) {
         if (is_array($var)) {
             $toImplode = array();
@@ -29,12 +37,14 @@ class InitValidatorRules extends AbstractModel
             if ($return) return $code;
             else echo $code;
         } else {
-            if ($var instanceof \Zend\Code\Generator\ValueGenerator) {
+            if ($var instanceof ValueGenerator) {
                 return $var;
             } else {
                 return var_export($var, $return);
             }
         }
+
+        return null;
     }
 
     public function postRun(PartInterface $part)
@@ -48,7 +58,7 @@ class InitValidatorRules extends AbstractModel
          */
         $file = $part->getFile();
 
-        $file->addUse('App\\Validator\\Validator');
+        $file->addUse('Model\\Validator\\Validator');
 
         $columnCollection = $part->getTable()->getColumn();
 
@@ -56,19 +66,7 @@ class InitValidatorRules extends AbstractModel
         /** @var $column Column */
         foreach ($columnCollection as $column) {
             $name = $column->getName();
-            //$template .= "    '{$name}' => array(\n";
-
             $requiredFlag = !($column->isNullable() || $column->getName() == 'id');
-
-            if ($column->isNullable() || $column->getName() == 'id') {
-                $required = "        'required' => false,\n";
-            } else {
-                $required = "        'required' => \$required,\n";
-            }
-
-            //$template .= "        'name' => '{$name}',\n" . $required;
-            //$template .= "        'validators' => array(\n";
-
             $validatorArray = $column->getValidator();
 
             foreach ($validatorArray as $validator) {
@@ -99,7 +97,7 @@ class InitValidatorRules extends AbstractModel
         $docblock = new DocBlockGenerator('Получить правила для фильтрации ');
         $docblock->setTags($tags);
 
-        $p = new \Zend\Code\Generator\ParameterGenerator('required');
+        $p = new ParameterGenerator('required');
         $p->setDefaultValue(false);
 
 

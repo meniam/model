@@ -42,4 +42,6 @@ if (is_file(GENERATE_OUTPUT . '/_autoload_classmap.php')) {
     $a = require(GENERATE_OUTPUT . '/_autoload_classmap.php');
     $loader = new \Zend\Loader\ClassMapAutoloader(array($a));
     $loader->register();
+} else {
+
 }

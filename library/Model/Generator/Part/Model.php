@@ -2,10 +2,12 @@
 
 namespace Model\Generator\Part;
 
+use Model\Code\Generator\FileGenerator;
 use Model\Generator\Log;
 use Model\Cluster;
 use Model\Cluster\Schema;
 use Model\Cluster\Schema\Table;
+use Zend\Code\Generator\ClassGenerator;
 
 class Model extends AbstractPart
 {
@@ -15,12 +17,12 @@ class Model extends AbstractPart
 
         $this->_table = $table;
 
-        $file = new \Model\Code\Generator\FileGenerator();
+        $file = new FileGenerator();
         $this->setFile($file);
 
         $file->setNamespace('Model');
 
-        $class = new \Zend\Code\Generator\ClassGenerator();
+        $class = new ClassGenerator();
         $file->setClass($class);
         $file->addUse('Model\\Result\\Result');
         $file->addUse('Model\\Entity\\' . $table->getNameAsCamelCase() . 'Entity');

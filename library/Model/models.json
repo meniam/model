@@ -1,48 +1,112 @@
 {
     "fields" : [
         {
-            "match" : {
-                "regexp": "#^.*?\\._#",
-                "type"  : "varchar",
-                "length" : { ">" : 32 , "<" : 40 }
-            },
-            "skip" : true
-        },
-        {
-            "regexp" : "#^.*?\\..*?_(link|index)$#",
-            "skip" : true
-        },
-        {
-            "regexp" : "#.*?\\..*?#",
-            "type"  : [],
-            "length" : [],
-            "skip"   : true,
-            "validators" : [
-                {
-                    "name" : "App\\Validator\\Null"
-                },
-                {
-                    "name" : "App\\Validator\\Url"
-                }
-
+            "comment" : "String fields",
+            "match" : [
+                { "type"  : [ "char", "varchar", "tinyblob", "tinytext", "blob", "text", "mediumblob", "mediumtext", "longblob",  "longtext"], "length" : { ">" : 1 }}
             ],
-            "filters" : [
-                {
-                    "name" : "App\\Validator\\Null"
-                },
-                {
-                    "name" : "App\\Validator\\Url"
-                }
+            "decorators" : [
+                {"name" : "String"}
+            ]
+        },
 
+        {
+            "comment" : "String fields",
+            "match" : [
+                {"type"  : [ "char", "varchar"]}
+            ],
+            "validators" : [
+                {"name" : "\\Zend\\Validator\\StringLength", "params" : {"min" : 0, "max" : "COLUMN_CHAR_LENGTH", "encoding" : "UTF-8"}}
+            ]
+        },
+
+        {
+            "comment" : "Hash fields check",
+            "match" : [
+                {"regexp": "#^(.*)_hash$#", "type"  : [ "char", "varchar"]}
+            ],
+            "validators" : [
+                {"name" : "\\Zend\\Validator\\StringLength", "params" : {"min" : "COLUMN_CHAR_LENGTH", "max" : "COLUMN_CHAR_LENGTH"}}
+            ]
+        },
+
+        {
+            "comment" : "Enum fields check",
+            "match" : [
+                { "regexp": "#.*#", "type"  : [ "enum"] }
+            ],
+            "validators" : [
+                {"name" : "\\Zend\\Validator\\InArray", "params" : {"haystack" : "COLUMN_ENUM_VALUES"}}
+            ]
+        },
+
+        {
+            "comment" : "DateTime decoration",
+            "match" : [
+                {"regexp": "#^(.*?\\..*?)$#", "type"  : ["date", "timestamp"], "length" : { ">" : 1 }}
+            ],
+            "decorators" : [
+                {"name" : "DateTime"}
+            ]
+        },
+
+        {
+            "match" : [
+                {
+                    "regexp": "#^(.*?\\..*?)$#",
+                    "type"  : [ "tinyint", "smallint", "mediumint", "int", "bigint"],
+                    "length" : { ">" : 1 }
+                }
             ],
             "decorators" : [
                 {
-                    "name" : "Model\\Entity\\Decorator\\SuperPrice"
-                },
-                {
-                    "name" : "App\\Validator\\Url"
+                    "name" : "Int"
                 }
+            ]
+        },
+        {
+            "match" : [{ "regexp": "#^.*?\\.id$#",
+                    "type"  : [ "tinyint", "smallint", "mediumint", "int", "bigint"],
+                    "length" : { ">" : 1 }
+                }
+            ],
 
+            "filters" : [
+                {"name" : "\\Zend\\Validator\\StringLength", "params" : {"min" : 0, "max" : "COLUMN_CHAR_LENGTH", "encoding" : "UTF-8"}}
+            ],
+
+            "decorators" : [
+                {
+                    "name" : "Int"
+                }
+            ]
+        },
+        {
+            "match" : [
+                {
+                    "regexp": "#^(.*?\\..*?)$#",
+                    "type"  : [ "float", "decimal", "double"],
+                    "length" : { ">" : 1 }
+                }
+            ],
+            "decorators" : [
+                {
+                    "name" : "Float"
+                }
+            ]
+        },
+        {
+            "match" : [
+                {
+                    "regexp": "#^(.*?\\.url|.*?\\..*?_url)$#",
+                    "type"  : ":string:",
+                    "length" : { ">=" : 255 }
+                }
+            ],
+            "decorators" : [
+                {
+                    "name" : "Url"
+                }
             ]
         }
     ],

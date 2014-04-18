@@ -30,7 +30,7 @@ class InitFilterRules extends AbstractModel
          */
         $file = $part->getFile();
 
-        $file->addUse('App\\Filter\\Filter');
+        $file->addUse('Model\\Filter\\Filter');
 
         $columnCollection = $part->getTable()->getColumn();
 

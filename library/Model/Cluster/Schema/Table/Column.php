@@ -70,95 +70,10 @@ class Column extends ArrayObject
     {
         $this->setupDefaultValidators();
         $this->setupDefaultFilters();
-        $this->setupDefaultDecorators();
+        //$this->setupDefaultDecorators();
         return $this;
     }
 
-    /**
-     * Создать колонку из XML
-     *
-     * @param                             $xml
-     * @param \Model\Cluster\Schema\Table $table
-     * @return Column
-     */
-    public static function fromXml($xml, Table $table)
-    {
-        if (is_array($xml)) {
-            $data = $xml;
-        } else {
-            $xml = simplexml_load_string($xml);
-            $data = json_decode(json_encode((array) $xml), 1);
-        }
-        $data = self::prepareXmlArray($data);
-
-        $column = new Column($data['data'], $table);
-
-        if (isset($data['filters'])) {
-            $filters = is_int(key($data['filters']['filter'])) ? $data['filters']['filter'] : $data['filters'];
-
-            foreach ($filters as $filter) {
-                $column->addFilter($filter['name'], $filter['params']);
-            }
-        }
-
-        if (isset($data['validators'])) {
-            $validators = is_int(key($data['validators']['validator'])) ? $data['validators']['validator'] : $data['validators'];
-            foreach ($validators as $validator) {
-                $column->addValidator($validator['name'], $validator['params']);
-            }
-        }
-
-        if (isset($data['decorators']['decorator'])) {
-            $decorators = is_int(key($data['decorators']['decorator'])) ? $data['decorators']['decorator'] : $data['decorators'];
-            foreach ($decorators as $decorator) {
-                $column->addDecorator($decorator['name']);
-            }
-        }
-
-        return $column;
-    }
-
-    public static function structureXmlArray($data)
-    {
-        foreach ($data as $k => &$v) {
-            if (is_array($v) && !is_int($k) && in_array($k, array('column', 'table', 'schema', 'index', 'link', 'filter', 'decorator', 'validator')) && !is_int(key($v))) {
-                unset($data[$k]);
-                $data[$k][] = $v;
-            }
-
-            if (is_array($v)) {
-                $v = self::structureXmlArray($v);
-            }
-        }
-
-        return $data;
-    }
-
-    /**
-     * Обработать массим который пришел из XML
-     *
-     * @param $data
-     * @return mixed
-     */
-    public static function prepareXmlArray($data)
-    {
-        $data = self::structureXmlArray($data);
-
-        foreach ($data as $k => &$v) {
-            if (is_array($v) && empty($v)) {
-                $v = null;
-            } elseif (is_array($v)) {
-                $v = self::prepareXmlArray($v);
-            }
-
-            if (substr($k, 0, 10) == 'array_key_') {
-                $data[intval(substr($k, 10))] = $v;
-                unset($data[$k]);
-            }
-        }
-
-        return $data;
-    }
 
     /**
      * Set column data
@@ -341,6 +256,16 @@ class Column extends ArrayObject
     }
 
 
+    public function getNumericPrecision()
+    {
+        return (int)$this['numeric_precision'];
+    }
+
+    public function getNumericScale()
+    {
+        return (int)$this['numeric_scale'];
+    }
+
     /**
      * Получить флаг уникальности
      *
@@ -398,6 +323,14 @@ class Column extends ArrayObject
     public function getName()
     {
         return $this['column_name'];
+    }
+
+    /**
+     * @return string
+     */
+    public function getFullName()
+    {
+        return $this->getTable()->getName() . '.' . $this->getName();
     }
 
     /**
@@ -609,33 +542,33 @@ class Column extends ArrayObject
             case 'longtext':
             case 'timestamp':
                 if ($this->getColumnType() == 'enum') {
-                    $this->addFilter('\App\Filter\EnumField');
+                    $this->addFilter('\Model\Filter\EnumField');
                 } elseif (substr($name, 0,3) == 'is_' && $this->getColumnType() == 'enum') {
-                    $this->addFilter('\App\Filter\IsFlag');
+                    $this->addFilter('\Model\Filter\IsFlag');
                 } elseif (substr($name, -5) == '_hash' || substr($name, -4) == '_md5') {
-                    $this->addFilter('\App\Filter\Hash');
+                    $this->addFilter('\Model\Filter\Hash');
                 } elseif (substr($name, -5) == '_stem' || $name == 'stem') {
-                    $this->addFilter('\App\Filter\Stem');
+                    $this->addFilter('\Model\Filter\Stem');
                 } elseif ($name == 'description' || $name == 'text' || substr($name, -12) == '_description' || substr($name, -5) == '_text') {
-                    $this->addFilter('\App\Filter\Text');
+                    $this->addFilter('\Model\Filter\Text');
                 } elseif ($name == 'url' || substr($name, -4) == '_url') {
-                    $this->addFilter('\App\Filter\Url');
+                    $this->addFilter('\Model\Filter\Url');
                 } elseif ($name == 'email' || substr($name, -6) == '_email') {
-                    $this->addFilter('\App\Filter\Email');
+                    $this->addFilter('\Model\Filter\Email');
                 } elseif ($name == 'price' || substr($name, -6) == '_price') {
-                    $this->addFilter('\App\Filter\Price');
+                    $this->addFilter('\Model\Filter\Price');
                 } elseif ($name == 'slug' || substr($name, -5) == '_slug') {
-                    $this->addFilter('\App\Filter\Slug');
+                    $this->addFilter('\Model\Filter\Slug');
                 } elseif (in_array($this->getColumnType(), array('varchar', 'char')) && ($this->getName() == 'name' || $this->getName() == 'name_alias' || $this->getName() == 'name_translate'
                     || $this->getName() == 'title' || $this->getName() == 'title_alias' || $this->getName() == 'title_translate'
                     || $this->getName() == 'h1' || $this->getName() == 'h1_alias' || $this->getName() == 'h1_translate'
                     || $this->getName() == 'meta_title' || $this->getName() == 'meta_title_alias' || $this->getName() == 'meta_title_translate')) {
 
-                    $this->addFilter('\App\Filter\Name');
+                    $this->addFilter('\Model\Filter\Name');
                 } elseif ($this->getColumnType() == 'timestamp' || $this->getName() == 'date' || substr($this->getName(), -5) == '_date') {
-                    $this->addFilter('\App\Filter\Date');
+                    $this->addFilter('\Model\Filter\Date');
                 } else {
-                    $this->addFilter('\App\Filter\StringTrim');
+                    $this->addFilter('\Model\Filter\StringTrim');
                 }
                 break;
             case 'tinyint':
@@ -644,10 +577,10 @@ class Column extends ArrayObject
             case 'int':
             case 'bigint':
                 if ($name == 'level' || $name == 'pos' || $name == 'count' || substr($name, -6) == '_count') {
-                    $this->addFilter('\App\Filter\Int');
-                    $this->addFilter('\App\Filter\Abs');
+                    $this->addFilter('\Model\Filter\Int');
+                    $this->addFilter('\Model\Filter\Abs');
                 } elseif ($name = 'id' || substr($name, -3) == '_id') {
-                    $this->addFilter('\App\Filter\Id');
+                    $this->addFilter('\Model\Filter\Id');
                 } else {
                     $this->addFilter('\Zend\Filter\Int');
                 }
@@ -656,52 +589,7 @@ class Column extends ArrayObject
             case 'float':
             case 'decimal':
             case 'double':
-                $this->addFilter('\App\Filter\Float');
-                break;
-        }
-
-        return $this;
-    }
-
-    /**
-     * Установить декораторы по-умолчанию
-     *
-     * @return Column
-     */
-    public function setupDefaultDecorators()
-    {
-        switch ($this->getColumnType()) {
-            case 'char':
-            case 'varchar':
-            case 'tinyblob':
-            case 'tinytext':
-            case 'blob':
-            case 'text':
-            case 'mediumblob':
-            case 'mediumtext':
-            case 'longblob':
-            case 'enum':
-            case 'longtext':
-                $this->addDecorator('String');
-                if (substr($this->getName(), -4) == '_url') {
-                    $this->addDecorator('Url');
-                }
-                break;
-            case 'timestamp':
-            case 'date':
-                $this->addDecorator('DateTime');
-                break;
-            case 'tinyint':
-            case 'smallint':
-            case 'mediumint':
-            case 'int':
-            case 'bigint':
-                $this->addDecorator('Int');
-                break;
-            case 'float':
-            case 'decimal':
-            case 'double':
-                $this->addDecorator('Float');
+                $this->addFilter('\Model\Filter\Float');
                 break;
         }
 
@@ -872,80 +760,5 @@ class Column extends ArrayObject
     public function getColumnDefault()
     {
         return (string)$this['column_default'];
-    }
-
-    /**
-     * Выгрузить в XML
-     *
-     * @param bool $withHeader
-     * @param int  $tabStep
-     * @return string
-     */
-    public function toXml($withHeader = true, $tabStep = 0)
-    {
-        $tab = '    ';
-        $shift = str_repeat($tab, $tabStep);
-
-        $xml = $withHeader ? \Model\Cluster::XML_HEADER . "\n": '';
-
-        $xml .= $shift . '<column name="' . $this->getName() . '">' . "\n";
-        $xml .= $shift . $tab . '<data>' . "\n";
-        foreach ($this as $k => $v) {
-            $xml .= $shift . $tab . $tab . '<' . $k . '>' . $v . '</' . $k . '>' . "\n";
-        }
-        $xml .= $shift . $tab . '</data>' . "\n";
-        $xml .= $shift . $tab . '<filters>' . "\n";
-        foreach ($this->filterArray as $filter) {
-            $xml .= $shift . $tab . $tab . '<filter>' . "\n" . $this->arrayToXml($filter, $tabStep + 3) . $shift . $tab . $tab . '</filter>' . "\n";
-        }
-        $xml .= $shift . $tab . '</filters>' . "\n";
-
-        $xml .= $shift . $tab . '<validators>' . "\n";
-        foreach ($this->validatorArray as $validator) {
-            $xml .= $shift . $tab . $tab . '<validator>' . "\n" . $this->arrayToXml($validator, $tabStep + 3) . $shift . $tab . $tab . '</validator>' . "\n";
-        }
-        $xml .= $shift . $tab . '</validators>' . "\n";
-
-        $xml .= $shift . $tab . '<decorators>' . "\n";
-        foreach ($this->decoratorArray as $decorator) {
-            $xml .= $shift . $tab . $tab . '<decorator>' . "\n" . $this->arrayToXml($decorator, $tabStep + 3) . $shift . $tab . $tab . '</decorator>' . "\n";
-        }
-        $xml .= $shift . $tab . '</decorators>' . "\n";
-
-        $xml .= $shift . '</column>' . "\n";
-
-        return $xml;
-    }
-
-    /**
-     * Преобразовать массив в XML
-     *
-     * @param     $array
-     * @param int $tabStep
-     * @return string
-     */
-    public function arrayToXml($array, $tabStep = 0)
-    {
-        $tab = '    ';
-        $shift = str_repeat($tab, $tabStep);
-
-        if (!is_array($array)) {
-            return '';
-        }
-
-        $xml = '';
-        foreach ($array as $k => $v) {
-            if (is_numeric($k)) {
-                $k = 'array_key_' . $k;
-            }
-
-            $xml .= $shift . '<' . $k . '>';
-            if (is_array($v)) {
-                $v = "\n" . $this->arrayToXml($v, $tabStep + 1) . $shift;
-            }
-            $xml .= $v . '</' . $k . '>' . "\n";
-        }
-
-        return $xml;
     }
 }

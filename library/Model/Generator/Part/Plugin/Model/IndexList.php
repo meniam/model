@@ -2,11 +2,10 @@
 
 namespace Model\Generator\Part\Plugin\Model;
 
+use Model\Code\Generator\DocBlockGenerator;
 use Model\Generator\Part\PartInterface;
-use Model\Cluster\Schema\Table\Link\AbstractLink;
 use Model\Cluster\Schema\Table\Index\AbstractIndex;
 use \Zend\Code\Generator\PropertyGenerator;
-use \Zend\Code\Generator\PropertyValueGenerator;
 use \Zend\Code\Generator\ValueGenerator;
 
 /**
@@ -48,7 +47,7 @@ class IndexList extends AbstractModel
             ),
         );
 
-        $docblock = new \Zend\Code\Generator\DocBlockGenerator('Ключи');
+        $docblock = new DocBlockGenerator('Ключи');
         $docblock->setTags($tags);
 
         $resultIndexList = array();

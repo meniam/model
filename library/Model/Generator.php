@@ -2,6 +2,7 @@
 
 namespace Model;
 
+use Model\Cluster\Schema;
 use Model\Exception\ErrorException;
 use Model\Generator\Part\AbstractPart;
 use Model\Db\Mysql as DbAdapter;
@@ -16,6 +17,7 @@ use \Model\Generator\Part\FrontCollection;
 use Model\Generator\Part\FrontModel;
 use Model\Generator\Part\Model;
 use Model\Generator\Part\Plugin\Cond\JoinConst;
+use Zend\Console\RouteMatcher\DefaultRouteMatcher;
 
 /**
  * Основной класс генератора
@@ -57,20 +59,13 @@ class Generator
      */
     protected $_deployDir;
 
-    /**
-     * @var
-     */
-    private $sm;
+    private function setOutDir($outDir)
+    {
+        $this->_outDir = rtrim($outDir, '/');
 
-	public function __construct($sm, $cluster, $outDir)
-	{
-        $this->sm = $sm;
-        $this->cluster = $cluster;
-		$this->_outDir = rtrim($outDir, '/');
-
-		if (!is_dir($outDir) || !is_writeable($outDir)) {
-			throw new ErrorException('Directory is not writable: ' . $outDir);
-		}
+        if (!is_dir($outDir) || !is_writeable($outDir)) {
+            throw new ErrorException('Directory is not writable: ' . $outDir);
+        }
 
         $this->outDirArray = array(
             AbstractPart::PART_FRONT_COLLECTION => $outDir . '/collections',
@@ -92,8 +87,31 @@ class Generator
                 throw new ErrorException('Directory is not writable: ' . $dir);
             }
         }
-	}
+    }
 
+    private $config = array();
+
+    /**
+     * @return array
+     */
+    public function getConfig()
+    {
+        return $this->config;
+    }
+
+    /**
+     * @param array $config
+     */
+    public function setConfig($config)
+    {
+        $this->config = $config;
+    }
+
+    /**
+     * @param Table $table
+     * @param       $part
+     * @param null  $aliasName
+     */
     public function buildPart(Table $table, $part, $aliasName = null)
     {
         if ($part == 'front_cond') {
@@ -121,68 +139,61 @@ class Generator
             $outputFile .= 'Abstract';
         }
         $outputFile .= str_replace('Front', '', $aliasNameAsCamelCase . $partAsCameCase) . '.php';
-        $options = $aliasName ? array('alias' => $aliasName) : array();
+        $options = $aliasName ? array('alias' => $aliasName, 'config' => $this->getConfig()) : array('config' => $this->getConfig());
 
         new $partClass($table, $this->getCluster(), $outputFile, $options);
-        //$partObject->generate($options);
-        if (!is_file($outputFile)) {
-            echo $partClass . "- " ;
-            echo $outputFile;
-            echo "fuck";die;
-        }
-        //echo $outputFile . "\n";
     }
-
-
-    /**
-     * @param      $tableName
-     * @param null $aliasName
-     * @return bool
-    public function buildPartCond($tableName, $aliasName = null)
-    {
-        $table = $this->getCluster()->getTable($tableName);
-        if (!$table) {
-            return false;
-        }
-
-        $tableNameAsCamelCase = $table->getNameAsCamelCase();
-
-        if ($aliasName) {
-            $file = $this->_outDir . '/cond/abstract/Abstract' . implode('', array_map('ucfirst', explode('_', $aliasName))) . 'Cond.php';
-        } else {
-            $file = $this->_outDir . '/cond/abstract/Abstract' . $tableNameAsCamelCase . 'Cond.php';
-        }
-
-        $cond = new Cond($table, $this->getCluster(), $file);
-        $cond->generate(array('alias' => $aliasName));
-
-        return true;
-    }
-
-    public function buildPartFrontCond($tableName, $aliasName = null)
-    {
-        $table = $this->getCluster()->getTable($tableName);
-        $tableNameAsCamelCase = $table->getNameAsCamelCase();
-
-        if ($aliasName) {
-            $file = $this->_outDir . '/cond/' . implode('', array_map('ucfirst', explode('_', $aliasName))) . 'Cond.php';
-        } else {
-            $file = $this->_outDir . '/cond/' . $tableNameAsCamelCase . 'Cond.php';
-        }
-
-        new FrontCond($table, $this->getCluster(), $file, array('alias' => $aliasName));
-
-        return true;
-    }
-     */
 
     /**
      * @throws \Exception
      */
-    public function run()
+    public function run($commandString = array())
     {
-        $config = json_decode(file_get_contents(__DIR__ . '/models.json'), true);
+        if ($commandString) {
+            if (!is_array($commandString)) {
+                $commandString = 'models ' . $commandString;
+                $commandString = explode(' ', $commandString);
+            }
+        } else {
+            $commandString = $GLOBALS['argv'];
+        }
 
+        $params = new DefaultRouteMatcher("[--output-dir=] [--db-host=] [--db-schema=]  [--db-user=] [--db-password=] [--deploy=] [--verbose] [--help] [--force] [--cache-dir=] [--db-schema=]");
+        $argv = $commandString;
+        array_shift($argv);
+        $consoleParams = $params->match($argv);
+
+        if (!isset($consoleParams['output-dir'])) {
+            echo "Unknown output dir. Use ./console --help\n";
+            exit();
+        }
+
+        if (!is_dir($consoleParams['output-dir']) || !is_writeable($consoleParams['output-dir'])) {
+            echo "Unknown output dir not exists or not writable. Use ./console --help\n";
+            exit();
+        }
+
+        $this->setOutDir($consoleParams['output-dir']);
+
+        // Read Db Configuration
+
+        $host = isset($consoleParams['db-host']) ? $consoleParams['db-host'] : '127.0.0.1';
+        $dbSchema = isset($consoleParams['db-schema']) ? $consoleParams['db-schema'] : 'test';
+        $user = isset($consoleParams['db-user']) ? $consoleParams['db-user'] : 'root';
+        $password = isset($consoleParams['db-password']) ? $consoleParams['db-password'] : '';
+
+        $dsn = "mysql:host=" . $host . ';'
+               . 'dbname=' . $dbSchema . ';'
+               . 'charset=utf8';
+        $db = new \Model\Db\Mysql($dsn, $user, $password);
+
+        $this->cluster = new Cluster();
+        $this->cluster->addSchema((new Schema($dbSchema, $db))->init());
+
+        $config = json_decode(file_get_contents(__DIR__ . '/models.json'), true);
+        $this->setConfig($config);
+
+        // Register plugins
         if (isset($config['plugins'])) {
             foreach ($config['plugins'] as $partType => $pluginArray )
                 if (isset($pluginArray['list'])) {
@@ -198,6 +209,9 @@ class Generator
                     }
                 }
         }
+
+        // Fields prepare
+
 
         /**
          * Generate Alias cond
@@ -215,31 +229,12 @@ class Generator
 
             $this->buildPart($table, 'cond');
             $this->buildPart($table, 'front_cond');
-/*            if ($table->getName() == 'tag') {
-                print_r($aliasList);
-                die;
-            }
-*/
-
             $this->buildPart($table, 'collection');
             $this->buildPart($table, 'front_collection');
-
             $this->buildPart($table, 'entity');
             $this->buildPart($table, 'front_entity');
-
             $this->buildPart($table, 'model');
             $this->buildPart($table, 'front_model');
-
-            //$this->buildPartModel($table->getName());
-            //$this->buildPartFrontModel($table->getName());
-            //$this->buildPartCond($table->getName());
-            //$this->buildPartFrontCond($table->getName());
-
-            //$this->buildPartEntity($table->getName());
-            //$this->buildPartFrontEntity($table->getName());
-
-            //$this->buildPartCollection($table->getName());
-            //$this->buildPartFrontCollection($table->getName());
 
             $tableNameAsCamelCase = $table->getNameAsCamelCase();
             $classmap .= "\t\t'Model\\\\Abstract{$tableNameAsCamelCase}Model' => __DIR__ . '/abstract/Abstract{$tableNameAsCamelCase}Model.php',\n";
@@ -263,18 +258,12 @@ class Generator
             throw new ErrorException ('Directory is not writable: ' . $outDir);
         }
 
-        @mkdir($outDir . '/abstract');
-        @mkdir($outDir . '/entities');
-        @mkdir($outDir . '/entities/abstract');
-        @mkdir($outDir . '/collections');
-        @mkdir($outDir . '/collections/abstract');
-
-        @mkdir($outDir . '/cond');
-        @mkdir($outDir . '/cond/abstract');
+        foreach ($this->outDirArray as $dir) {
+            @mkdir($dir);
+        }
 
         foreach (glob($this->_outDir . '/abstract/*.php') as $filename) {
             $deployFile = $this->_deployDir . '/abstract/' . basename($filename);
-            //echo $deployFile;
             copy($filename, $deployFile);
         }
 

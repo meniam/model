@@ -21,6 +21,11 @@ define('FIXTURES_PATH',   realpath(__DIR__ . '/_fixtures'));
 
 include __DIR__ . '/autoload.php';
 
+define('DB_HOST', 'models-db-server');
+define('DB_USER', 'macbook');
+define('DB_PASSWORD', 'test');
+define('DB_NAME', 'model_test');
+
 $db = new Model\Db\Mysql('mysql:host=models-db-server;dbname=model_test;charset=UTF8', 'macbook', 'test');
 
 /** @var Zend\Cache\Storage\Adapter\Filesystem $cache */

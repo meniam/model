@@ -85,9 +85,10 @@
             "url": "https://packages.zendframework.com/"
         }
     ],
+    "bin": ["bin/models"],
     "autoload": {
-        "psr-0": {
-            "Model": "/library/"
-        }
+        "classmap": [
+            "library/"
+        ]
     }
 }

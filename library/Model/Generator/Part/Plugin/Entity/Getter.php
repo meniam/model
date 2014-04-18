@@ -1,8 +1,11 @@
 <?php
 
 namespace Model\Generator\Part\Plugin\Entity;
+use Model\Code\Generator\DocBlockGenerator;
 use Model\Generator\Part\PartInterface;
 use Model\Cluster\Schema\Table\Column;
+use Zend\Code\Generator\AbstractMemberGenerator;
+use Zend\Code\Generator\MethodGenerator;
 
 class Getter extends AbstractEntity
 {
@@ -53,7 +56,7 @@ class Getter extends AbstractEntity
                 $shortDescr = 'Получить ' . $column->getTable()->getName() . '.' . $columnName;
             }
 
-            $docblock = new \Zend\Code\Generator\DocBlockGenerator($shortDescr);
+            $docblock = new DocBlockGenerator($shortDescr);
             $docblock->setTags(array(
                              array(
                                  'name'        => 'return',
@@ -62,9 +65,9 @@ class Getter extends AbstractEntity
 
             ));
 
-            $method = new \Zend\Code\Generator\MethodGenerator();
+            $method = new MethodGenerator();
             $method->setName('get' . $column->getNameAsCamelCase());
-            $method->setVisibility(\Zend\Code\Generator\AbstractMemberGenerator::VISIBILITY_PUBLIC);
+            $method->setVisibility(AbstractMemberGenerator::VISIBILITY_PUBLIC);
             $method->setDocBlock($docblock);
 
             $method->setBody(<<<EOS

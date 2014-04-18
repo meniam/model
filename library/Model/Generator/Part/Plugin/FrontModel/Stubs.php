@@ -117,8 +117,8 @@ EOS
         $method->setDocBlock($docblock);
 
         $method->setBody(<<<EOS
-// \$this->addFilterRule('field', Filter::getFilterInstance('App\Filter\Id'));
-// \$this->addFilterRule('field', Filter::getFilterInstance('App\Filter\Null'));
+// \$this->addFilterRule('field', Filter::getFilterInstance('Model\Filter\Id'));
+// \$this->addFilterRule('field', Filter::getFilterInstance('Model\Filter\Null'));
 EOS
         );
 

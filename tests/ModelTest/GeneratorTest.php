@@ -29,7 +29,7 @@ class GeneratorTest extends \ModelTest\TestCase
         $schema = $this->getSchema();
         $cluster->addSchema($schema);
 
-        $this->generator = new Generator($this->getDb(), $cluster, '/tmp/generate');
+        $this->generator = new Generator();
     }
 
     protected function tearDown()
@@ -40,8 +40,6 @@ class GeneratorTest extends \ModelTest\TestCase
     public function testGetSchema()
     {
         $this->assertInstanceOf('Model\Generator', $this->generator);
-
-        $this->assertInstanceOf('Model\Cluster', $this->generator->getCluster());
-        $this->assertTrue($this->generator->getCluster()->hasSchema('model_test'));
+        $this->assertNull($this->generator->getCluster());
     }
 }

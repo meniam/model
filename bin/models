@@ -1,8 +1,6 @@
 #!/usr/local/app/bin/php
 <?php
 
-echo "aaaaa";
-
 foreach (array(__DIR__ . '/../vendor/autoload.php') as $file) {
     if (file_exists($file)) {
         define('MODELS_COMPOSER_INSTALL', $file);
@@ -20,3 +18,5 @@ if (!defined('MODELS_COMPOSER_INSTALL')) {
 
 require MODELS_COMPOSER_INSTALL;
 
+
+(new \Model\Generator)->run();
