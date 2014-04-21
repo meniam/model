@@ -24,9 +24,8 @@
         "ext-mbstring"  : "*",
         "ext-pdo_mysql" : "*",
         "lib-libxml"    : "*",
-        "lib-iconv"     : "~1.14",
+        "lib-iconv"     : "*",
         "lib-pcre"      : "*",
-        "meniam/app"    : "1.0.*",
 
         "doctrine/annotations"   : ">=1.0",
         "ircmaxell/random-lib"   : "dev-master",
@@ -62,24 +61,6 @@
     },
 
     "repositories": [
-        {
-            "type":"package",
-            "package":{
-                "name":"meniam/app",
-                "version":"v1.0.0",
-                "source":{
-                    "type":"git",
-                    "url":"git@github.com:meniam/app.git",
-                    "reference":"master"
-                },
-
-                "autoload": {
-                    "psr-0": {
-                        "App": "library/"
-                    }
-                }
-            }
-        },
         {
             "type": "composer",
             "url": "https://packages.zendframework.com/"
