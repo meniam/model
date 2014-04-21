@@ -14,10 +14,6 @@ class StringTrim extends \Zend\Filter\StringTrim
      */
     protected function unicodeTrim($value, $charlist = null)
     {
-        if ($charlist === null) {
-            return trim($value);
-        } else {
-            return trim($value, $charlist);
-        }
+        return ($charlist === null) ? trim($value) : trim($value, $charlist);
     }
 }

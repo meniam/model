@@ -2,7 +2,9 @@
 
 namespace Model\Filter;
 
-class Name extends \Zend\Filter\AbstractFilter
+use Zend\Filter\AbstractFilter;
+
+class Name extends AbstractFilter
 {
 	public function filter($value)
 	{
@@ -11,8 +13,10 @@ class Name extends \Zend\Filter\AbstractFilter
         }
 
         $value = preg_replace('#\s+#usi', ' ', $value);
-        $value = Filter::filterStatic($value, '\\Model\\Filter\\Truncate', array('length' => 255, 'etc' => '', 'break_words' => false, 'middle' => false));
-
-		return trim($value);
+        return  trim(Filter::filterStatic($value, '\\Model\\Filter\\Truncate',
+                    array('length' => 255,
+                          'etc' => '',
+                          'break_words' => false,
+                          'middle' => false)));
 	}
 }

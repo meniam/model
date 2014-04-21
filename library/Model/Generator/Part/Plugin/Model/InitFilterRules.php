@@ -39,6 +39,22 @@ class InitFilterRules extends AbstractModel
         foreach ($columnCollection as $column) {
             $name = $column->getName();
 
+
+            if ($columnConfig = $part->getColumntConfig($column)) {
+                if ($columnConfig && isset($columnConfig['filters'])) {
+                    foreach ($columnConfig['filters'] as $filter) {
+                        $filterParams = isset($validator['params']) ? $this->varExportMin($validator['params'], true) : null;
+
+                        if ($filterParams && $filterParams != 'NULL') {
+                            $template .= "\$this->addFilterRule('$name', Filter::getFilterInstance('{$filter['name']}', {$filterParams}));\n";
+                        } else {
+                            $template .= "\$this->addFilterRule('$name', Filter::getFilterInstance('{$filter['name']}'));\n";
+                        }
+                    }
+                }
+            }
+
+/*
             $filterArray = $column->getFilter();
 
             foreach ($filterArray as $filter) {
@@ -49,7 +65,7 @@ class InitFilterRules extends AbstractModel
                     $template .= "\$this->addFilterRule('$name', Filter::getFilterInstance('{$filter['name']}', {$filterParams}));\n";
                 }
             }
-
+*/
             if ($column->isNullable()) {
                 $template .= "\$this->addFilterRule('$name', Filter::getFilterInstance('\\Zend\\Filter\\Null'));\n";
             }

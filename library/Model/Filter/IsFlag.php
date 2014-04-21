@@ -2,6 +2,8 @@
 
 namespace Model\Filter;
 
+use Zend\Filter\AbstractFilter;
+
 /**
  * Фильтрует поле как флаг в базе данных
  *

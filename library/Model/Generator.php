@@ -141,11 +141,7 @@ class Generator
 
     public function showUsage()
     {
-        $shift = 4;
-        $shiftStr = str_repeat(" ", $shift);
-        $console = Console::getInstance();
-        $width = $console->getWidth() - 4 * $shift;
-        $width = $width > 80 ? 80 : $width;
+        $shiftLen = 16;
 
         $help = array(
             "Models 1.0.0 by Eugene Myazin <github.com/meniam/models>.",
@@ -154,10 +150,6 @@ class Generator
 
         $this->showLine($help, ColorInterface::WHITE);
 
-        //$console->write($shiftStr . str_repeat('-', $width) . PHP_EOL) ;
-        //$console->write($shiftStr . $shiftStr . );
-        $shiftLen = 16;
-        $shiftLenStr = str_repeat(" ", $shiftLen);
         $this->showLine("Usage# ./models --deploy-dir=<dir> \\", ColorInterface::LIGHT_WHITE, $shiftLen);
         $this->showLine("                --output-dir=<dir> \\", ColorInterface::LIGHT_WHITE, $shiftLen);
         $this->showLine("               [--db-host=<str>] \\", ColorInterface::LIGHT_WHITE, $shiftLen);
@@ -207,8 +199,18 @@ class Generator
             "в этом режиме скрипт игнорирует ошибки, все что может..." . PHP_EOL.
             "кеш игнорируется" . PHP_EOL,
             8);
+
+
+        return null;
     }
 
+    /**
+     * @param array $lines
+     * @param null  $color
+     * @param int   $shift
+     *
+     * @return null
+     */
     public function showLine($lines = array(), $color = null, $shift = 0)
     {
         $console = Console::getInstance();
@@ -224,8 +226,17 @@ class Generator
                 $console->write($shiftStr . $line . PHP_EOL, $color);
             }
         }
+
+        return null;
     }
 
+    /**
+     * @param $param
+     * @param $name
+     * @param $description
+     *
+     * @return null
+     */
     public function showParam($param, $name, $description)
     {
         $console = Console::getInstance();
@@ -242,10 +253,10 @@ class Generator
         $descriptionArray = array_map('trim', explode("\n", $description));
         foreach ($descriptionArray as $descriptionItem) {
             $console->write($shiftStr . str_repeat(" ", 24) . $descriptionItem . "\n");
-
         }
-    }
 
+        return null;
+    }
 
     /**
      * @throws \Exception
@@ -377,6 +388,8 @@ class Generator
             }
             $this->deploy($consoleParams['deploy-dir']);
         }
+
+        return null;
     }
 
     public function deploy($outDir)

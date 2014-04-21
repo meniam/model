@@ -2,7 +2,9 @@
 
 namespace Model\Filter;
 
-class Float extends \Zend\Filter\AbstractFilter
+use Zend\Filter\AbstractFilter;
+
+class Float extends AbstractFilter
 {
 	/**
 	 * Defined by Zend_Filter_Interface

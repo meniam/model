@@ -2,6 +2,8 @@
 
 namespace Model\Filter;
 
+use Zend\Filter\AbstractFilter;
+
 /**
  * Превращает строку в MD5
  *
@@ -11,7 +13,7 @@ namespace Model\Filter;
  * @copyright  2008-2012 ООО "Америка"
  * @version    SVN: $Id$
  */
-class Date extends \Zend\Filter\AbstractFilter
+class Date extends AbstractFilter
 {
     public function filter($value)
     {

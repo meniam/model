@@ -68,7 +68,7 @@ class Column extends ArrayObject
      */
     public function init()
     {
-        $this->setupDefaultValidators();
+        //$this->setupDefaultValidators();
         $this->setupDefaultFilters();
         //$this->setupDefaultDecorators();
         return $this;
@@ -255,15 +255,46 @@ class Column extends ArrayObject
         return (int)$this['character_maximum_length'];
     }
 
-
+    /**
+     * @return int
+     */
     public function getNumericPrecision()
     {
         return (int)$this['numeric_precision'];
     }
 
+    /**
+     * @return int
+     */
     public function getNumericScale()
     {
         return (int)$this['numeric_scale'];
+    }
+
+    /**
+     * @return int
+     */
+    public function getMaxValue()
+    {
+        switch ($this->getColumnType()) {
+            case 'tinyint':
+                return $this->isUnsigned() ? 255 : 128;
+                break;
+            case 'smallint':
+                return $this->isUnsigned() ? 65535 : 32768;
+                break;
+            case 'mediumint':
+                return $this->isUnsigned() ? 16777215 : 8388607;
+                break;
+        }
+    }
+
+    /**
+     * @return int
+     */
+    public function getMinValue()
+    {
+        return $this->isUnsigned() ? 0 : 0 - $this->getMaxValue();
     }
 
     /**
@@ -542,33 +573,33 @@ class Column extends ArrayObject
             case 'longtext':
             case 'timestamp':
                 if ($this->getColumnType() == 'enum') {
-                    $this->addFilter('\Model\Filter\EnumField');
+//                    $this->addFilter('\Model\Filter\EnumField');
                 } elseif (substr($name, 0,3) == 'is_' && $this->getColumnType() == 'enum') {
-                    $this->addFilter('\Model\Filter\IsFlag');
+//                    $this->addFilter('\Model\Filter\IsFlag');
                 } elseif (substr($name, -5) == '_hash' || substr($name, -4) == '_md5') {
-                    $this->addFilter('\Model\Filter\Hash');
+//                    $this->addFilter('\Model\Filter\Hash');
                 } elseif (substr($name, -5) == '_stem' || $name == 'stem') {
-                    $this->addFilter('\Model\Filter\Stem');
+  //                  $this->addFilter('\Model\Filter\Stem');
                 } elseif ($name == 'description' || $name == 'text' || substr($name, -12) == '_description' || substr($name, -5) == '_text') {
-                    $this->addFilter('\Model\Filter\Text');
+//                    $this->addFilter('\Model\Filter\Text');
                 } elseif ($name == 'url' || substr($name, -4) == '_url') {
-                    $this->addFilter('\Model\Filter\Url');
+                    //$this->addFilter('\Model\Filter\Url');
                 } elseif ($name == 'email' || substr($name, -6) == '_email') {
-                    $this->addFilter('\Model\Filter\Email');
+                    //$this->addFilter('\Model\Filter\Email');
                 } elseif ($name == 'price' || substr($name, -6) == '_price') {
-                    $this->addFilter('\Model\Filter\Price');
+                    //$this->addFilter('\Model\Filter\Price');
                 } elseif ($name == 'slug' || substr($name, -5) == '_slug') {
-                    $this->addFilter('\Model\Filter\Slug');
+                    //$this->addFilter('\Model\Filter\Slug');
                 } elseif (in_array($this->getColumnType(), array('varchar', 'char')) && ($this->getName() == 'name' || $this->getName() == 'name_alias' || $this->getName() == 'name_translate'
                     || $this->getName() == 'title' || $this->getName() == 'title_alias' || $this->getName() == 'title_translate'
                     || $this->getName() == 'h1' || $this->getName() == 'h1_alias' || $this->getName() == 'h1_translate'
                     || $this->getName() == 'meta_title' || $this->getName() == 'meta_title_alias' || $this->getName() == 'meta_title_translate')) {
 
-                    $this->addFilter('\Model\Filter\Name');
+                    //$this->addFilter('\Model\Filter\Name');
                 } elseif ($this->getColumnType() == 'timestamp' || $this->getName() == 'date' || substr($this->getName(), -5) == '_date') {
-                    $this->addFilter('\Model\Filter\Date');
+                    //$this->addFilter('\Model\Filter\Date');
                 } else {
-                    $this->addFilter('\Model\Filter\StringTrim');
+                    //$this->addFilter('\Model\Filter\StringTrim');
                 }
                 break;
             case 'tinyint':
@@ -590,98 +621,6 @@ class Column extends ArrayObject
             case 'decimal':
             case 'double':
                 $this->addFilter('\Model\Filter\Float');
-                break;
-        }
-
-        return $this;
-    }
-
-    /**
-     * Установить валидаторы по-умолчанию
-     *
-     * @return Column
-     */
-    public function setupDefaultValidators()
-    {
-        switch ($this->getColumnType()) {
-            case 'char':
-            case 'varchar':
-                $maxLen = $this->getCharacterMaximumLength();
-
-                if (substr($this->getName(), -5) == '_hash') {
-                    $this->addValidator('\Zend\Validator\StringLength',
-                                    array('min' => $maxLen,
-                                          'max' => $maxLen))
-                         ->addValidator('\Zend\Validator\Hex');
-                } elseif ($maxLen > 0) {
-                    $this->addValidator('\Zend\Validator\StringLength',
-                            array('min' => 0,
-                                  'max' => $maxLen));
-                }
-                break;
-            case 'enum':
-                $enumValues = $this->getEnumValuesAsArray();
-                $this->addValidator('\Zend\Validator\InArray', array('haystack' => $enumValues));
-                break;
-            case 'timestamp':
-                $this->addValidator('\Zend\Validator\Date', array('format' => 'Y-m-d H:i:s'));
-                break;
-            case 'tinyblob':
-            case 'tinytext':
-                    $this->addValidator('\Zend\Validator\StringLength', array('min' => 0, 'max' => 255, 'encoding' => 'UTF-8'));
-                break;
-            case 'blob':
-            case 'text':
-                    $this->addValidator('\Zend\Validator\StringLength', array('min' => 0, 'max' => 65535, 'encoding' => 'UTF-8'));
-                break;
-            case 'mediumblob':
-            case 'mediumtext':
-                    $this->addValidator('\Zend\Validator\StringLength', array('min' => 0, 'max' => 16777215, 'encoding' => 'UTF-8'));
-                break;
-            case 'longblob':
-            case 'longtext':
-                break;
-            case 'tinyint':
-                if ($this->isUnsigned()) {
-                    $min = 0;
-                    $max = 255;
-                } else {
-                    $min = -128;
-                    $max = 128;
-                }
-                $this->addValidator('\Zend\Validator\Regex', array('pattern' => '/^[\d]*$/'));
-                $this->addValidator('\Zend\Validator\Between', array('min' => $min, 'max' => $max, 'inclusive' => true));
-                break;
-            case 'smallint':
-                if ($this->isUnsigned()) {
-                    $min = 0;
-                    $max = 65535;
-                } else {
-                    $min = -32768;
-                    $max = 32768;
-                }
-                $this->addValidator('\Zend\Validator\Regex', array('pattern' => '/^[\d]*$/'));
-                $this->addValidator('\Zend\Validator\Between', array('min' => $min, 'max' => $max, 'inclusive' => true));
-                break;
-            case 'mediumint':
-                if ($this->isUnsigned()) {
-                    $min = 0;
-                    $max = 16777215;
-                } else {
-                    $min = -8388607;
-                    $max = 8388607;
-                }
-                $this->addValidator('\Zend\Validator\Regex', array('pattern' => '/^[\d]*$/'));
-                $this->addValidator('\Zend\Validator\Between', array('min' => $min, 'max' => $max, 'inclusive' => true));
-                break;
-            case 'int':
-            case 'bigint':
-                $this->addValidator('\Zend\Validator\Regex', array('pattern' => '/^[\d]*$/'));
-                break;
-            case 'float':
-            case 'decimal':
-            case 'double':
-                $this->addValidator('\Zend\Validator\Regex', array('pattern' => '/^[\d\,\.]*$/'));
                 break;
         }
 
