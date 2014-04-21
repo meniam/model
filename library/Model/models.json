@@ -9,8 +9,7 @@
                 {"name" : "String"}
             ]
         },
-
-        {
+                                                                                                                                           {
             "comment" : "String fields",
             "match" : [
                 {"type"  : [ "char", "varchar"]}

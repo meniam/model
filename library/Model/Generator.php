@@ -3,20 +3,15 @@
 namespace Model;
 
 use Model\Cluster\Schema;
+use Model\Db\Mysql;
 use Model\Exception\ErrorException;
 use Model\Generator\Part\AbstractPart;
 use Model\Db\Mysql as DbAdapter;
 
 use Model\Cluster\Schema\Table;
-use Model\Generator\Part\Cond;
 use Model\Generator\Part\Entity;
-use Model\Generator\Part\FrontCond;
-use Model\Generator\Part\FrontEntity;
-use \Model\Generator\Part\Collection;
-use \Model\Generator\Part\FrontCollection;
-use Model\Generator\Part\FrontModel;
-use Model\Generator\Part\Model;
-use Model\Generator\Part\Plugin\Cond\JoinConst;
+use Zend\Console\ColorInterface;
+use Zend\Console\Console;
 use Zend\Console\RouteMatcher\DefaultRouteMatcher;
 
 /**
@@ -144,6 +139,114 @@ class Generator
         new $partClass($table, $this->getCluster(), $outputFile, $options);
     }
 
+    public function showUsage()
+    {
+        $shift = 4;
+        $shiftStr = str_repeat(" ", $shift);
+        $console = Console::getInstance();
+        $width = $console->getWidth() - 4 * $shift;
+        $width = $width > 80 ? 80 : $width;
+
+        $help = array(
+            "Models 1.0.0 by Eugene Myazin <github.com/meniam/models>.",
+            ''
+        );
+
+        $this->showLine($help, ColorInterface::WHITE);
+
+        //$console->write($shiftStr . str_repeat('-', $width) . PHP_EOL) ;
+        //$console->write($shiftStr . $shiftStr . );
+        $shiftLen = 16;
+        $shiftLenStr = str_repeat(" ", $shiftLen);
+        $this->showLine("Usage# ./models --deploy-dir=<dir> \\", ColorInterface::LIGHT_WHITE, $shiftLen);
+        $this->showLine("                --output-dir=<dir> \\", ColorInterface::LIGHT_WHITE, $shiftLen);
+        $this->showLine("               [--db-host=<str>] \\", ColorInterface::LIGHT_WHITE, $shiftLen);
+        $this->showLine("               [--db-schema=<str>] \\", ColorInterface::LIGHT_WHITE, $shiftLen);
+        $this->showLine("               [--db-user=<str>] \\", ColorInterface::LIGHT_WHITE, $shiftLen);
+        $this->showLine("               [--db-password=<str>] \\", ColorInterface::LIGHT_WHITE, $shiftLen);
+        $this->showLine("               [--force] \\", ColorInterface::LIGHT_WHITE, $shiftLen);
+        $this->showLine("               [--verbose] \\", ColorInterface::LIGHT_WHITE, $shiftLen);
+        $this->showLine("               [--cache-dir=<dir>]", ColorInterface::LIGHT_WHITE, $shiftLen);
+
+        $this->showLine("");
+        $this->showParam("--deploy-dir=<dir>", "Директория для выгрузки готовых моделей",
+                                         "в которую с заменой копируются абстрактные классы," . PHP_EOL .
+                                         "базовые классы копируются если отсутствует в папке." . PHP_EOL,
+            $shiftLen);
+
+        $this->showParam("--output-dir=<dir>", "Директория в которую генерируются модели",
+            "очищается перед каждым запуском генерации" . PHP_EOL,
+            8);
+
+        $this->showParam("[--db-host=<str>]", "Адрес Mysql сервера",
+            "по умолчанию: localhost" . PHP_EOL,
+            8);
+
+        $this->showParam("[--db-schema=<str>]", "Имя базы данных",
+            "по умолчанию: test" . PHP_EOL,
+            8);
+
+        $this->showParam("[--db-user=<str>]", "Пользователь MySql",
+            "по умолчанию: root" . PHP_EOL,
+            8);
+
+        $this->showParam("[--db-password=<str>]", "Пароль MySql",
+            "по умолчанию: пустой" . PHP_EOL,
+            8);
+
+        $this->showParam("[--cache-dir=<str>]", "Директория для кеша",
+            "если указана директория кеш включается," . PHP_EOL .
+            "в обычном режиме кеша нет" . PHP_EOL,
+
+            8);
+        $this->showParam("[--verbose]", "Вывод действий на экран",
+            "показывает что происходит в режиме реального времени" . PHP_EOL,
+            8);
+
+        $this->showParam("[--force]", "Режим бога",
+            "в этом режиме скрипт игнорирует ошибки, все что может..." . PHP_EOL.
+            "кеш игнорируется" . PHP_EOL,
+            8);
+    }
+
+    public function showLine($lines = array(), $color = null, $shift = 0)
+    {
+        $console = Console::getInstance();
+        $shiftStr = str_repeat(" ", $shift);
+
+        if (!is_array($lines)) {
+            $descriptionArray = explode("\n", $lines);
+            foreach ($descriptionArray as $descriptionItem) {
+                $console->write($shiftStr . $descriptionItem . "\n", $color);
+            }
+        } else {
+            foreach ($lines as $line) {
+                $console->write($shiftStr . $line . PHP_EOL, $color);
+            }
+        }
+    }
+
+    public function showParam($param, $name, $description)
+    {
+        $console = Console::getInstance();
+
+        $shiftStr = str_repeat(" ", 8);
+
+        $paramName = str_pad($param, 22, " ", STR_PAD_LEFT);
+        $paramName = $console->colorize($paramName, ColorInterface::LIGHT_WHITE);
+        $paramName = preg_replace("#<(dir|str)>#", $console->colorize("<\\1>", ColorInterface::WHITE), $paramName);
+        $paramName = preg_replace("#(\\[\\-\\-.*?\\])#", $console->colorize("\\1", ColorInterface::WHITE), $paramName);
+
+        $console->write($shiftStr . $paramName . "  " . $console->colorize($name, ColorInterface::LIGHT_WHITE) . PHP_EOL);
+
+        $descriptionArray = array_map('trim', explode("\n", $description));
+        foreach ($descriptionArray as $descriptionItem) {
+            $console->write($shiftStr . str_repeat(" ", 24) . $descriptionItem . "\n");
+
+        }
+    }
+
+
     /**
      * @throws \Exception
      */
@@ -152,24 +255,42 @@ class Generator
         if ($commandString) {
             if (!is_array($commandString)) {
                 $commandString = 'models ' . $commandString;
-                $commandString = explode(' ', $commandString);
             }
+            $commandString = explode(' ', $commandString);
         } else {
             $commandString = $GLOBALS['argv'];
         }
 
-        $params = new DefaultRouteMatcher("[--output-dir=] [--db-host=] [--db-schema=]  [--db-user=] [--db-password=] [--deploy=] [--verbose] [--help] [--force] [--cache-dir=] [--db-schema=]");
-        $argv = $commandString;
+        if (count($commandString) < 2) {
+            return $this->showUsage();
+        }
+
+        $params = new DefaultRouteMatcher("[--output-dir=] "
+                                        . "[--deploy-dir=] "
+                                        . "[--db-host=] "
+                                        . "[--db-schema=]  "
+                                        . "[--db-user=] "
+                                        . "[--db-password=] "
+                                        . "[--deploy=] "
+                                        . "[--verbose] "
+                                        . "[--help] "
+                                        . "[--force] "
+                                        . "[--cache-dir=] ");
+        $argv   = $commandString;
         array_shift($argv);
         $consoleParams = $params->match($argv);
 
         if (!isset($consoleParams['output-dir'])) {
-            echo "Unknown output dir. Use ./console --help\n";
+            $console = Console::getInstance();
+            $console->write("Unknown output dir. Use ./models --help\n", ColorInterface::RED);
+
+            $this->showUsage();
             exit();
         }
 
         if (!is_dir($consoleParams['output-dir']) || !is_writeable($consoleParams['output-dir'])) {
-            echo "Unknown output dir not exists or not writable. Use ./console --help\n";
+            $console = Console::getInstance();
+            $console->write("Unknown output dir not exists or not writable. Use ./models --help\n", ColorInterface::RED);
             exit();
         }
 
@@ -177,15 +298,15 @@ class Generator
 
         // Read Db Configuration
 
-        $host = isset($consoleParams['db-host']) ? $consoleParams['db-host'] : '127.0.0.1';
+        $host     = isset($consoleParams['db-host']) ? $consoleParams['db-host'] : '127.0.0.1';
         $dbSchema = isset($consoleParams['db-schema']) ? $consoleParams['db-schema'] : 'test';
-        $user = isset($consoleParams['db-user']) ? $consoleParams['db-user'] : 'root';
+        $user     = isset($consoleParams['db-user']) ? $consoleParams['db-user'] : 'root';
         $password = isset($consoleParams['db-password']) ? $consoleParams['db-password'] : '';
 
         $dsn = "mysql:host=" . $host . ';'
                . 'dbname=' . $dbSchema . ';'
                . 'charset=utf8';
-        $db = new \Model\Db\Mysql($dsn, $user, $password);
+        $db  = new Mysql($dsn, $user, $password);
 
         $this->cluster = new Cluster();
         $this->cluster->addSchema((new Schema($dbSchema, $db))->init());
@@ -195,14 +316,14 @@ class Generator
 
         // Register plugins
         if (isset($config['plugins'])) {
-            foreach ($config['plugins'] as $partType => $pluginArray )
+            foreach ($config['plugins'] as $partType => $pluginArray)
                 if (isset($pluginArray['list'])) {
                     foreach ($pluginArray['list'] as $condPluginArray) {
                         if ($pluginName = (isset($condPluginArray['name']) ? $condPluginArray['name'] : null)) {
                             $partTypeAsCamelCalse = implode('', array_map('ucfirst', explode('_', $partType)));
 
                             $condPluginClassName = '\\Model\\Generator\\Part\\Plugin\\' . $partTypeAsCamelCalse . '\\' . $pluginName;
-                            $partConst = constant('\\Model\\Generator\\Part\\AbstractPart::PART_' . strtoupper($partType));
+                            $partConst           = constant('\\Model\\Generator\\Part\\AbstractPart::PART_' . strtoupper($partType));
 
                             AbstractPart::addPlugin(new $condPluginClassName(), $partConst);
                         }
@@ -211,7 +332,6 @@ class Generator
         }
 
         // Fields prepare
-
 
         /**
          * Generate Alias cond
@@ -248,6 +368,15 @@ class Generator
         }
 
         file_put_contents($this->_outDir . '/_autoload_classmap.php', "<?php\nreturn array(" . $classmap . ");\n");
+
+        if (isset($consoleParams['deploy-dir'])) {
+            if (!is_dir($consoleParams['deploy-dir'])) {
+                echo "Deploy dir doesn't exists: ". $consoleParams['deploy-dir'] . "\n";
+                exit();
+
+            }
+            $this->deploy($consoleParams['deploy-dir']);
+        }
     }
 
     public function deploy($outDir)
@@ -329,15 +458,5 @@ class Generator
     public function getCluster()
     {
         return $this->cluster;
-    }
-
-    /**
-     * @return string
-     */
-    public function toXml()
-    {
-        $xml = $this->getCluster()->toXml();
-        $xml = simplexml_load_string($xml);
-        return $xml->asXml();
     }
 }
