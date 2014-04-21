@@ -258,6 +258,12 @@ class Generator
         return null;
     }
 
+    public function initLog($isVerbose, $logfile)
+    {
+
+    }
+
+
     /**
      * @throws \Exception
      */
@@ -401,6 +407,7 @@ class Generator
         }
 
         foreach ($this->outDirArray as $dir) {
+            $dir = str_replace($this->_outDir, $this->_deployDir, $dir);
             @mkdir($dir);
         }
 
@@ -409,7 +416,7 @@ class Generator
             copy($filename, $deployFile);
         }
 
-        unlink($this->_deployDir . '/_autoload_classmap.php');
+        @unlink($this->_deployDir . '/_autoload_classmap.php');
         foreach (glob($this->_outDir . '/*.php') as $filename) {
             $deployFile = $this->_deployDir . '/' . basename($filename);
             //echo $deployFile;
