@@ -46,7 +46,7 @@ class DefaultEntityType extends AbstractCollection
         $method->setDocBlock($docblock);
 
         $method->setBody(<<<EOS
-\$this->_defaultEntityType = '\Model\Entity\\{$tableNameAsCamelCase}Entity';
+\$this->defaultEntityType = '\Model\Entity\\{$tableNameAsCamelCase}Entity';
 EOS
         );
 
