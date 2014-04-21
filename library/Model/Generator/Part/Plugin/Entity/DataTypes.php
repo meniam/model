@@ -4,6 +4,7 @@ namespace Model\Generator\Part\Plugin\Entity;
 
 use Model\Generator\Part\PartInterface;
 use Model\Cluster\Schema\Table\Link\AbstractLink;
+use Zend\Code\Generator\DocBlockGenerator;
 
 class DataTypes extends AbstractEntity
 {
@@ -35,7 +36,7 @@ class DataTypes extends AbstractEntity
 
         $columnList = $table->getColumn();
 
-        $docblock = new \Zend\Code\Generator\DocBlockGenerator('Настраиваем типы данных');
+        $docblock = new DocBlockGenerator('Настраиваем типы данных');
 
         $method = new \Zend\Code\Generator\MethodGenerator();
         $method->setName('setupDataTypes');

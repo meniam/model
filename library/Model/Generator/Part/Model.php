@@ -11,8 +11,12 @@ use Zend\Code\Generator\ClassGenerator;
 
 class Model extends AbstractPart
 {
-  	public function __construct(Table $table, Cluster $cluster, $outputFilename = null)
+  	public function __construct(Table $table, Cluster $cluster, $outputFilename = null, array $options = array())
 	{
+        if (!empty($options)) {
+            $this->setOptions($options);
+        }
+
 		Log::info('Generate part mode ' . $table->getName());
 
         $this->_table = $table;

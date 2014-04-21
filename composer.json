@@ -1,9 +1,9 @@
 {
-    "name": "esteit/model",
+    "name": "meniam/model",
     "type": "library",
     "description": "Database models for MySql",
     "keywords": ["model","mysql", "orm"],
-    "homepage": "http://github.com/esteit/model",
+    "homepage": "http://github.com/meniam/model",
     "license": "MIT",
     "authors": [
         {

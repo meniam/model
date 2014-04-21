@@ -2,10 +2,12 @@
 
 namespace Model\Filter;
 
+use Zend\Filter\AbstractFilter;
+
 /**
  * Превращает Entity в симоволы
  */
-class EntityDecode extends \Zend\Filter\AbstractFilter
+class EntityDecode extends AbstractFilter
 {
     static public $_entity = array(
         '&nbsp;'    => ' ',

@@ -31,7 +31,6 @@ class Validator
      */
     public static function validatorStatic($value, $class, array $args = array(), $namespaces = array())
     {
-        /** @var $validateObject \Zend\Validator\AbstractValidator */
         $validateObject = self::getValidatorInstance($class, $args, $namespaces);
         return $validateObject->isValid($value);
     }
@@ -40,6 +39,7 @@ class Validator
      * @param       $class
      * @param array $args
      * @param array $namespaces
+     * @return \Zend\Validator\AbstractValidator
      *
      * @throws Exception\ErrorException
      */

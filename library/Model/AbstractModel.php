@@ -12,6 +12,10 @@ use Zend\Filter\FilterInterface;
 use Zend\InputFilter\InputFilter;
 use Zend\Validator\AbstractValidator;
 
+/**
+ * Class AbstractModel
+ * @package Model
+ */
 class AbstractModel extends Singleton implements ModelInterface
 {
     /**

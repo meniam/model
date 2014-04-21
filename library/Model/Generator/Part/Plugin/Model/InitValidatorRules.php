@@ -47,6 +47,39 @@ class InitValidatorRules extends AbstractModel
         return null;
     }
 
+    /**
+     * @param        $paramArray
+     * @param Column $column
+     *
+     * @return array
+     */
+    public function prepareValidatorParams($paramArray, Column $column)
+    {
+        if (!is_array($paramArray)) {
+            return $paramArray;
+        }
+
+        foreach ($paramArray as $k => $value) {
+            switch ((string)$value) {
+                case 'COLUMN_CHAR_LENGTH':
+                    $value = $column->getCharacterMaximumLength();
+                    break;
+                case 'COLUMN_ENUM_VALUES':
+                    $value = $column->getEnumValuesAsArray();
+                    break;
+                case 'MAX_VALUE':
+                    $value = $column->getMaxValue();
+                    break;
+                case 'MIN_VALUE':
+                    $value = $column->getMinValue();
+                    break;
+            }
+            $paramArray[$k] = $value;
+        }
+
+        return $paramArray;
+    }
+
     public function postRun(PartInterface $part)
     {
         /**
@@ -67,18 +100,26 @@ class InitValidatorRules extends AbstractModel
         foreach ($columnCollection as $column) {
             $name = $column->getName();
             $requiredFlag = !($column->isNullable() || $column->getName() == 'id');
-            $validatorArray = $column->getValidator();
 
-            foreach ($validatorArray as $validator) {
-                $validatorParams = $this->varExportMin($validator['params'], true);
+            if ($columnConfig = $part->getColumntConfig($column)) {
+                if ($columnConfig && isset($columnConfig['validators'])) {
+                    foreach ($columnConfig['validators'] as $validator) {
+                        if (isset($validator['params'])) {
+                            $validatorParams = $this->prepareValidatorParams($validator['params'], $column);
+                            $validatorParams = $this->varExportMin($validatorParams, true);
+                        } else {
+                            $validatorParams = null;
+                        }
 
-                if ($validatorParams && $validatorParams != 'NULL') {
-                    $template .= "\$this->addValidatorRule('{$name}', Validator::getValidatorInstance('{$validator['name']}', {$validatorParams}), " . ($requiredFlag ? 'true' : 'false') . ");\n";
-                } else {
-                    $template .= "\$this->addValidatorRule('{$name}', Validator::getValidatorInstance('{$validator['name']}'), " . ($requiredFlag ? 'true' : 'false') . ");\n";
+                        if ($validatorParams && $validatorParams != 'NULL') {
+                            $template .= "\$this->addValidatorRule('{$name}', Validator::getValidatorInstance('{$validator['name']}', {$validatorParams}), " . ($requiredFlag ? 'true' : 'false') . ");\n";
+                        } else {
+                            $template .= "\$this->addValidatorRule('{$name}', Validator::getValidatorInstance('{$validator['name']}'), " . ($requiredFlag ? 'true' : 'false') . ");\n";
+                        }
+                    }
                 }
             }
-      }
+        }
 
         $template = rtrim($template, "\r\n, ");
         //$tableNameAsCamelCase = $part->getTable()->getNameAsCamelCase();

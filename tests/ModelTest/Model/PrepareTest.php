@@ -33,6 +33,8 @@ class PrepareTest extends \ModelTest\Model\TestCase
 
         $result = $topicModel->import($topicData);
 
+        $this->assertEquals(12, $result->getResult());
+
         $cond = TopicCond::init()
                     ->with(TopicCond::WITH_ADDITIONAL_TAG);
         $entity = $topicModel->getById(12, $cond);

@@ -3,40 +3,213 @@
         {
             "comment" : "String fields",
             "match" : [
-                { "type"  : [ "char", "varchar", "tinyblob", "tinytext", "blob", "text", "mediumblob", "mediumtext", "longblob",  "longtext"], "length" : { ">" : 1 }}
+                { "type" : [ "char", "varchar", "tinyblob", "tinytext", "blob", "text", "mediumblob", "mediumtext", "longblob",  "longtext"], "length" : { ">" : 1 }}
             ],
             "decorators" : [
                 {"name" : "String"}
-            ]
-        },
-
-        {
-            "comment" : "String fields",
-            "match" : [
-                {"type"  : [ "char", "varchar"]}
             ],
             "validators" : [
                 {"name" : "\\Zend\\Validator\\StringLength", "params" : {"min" : 0, "max" : "COLUMN_CHAR_LENGTH", "encoding" : "UTF-8"}}
+            ],
+            "filters"   : [
+                {"name" : "\\Model\\Filter\\StringTrim"}
             ]
         },
 
         {
-            "comment" : "Hash fields check",
+            "comment" : "Name fields",
+            "match" : [
+                { "regexp": "#^(name|title|h1|meta_title)(_alias|_translate)?$#", "type" : [ "char", "varchar" ]}
+            ],
+            "filters"   : [
+                {"name" : "\\Model\\Filter\\Name"}
+            ]
+        },
+
+        {
+            "comment" : "Slug fields",
+            "match" : [
+                { "regexp": "#^(slug|.*_slug)?$#", "type" : [ "char", "varchar" ]}
+            ],
+            "filters"   : [
+                {"name" : "\\Model\\Filter\\Slug"}
+            ]
+        },
+
+        {
+            "comment" : "Hash fields",
+            "match" : [
+                { "regexp": "#^(hash|md5|.*_hash|.*_md5)?$#", "type" : [ "char", "varchar" ]}
+            ],
+            "filters"   : [
+                {"name" : "\\Model\\Filter\\Hash"}
+            ]
+        },
+
+        {
+            "comment" : "Stem fields",
+            "match" : [
+                { "regexp": "#^(stem|.*_stem)?$#", "type" : [ "char", "varchar" ]}
+            ],
+            "filters"   : [
+                {"name" : "\\Model\\Filter\\Stem"}
+            ]
+        },
+
+        {
+            "comment" : "Email fields",
+            "match" : [
+                { "regexp": "#^(email|.*_email)?$#", "type" : [ "char", "varchar" ]}
+            ],
+            "filters"   : [
+                {"name" : "\\Model\\Filter\\Email"}
+            ]
+        },
+
+        {
+            "comment" : "Url fields",
+            "match" : [
+                { "regexp": "#^(url|.*_url)?$#", "type" : [ "char", "varchar" ]}
+            ],
+            "filters"   : [
+                {"name" : "\\Model\\Filter\\Url"}
+            ]
+        },
+
+        {
+            "comment" : "Text fields",
+            "match" : [
+                { "regexp": "#^(text|.*_text|description|.*_description|comment|.*_comment)?$#", "type" : [ "char", "varchar", "tinyblob", "tinytext", "blob", "text", "mediumblob", "mediumtext", "longblob",  "longtext"] }
+            ],
+            "filters"   : [
+                {"name" : "\\Model\\Filter\\Url"}
+            ]
+        },
+
+        {
+            "comment" : "Slug fields",
+            "match" : [
+                { "regexp": "#^(price|.*_price)?$#", "type" : [ "decimal" ]}
+            ],
+            "filters"   : [
+                {"name" : "\\Model\\Filter\\Price"}
+            ]
+        },
+
+        {
+            "comment" : "Small integer fields",
+            "match" : [
+                { "type" : [ "tinyint", "smallint", "mediumint"] }
+            ],
+            "decorators" : [
+                { "name" : "Int" }
+            ],
+            "validators" : [
+                {"name" : "\\Zend\\Validator\\Regex", "params" : {"pattern" : "/^\\d*$/"}},
+                {"name" : "\\Zend\\Validator\\Between", "params" : {"min" : "MIN_VALUE", "max" : "MAX_VALUE", "inclusive" : "true"}}
+            ],
+            "filters"   : [
+                {"name" : "\\Model\\Filter\\Int"}
+            ]
+        },
+        {
+            "comment" : "Big integer fields",
+            "match" : [
+                { "type" : [ "int", "bigint"] }
+            ],
+            "decorators" : [
+                { "name" : "Int" }
+            ],
+            "validators" : [
+                {"name" : "\\Zend\\Validator\\Regex", "params" : {"pattern" : "/^\\d*$/"}}
+            ],
+            "filters"   : [
+                {"name" : "\\Model\\Filter\\Int"}
+            ]
+        },
+
+        {
+            "comment" : "Absolute integer fields",
+            "match" : [
+                { "regexp": "#^(level|pos|count|.*_count)?$#", "type" : [ "tinyint", "smallint", "mediumint", "int", "bigint"] }
+            ],
+            "filters"   : [
+                {  "name" : "\\Model\\Filter\\Abs"}
+            ]
+        },
+
+        {
+            "comment" : "ID integer fields",
+            "match" : [
+                { "regexp": "#^(level|pos|count|.*_count)?$#", "type" : [ "tinyint", "smallint", "mediumint", "int", "bigint"] }
+            ],
+            "filters"   : [
+                { "name" : "\\Model\\Filter\\Abs"}
+            ]
+        },
+
+        {
+            "comment" : "Float fields",
+            "match" : [
+                { "type" : [ "float", "decimal", "double"] }
+            ],
+            "decorators" : [
+                { "name" : "Float" }
+            ],
+            "validators" : [
+                {"name" : "\\Zend\\Validator\\Regex", "params" : {"pattern" : "/^[\\d\\,\\.]*$/"}}
+            ],
+
+            "filters"   : [
+                {"name" : "\\Model\\Filter\\Float"}
+            ]
+        },
+        {
+            "comment" : "VALIDATOR: Hash fields check",
             "match" : [
                 {"regexp": "#^(.*)_hash$#", "type"  : [ "char", "varchar"]}
             ],
             "validators" : [
-                {"name" : "\\Zend\\Validator\\StringLength", "params" : {"min" : "COLUMN_CHAR_LENGTH", "max" : "COLUMN_CHAR_LENGTH"}}
+                {"name" : "\\Zend\\Validator\\StringLength", "params" : {"min" : "COLUMN_CHAR_LENGTH", "max" : "COLUMN_CHAR_LENGTH"}},
+                {"name" : "\\Zend\\Validator\\Hex"}
+            ]
+        },
+        {
+            "comment" : "VALIDATOR: Date",
+            "match" : [
+                {"type"  : [ "timestamp"]}
+            ],
+            "decorators" : [
+                { "name" : "DateTime" }
+            ],
+            "validators" : [
+                {"name" : "\\Zend\\Validator\\Date", "params" : {"format" : "Y-m-d H:i:s"}}
+            ],
+            "filters" : [
+                {"name" : "\\Model\\Filter\\Date"}
+            ]
+        },
+
+        {
+            "comment" : "Enum FLAG fields check",
+            "match" : [
+                { "regexp" : "#^is_#", "type"  : [ "enum"] }
+            ],
+            "filters" : [
+                {"name" : "\\Model\\Filter\\IsFlag"}
             ]
         },
 
         {
             "comment" : "Enum fields check",
             "match" : [
-                { "regexp": "#.*#", "type"  : [ "enum"] }
+                { "type"  : [ "enum"] }
             ],
             "validators" : [
                 {"name" : "\\Zend\\Validator\\InArray", "params" : {"haystack" : "COLUMN_ENUM_VALUES"}}
+            ],
+            "filters" : [
+                { "name" : "\\Model\\Filter\\EnumField" }
             ]
         },
 
@@ -51,28 +224,10 @@
         },
 
         {
-            "match" : [
-                {
-                    "regexp": "#^(.*?\\..*?)$#",
-                    "type"  : [ "tinyint", "smallint", "mediumint", "int", "bigint"],
-                    "length" : { ">" : 1 }
-                }
-            ],
-            "decorators" : [
-                {
-                    "name" : "Int"
-                }
-            ]
-        },
-        {
             "match" : [{ "regexp": "#^.*?\\.id$#",
                     "type"  : [ "tinyint", "smallint", "mediumint", "int", "bigint"],
                     "length" : { ">" : 1 }
                 }
-            ],
-
-            "filters" : [
-                {"name" : "\\Zend\\Validator\\StringLength", "params" : {"min" : 0, "max" : "COLUMN_CHAR_LENGTH", "encoding" : "UTF-8"}}
             ],
 
             "decorators" : [
