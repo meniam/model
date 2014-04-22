@@ -40,6 +40,12 @@ class AbstractCollection extends \ArrayIterator
      */
     protected $_disableConstructInit = false;
 
+    /**
+     * @param null $data
+     * @param null $entityType
+     *
+     * @throws Exception\ErrorException
+     */
     public function __construct($data = null, $entityType = null)
     {
         if (!$this->_disableConstructInit) {
@@ -504,10 +510,10 @@ class AbstractCollection extends \ArrayIterator
      * Вычитание коллекций из текущей коллекции
      * Поведение аналогично array_diff()
      *
-     * @param CollectionInterface $collection
-     * @return CollectionInterface
+     * @param AbstractCollection $collection
+     * @return AbstractCollection
      */
-    public function diff(CollectionInterface $collection)
+    public function diff(AbstractCollection $collection)
     {
         $className = get_class($this);
         $collectionNew = new $className();
@@ -522,11 +528,11 @@ class AbstractCollection extends \ArrayIterator
     /**
      * Добавить коллекцию к текущей коллекции и вернуть новую
      *
-     * @param CollectionInterface $collection Добавляемая коллекция
+     * @param AbstractCollection $collection Добавляемая коллекция
      * @param bool $checkContains Проверять, что элемент уже в коллекции
-     * @return CollectionInterface
+     * @return AbstractCollection
      */
-    public function merge(CollectionInterface $collection, $checkContains = false)
+    public function merge(AbstractCollection $collection, $checkContains = false)
     {
         $className = get_class($this);
 
@@ -549,7 +555,7 @@ class AbstractCollection extends \ArrayIterator
      * Отсортировать по столбцам
      *
      * @param int $cols Количество столбцов
-     * @return \Model\Collection\CollectionInterface
+     * @return \Model\Collection\AbstractCollection
      */
     public function sortAsCol($cols = 3)
     {

@@ -2,7 +2,6 @@
 
 namespace Model\Db;
 
-use Model\Cond\AbstractCond;
 use Model\Db\Exception\ErrorException;
 use \PDO;
 
@@ -38,6 +37,8 @@ class Mysql
     private $profiler = array();
 
     private $profilerEnable = true;
+
+    protected $transactionCounter = 0;
 
     /**
      * @var PDO
@@ -89,6 +90,48 @@ class Mysql
         }
 
         $this->pdo = new \PDO($this->dsn, $this->user, $this->password, $defaultParams);
+        return $this;
+    }
+
+    /**
+     * @return Mysql
+     */
+    public function beginTransaction()
+    {
+        if (!$this->transactionCounter++) {
+            $this->connect();
+            $this->pdo->beginTransaction();
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Mysql
+     */
+    public function commit()
+    {
+        if (!--$this->transactionCounter) {
+            if ($this->isConnected) {
+                $this->pdo->commit();
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Mysql
+     */
+    function rollback()
+    {
+        if ($this->transactionCounter >= 0) {
+            $this->transactionCounter = 0;
+            if ($this->isConnected) {
+                $this->pdo->rollBack();
+            }
+        }
+        $this->transactionCounter = 0;
         return $this;
     }
 
@@ -375,8 +418,8 @@ class Mysql
     {
         $where = array();
 
-        if ($cond instanceof  \Model\Db\Select) {
-            $where = $cond->getPart(\Model\Db\Select::WHERE);
+        if ($cond instanceof Select) {
+            $where = $cond->getPart(Select::WHERE);
 
             if (!$bind) {
                 $bind  = $cond->getBind();

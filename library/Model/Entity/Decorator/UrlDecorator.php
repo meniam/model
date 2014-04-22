@@ -2,6 +2,7 @@
 
 namespace Model\Entity\Decorator;
 
+use Model\Entity\EntityInterface;
 use Zend\Uri\Uri;
 
 /**
@@ -28,10 +29,10 @@ class UrlDecorator implements DecoratorInterface
     /**
 	 */
 	const URL_PART_PATH = 'path';
-	
-	public function __construct($uri = null)
+
+    public function __construct($input = null, EntityInterface $entity = null)
 	{
-		$this->_uri = $uri;
+		$this->_uri = $input;
 	}
 
 	/**

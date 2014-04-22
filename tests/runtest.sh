@@ -8,6 +8,6 @@ fi
 
 #phpunit --group Model --configuration phpunit.xml
 #/usr/local/app/bin/phpunit --verbose --stop-on-error --configuration phpunit.xml
-/usr/local/app/bin/phpunit --verbose --stop-on-error --configuration phpunit.xml
+/usr/local/app/bin/phpunit --verbose  --stop-on-error --configuration phpunit.xml
 
 #/usr/local/app/bin/phpunit --group itrun --configuration phpunit.xml

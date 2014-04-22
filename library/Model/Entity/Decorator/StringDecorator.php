@@ -2,20 +2,24 @@
 
 namespace Model\Entity\Decorator;
 
+use Model\Entity\EntityInterface;
+
 class StringDecorator implements DecoratorInterface
 {
 	protected $_str = '';
 
-	/**
-	 * Конструктор
-	 *
-	 * @param $price цена
-	 * @param $currency валюта
-	 * @return void
-	 */
-	public function __construct($string)
-	{
-		$this->_str = $string;
+    /**
+     * Конструктор
+     *
+     * @param                               $input
+     * @param \Model\Entity\EntityInterface $entity
+     *
+     * @internal param \Model\Entity\Decorator\ $currency
+     * @return \Model\Entity\Decorator\StringDecorator
+     */
+    public function __construct($input = null, EntityInterface $entity = null)
+    {
+		$this->_str = $input;
 	}
 
 	public function strToUpper()
@@ -51,7 +55,6 @@ class StringDecorator implements DecoratorInterface
     {
         return implode('',array_map('ucfirst', explode('_', $this->_str)));
     }
-
     
     public function replace($search, $replace = null)
     {
@@ -62,17 +65,17 @@ class StringDecorator implements DecoratorInterface
         
         return str_replace($search, $replace, $this->_str);
     }
-    
-	/**
-	 *
-	 * @param unknown_type $length Длинна
-	 * @param unknown_type $etc Что добавить в случае обрезки
-	 * @param unknown_type $breadWords Разрешено ли резать слова
-	 * @param unknown_type $middle Делает строку вида http://www.superbols...domain.ru
-	 * _param unknown_type $extendAllowed Разрешено ли вылезать за пределы
-	 *
-	 * @return string
-	 */
+
+    /**
+     *
+     * @param                                 $length     Длинна
+     * @param string $etc        Что добавить в случае обрезки
+     * @param bool   $breadWords Разрешено ли резать слова
+     * @param bool   $middle     Делает строку вида http://www.superbols...domain.ru
+     *
+     *
+     * @return string
+     */
 	public function truncate($length, $etc = '&#133;', $breadWords = false, $middle = false)
 	{
 		return App_Str::truncate($this->_str, $length, $etc, $breadWords, $middle);

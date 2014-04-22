@@ -92,14 +92,14 @@ class AbstractModel extends Singleton implements ModelInterface
      * @see https://github.com/esteit/model/wiki/%D0%94%D0%BE%D0%B1%D0%B0%D0%B2%D0%BB%D0%B5%D0%BD%D0%B8%D0%B5-%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85
      * @var array
      */
-    protected $filterCascadeRulesOnAdd = array();
+    private $filterCascadeRulesOnAdd = array();
 
     /**
      * Каскад значений для фильтра при обновлении
      * @see https://github.com/esteit/model/wiki/%D0%94%D0%BE%D0%B1%D0%B0%D0%B2%D0%BB%D0%B5%D0%BD%D0%B8%D0%B5-%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85
      * @var array
      */
-    protected $filterCascadeRulesOnUpdate = array();
+    private $filterCascadeRulesOnUpdate = array();
 
     /**
      * Правила фильтрации
@@ -111,7 +111,7 @@ class AbstractModel extends Singleton implements ModelInterface
     /**
      * @var array
      */
-    protected $relation;
+    private $relation;
 
     /**
      * Правила валидации при добавлении
@@ -196,7 +196,6 @@ class AbstractModel extends Singleton implements ModelInterface
             }
         }
 
-
         $isGet  = false;
         if (substr($basePart, 0, 3) == 'get') {
             $type = 'get';
@@ -258,13 +257,51 @@ class AbstractModel extends Singleton implements ModelInterface
     }
 
     /**
+     * @param $relation
+     *
+     * @return $this
+     */
+    public function setRelation($relation)
+    {
+        $this->relation = (array)$relation;
+        return $this;
+    }
+
+    /**
      * @return array
      */
     public function getRelation()
     {
-        return $this->relation;
+        $this->initRelation();
+        return (array)$this->relation;
     }
 
+    /**
+     * @return bool
+     */
+    protected function isRelation()
+    {
+        $this->initRelation();
+        return !empty($this->relation);
+    }
+
+    /**
+     *
+     */
+    public function initRelation()
+    {
+        if (!is_array($this->relation)) {
+            $this->setupRelation();
+        }
+    }
+
+    /**
+     *
+     */
+    protected function setupRelation()
+    {
+        $this->relation = array();
+    }
     /**
      * @param        $itemArray
      * @param Cond   $cond
@@ -942,6 +979,8 @@ class AbstractModel extends Singleton implements ModelInterface
     {}
 
     /**
+     *
+     *
      * @param $name
      * @param $parentName
      * @param $allowedOnUpdate
