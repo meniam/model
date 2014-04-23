@@ -8,41 +8,16 @@
  * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
- * @category   Cond
+ * @category   Collection
  * @package    Model
  * @author     Eugene Myazin <eugene.myazin@gmail.com>
  * @copyright  2008-20013 Eugene Myazin <eugene.myazin@gmail.com>
  * @license    https://github.com/meniam/model/blob/master/MIT-LICENSE.txt  MIT License
  */
 
-namespace Model\Filter;
+namespace Model\Collection;
 
-use Zend\Filter\AbstractFilter;
-
-/**
- * Фильтр для даты
- *
- * @category   Filter
- * @package    Model
- * @author     Eugene Myazin <meniam@gmail.com>
- * @copyright  2008-2012 ООО "Америка"
- * @version    SVN: $Id$
- */
-class Date extends AbstractFilter
+class Collection extends AbstractCollection
 {
-    public function filter($value)
-    {
-        $format = 'Y-m-d H:i:s';
-        if (preg_match('#^\d+$#', $value)) {
-            $value = date($format, (int)$value);
-        } else{
-            if (is_scalar($value)) {
-                $value = date($format, strtotime($value));
-            } else {
-                $value = date($format);
-            }
-        }
 
-        return $value;
-    }
 }

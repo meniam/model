@@ -42,8 +42,6 @@ class MysqlTest extends \ModelTest\Db\TestCase
 
     public function testPrepareBindParams()
     {
-        $select = new Select($this->getDb());
-
         $result = $this->getDb()->prepareBindParams(array(':test' => 1));
         $this->assertEquals(array(':test' => 1), $result);
 

@@ -10,7 +10,7 @@ use Model\Db\Select;
 use Model\Db\Expr;
 use Model\Entity\AbstractEntity;
 use Model\Entity\EntityInterface as Entity;
-use Model\Collection\CollectionInterface as Collection;
+use Model\Collection\AbstractCollection as Collection;
 use Model\Paginator\Adapter\Mysql;
 use Model\Paginator\Paginator;
 use Model\Result\Result;
@@ -27,13 +27,6 @@ use Model\Result\Result;
  */
 class AbstractModel extends \Model\AbstractModel
 {
-    /**
-     * Связи
-     *
-     * @var array
-     */
-    protected $relation = array();
-
     /**
      * Индексы
      *
@@ -63,13 +56,15 @@ class AbstractModel extends \Model\AbstractModel
      */
     public function import($data, Cond $cond = null)
     {
+        $tableName = $this->getRawName();
+
         if (is_null($cond)) {
+            $cond = $this->getCond($tableName, $tableName);
+        } else {
+            /** @var $cond \Model\Cond\AbstractCond */
+            $cond = $this->prepareCond($cond);
         }
 
-        /** @var $cond \Model\Cond\AbstractCond */
-        $cond = $this->prepareCond($cond);
-
-        $tableName = $this->getRawName();
         $result    = new Result();
         $data      = $this->prepareData($data);
         $relatedData     = array();
@@ -86,7 +81,7 @@ class AbstractModel extends \Model\AbstractModel
         $id = $this->getExistedIdByUniqueIndex($data, $existsCond);
 
         // Идем по всем связям и ищем обязательные связи
-        foreach ($this->relation as $rel) {
+        foreach ($this->getRelation() as $rel) {
             if (!$rel['required_link']) {
                 continue;
             }
@@ -185,7 +180,7 @@ class AbstractModel extends \Model\AbstractModel
 
         $isIgnoreErrors = $cond->isIgnoreErrors();
         if (($id || $isIgnoreErrors) && $cond->isCascadeAllowed()) {
-            foreach ($this->relation as $key => $rel) {
+            foreach ($this->getRelation() as $key => $rel) {
                 /** @var $foreignModel \Model\Mysql\AbstractModel */
                 $foreignModel         = $rel['foreign_model'];
 
@@ -1081,10 +1076,11 @@ class AbstractModel extends \Model\AbstractModel
         if ($cond->checkAnyJoin()) {
             $joinRules = $cond->getJoin();
 
+            $relation = $this->getRelation();
             foreach ($joinRules as $join) {
                 $joinFunc = Cond::$_joinTypes[$join->getJoinType()];
-                if (!$join->issetRule() && isset($this->relation[$join->getEntity()])) {
-                    $rel = $this->relation[$join->getEntity()];
+                if (!$join->issetRule() && isset($relation[$join->getEntity()])) {
+                    $rel = $relation[$join->getEntity()];
                     $joinFunc = Cond::$_joinTypes[$join->getJoinType()];
 
                     if (isset($rel['link_table']) && !empty($rel['link_table'])) {
@@ -1151,45 +1147,6 @@ class AbstractModel extends \Model\AbstractModel
         }
 
         /**********************************************************************
-         * HAVING
-        $having = $cond->getCond(Cond::HAVING);
-        if (is_array($having) && !empty($having)) {
-            foreach ($having as $whereCond) {
-                if (!is_array($whereCond)) {
-                    continue;
-                }
-
-                $_cond  = $whereCond['cond'];
-                $value = $whereCond['value'];
-                $type  = $whereCond['type'];
-
-                if (is_array($_cond)) {
-
-                    foreach ($_cond as $k => $value) {
-                        if (is_array($value) && count($value) == 1) {
-                            $value = reset($value);
-                        }
-
-                        if (is_null($value)) {
-                            $_cond = $k . ' IS NULL ';
-                        } elseif (is_array($value)) {
-                            $_cond = $k . ' IN (?) ';
-                        } elseif ($value instanceof Expr) {
-                            $_cond = '?';
-                        } else {
-                            $_cond = $k . ' = ? ';
-                        }
-
-                        $select->having($_cond, $value, $type);
-                    }
-                } else {
-                    $select->having($cond, $value, $type);
-                }
-            }
-        }
-         *********************************************************************/
-
-        /**********************************************************************
          * GROUP
          *********************************************************************/
         $group = $cond->getCond(Cond::GROUP);
@@ -1230,4 +1187,29 @@ class AbstractModel extends \Model\AbstractModel
 
         return $select;
     }
+
+    /**
+     * @return DbAdapter
+     */
+    public function beginTransaction()
+    {
+        return $this->getDb()->beginTransaction();
+    }
+
+    /**
+     * @return DbAdapter
+     */
+    public function rollback()
+    {
+        return $this->getDb()->rollback();
+    }
+
+    /**
+     * @return DbAdapter
+     */
+    public function commit()
+    {
+        return $this->getDb()->commit();
+    }
+
 }

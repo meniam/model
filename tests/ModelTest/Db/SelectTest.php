@@ -17,14 +17,13 @@ use \Model\Db\Expr;
  */
 class SelectTest extends \ModelTest\Db\TestCase
 {
-
     public function setUp()
-    {
-    }
+    { }
 
     public function testInstance()
     {
         $select = new Select($this->getDb());
+        $this->assertInstanceOf('Model\\Db\\Select', $select);
     }
 
     public function testFrom()
@@ -54,19 +53,8 @@ class SelectTest extends \ModelTest\Db\TestCase
         $this->assertEquals('SELECT product.* FROM product LIMIT 1', $lastQuery['query']);
     }
 
-    public function testWhere()
-    {
-        /*$select = new Select($this->getDb());
-        $select->from('product')->where('product_type_id IN (:test)', array(':test' => array('a\'', 'b') ));
-        $select->query();
-        echo $select;*/
-
-    }
-
     public function testPrepareBindParams()
     {
-        $select = new Select($this->getDb());
-
         $result = $this->getDb()->prepareBindParams(array(':test' => 1));
         $this->assertEquals(array(':test' => 1), $result);
 
@@ -79,6 +67,4 @@ class SelectTest extends \ModelTest\Db\TestCase
         $result = $this->getDb()->prepareBindParams(array(':test' => false));
         $this->assertEquals(array(':test' => 0), $result);
     }
-
 }
-

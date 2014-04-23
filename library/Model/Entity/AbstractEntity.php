@@ -118,7 +118,7 @@ class AbstractEntity extends \ArrayObject implements EntityInterface
         if (preg_match('#(.*?)As(.*?Decorator)$#si', $method, $m)) {
             $baseMethod = $m[1];
             $decorator = '\\Model\Entity\\Decorator\\' . $m[2];
-            return new $decorator($this->$baseMethod());
+            return new $decorator($this->$baseMethod(), $this);
         } else {
             throw new ErrorException('Method "' . $method . '" do not exists');
         }
