@@ -306,6 +306,12 @@
                 {"name" : "Link"},
                 {"name" : "Tree"}
             ]
+        },
+
+        "front_model": {
+            "list" : [
+                {"name" : "Stubs"}
+            ]
         }
 
     }
