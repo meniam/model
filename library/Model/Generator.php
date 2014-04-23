@@ -158,6 +158,7 @@ class Generator
         $this->showLine("               [--db-password=<str>] \\", ColorInterface::LIGHT_WHITE, $shiftLen);
         $this->showLine("               [--force] \\", ColorInterface::LIGHT_WHITE, $shiftLen);
         $this->showLine("               [--verbose] \\", ColorInterface::LIGHT_WHITE, $shiftLen);
+        $this->showLine("               [--erase] \\", ColorInterface::LIGHT_WHITE, $shiftLen);
         $this->showLine("               [--cache-dir=<dir>]", ColorInterface::LIGHT_WHITE, $shiftLen);
 
         $this->showLine("");
@@ -198,6 +199,9 @@ class Generator
         $this->showParam("[--force]", "Режим бога",
             "в этом режиме скрипт игнорирует ошибки, все что может..." . PHP_EOL.
             "кеш игнорируется" . PHP_EOL,
+            8);
+        $this->showParam("[--erase]", "Очистка output директори",
+            "очищает директорию output после выгрузки моделей" . PHP_EOL,
             8);
 
 
@@ -292,6 +296,7 @@ class Generator
                                         . "[--verbose] "
                                         . "[--help] "
                                         . "[--force] "
+                                        . "[--erase] "
                                         . "[--cache-dir=] ");
         $argv   = $commandString;
         array_shift($argv);
@@ -468,6 +473,20 @@ class Generator
 
             if (!is_file($deployFile)) {
                 copy($filename, $deployFile);
+            }
+        }
+    }
+
+    /**
+     * Удалить output модели
+     */
+    public function eraseFolders()
+    {
+        $outDirArray = $this->outDirArray;
+
+        foreach ($outDirArray as $dir) {
+            foreach (glob("{$dir}/*.php") as $filename) {
+                unlink($filename);
             }
         }
     }
