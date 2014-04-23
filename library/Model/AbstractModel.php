@@ -7,6 +7,7 @@ use Model\Collection\AbstractCollection as Collection;
 use Model\Cond\AbstractCond as Cond;
 use Model\Entity\AbstractEntity as Entity;
 use Model\Exception\ErrorException as ErrorException;
+use Model\Result\Result;
 use Model\Validator\ValidatorSet;
 use Zend\Filter\FilterInterface;
 use Zend\InputFilter\InputFilter;
@@ -1162,6 +1163,8 @@ class AbstractModel extends Singleton implements ModelInterface
                     $ids = array_map($callbackPrepare, $data);
                 }
             }
+        } elseif ($data instanceof Result) {
+            return self::getIdsFromMixed($data->getResult(), $callbackPrepare);
         } elseif (is_string($data) && strpos($data, ',') !== false) {
             $ids = array_map($callbackPrepare, explode(',', $data));
         } elseif (is_string($data) && strpos($data, '|') !== false) {

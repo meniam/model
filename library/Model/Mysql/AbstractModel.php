@@ -1209,7 +1209,7 @@ class AbstractModel extends \Model\AbstractModel
      */
     public function commit()
     {
-        return $this->getDb()->rollback();
+        return $this->getDb()->commit();
     }
 
 }

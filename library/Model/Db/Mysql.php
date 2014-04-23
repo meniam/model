@@ -226,6 +226,11 @@ class Mysql
         }
 
         $bindParams = $this->prepareBindParams($bindParams);
+
+        foreach ($bindParams as $k => $v) {
+            $bindParams[':' . ltrim($k, ':')] = $this->quote($v);
+            unset($bindParams[ltrim($k, ':')]);
+        }
         //$sql = str_replace(array_keys($bindParams), array_values($bindParams), $sql);
         $sql = strtr($sql, $bindParams);
 
