@@ -58,12 +58,12 @@ class AbstractModel extends \Model\AbstractModel
     {
         $tableName = $this->getRawName();
 
-//        if (is_null($cond)) {
-  //          $cond = $this->getCond($tableName, $tableName);
-    //    } else {
+        if (is_null($cond)) {
+            $cond = $this->getCond($tableName, $tableName);
+        } else {
             /** @var $cond \Model\Cond\AbstractCond */
             $cond = $this->prepareCond($cond);
-      //  }
+        }
 
         $result    = new Result();
         $data      = $this->prepareData($data);

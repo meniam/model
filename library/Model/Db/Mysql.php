@@ -100,7 +100,18 @@ class Mysql
     {
         if (!$this->transactionCounter++) {
             $this->connect();
+
+            if ($this->profilerEnable) {
+                $this->profiler[] = array(
+                    'query' => 'BEGIN TRANSACTION',
+                    'runtime' => 0);
+            }
+
             $this->pdo->beginTransaction();
+        } elseif (!$this->profilerEnable) {
+            $this->profiler[] = array(
+                'query' => 'BEGIN INNER TRANSACTION #' . $this->transactionCounter,
+                'runtime' => 0);
         }
 
         return $this;
@@ -113,6 +124,12 @@ class Mysql
     {
         if (!--$this->transactionCounter) {
             if ($this->isConnected) {
+                if ($this->profilerEnable) {
+                    $this->profiler[] = array(
+                        'query'   => 'COMMIT',
+                        'runtime' => 0
+                    );
+                }
                 $this->pdo->commit();
             }
         }
@@ -125,9 +142,15 @@ class Mysql
      */
     function rollback()
     {
-        if ($this->transactionCounter >= 0) {
+        if ($this->transactionCounter > 0) {
             $this->transactionCounter = 0;
             if ($this->isConnected) {
+                if ($this->profilerEnable) {
+                    $this->profiler[] = array(
+                        'query'   => 'ROLLBACK',
+                        'runtime' => 0
+                    );
+                }
                 $this->pdo->rollBack();
             }
         }
@@ -135,8 +158,12 @@ class Mysql
         return $this;
     }
 
+    /**
+     * @return void
+     */
     public function disconnect()
     {
+        $this->rollback();
         unset($this->pdo);
         $this->isConnected = false;
     }
