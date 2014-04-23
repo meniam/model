@@ -400,6 +400,10 @@ class Generator
             $this->deploy($consoleParams['deploy-dir']);
         }
 
+        if (isset($consoleParams['erase']) && $consoleParams['erase']) {
+            $this->eraseFolders();
+        }
+
         return null;
     }
 
