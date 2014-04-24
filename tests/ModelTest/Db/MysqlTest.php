@@ -25,7 +25,7 @@ class MysqlTest extends \ModelTest\Db\TestCase
     public function testBuildSql()
     {
         $sql = "SELECT * FROM test WHERE test = :test";
-        $expected = "SELECT * FROM test WHERE test = 1";
+        $expected = "SELECT * FROM test WHERE test = '1'";
         $bindParams = array(':test' => 1);
 
         $this->assertEquals($expected, $this->getDb()->buildSql($sql, $bindParams));
