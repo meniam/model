@@ -2,7 +2,6 @@
 
 namespace Model\Db;
 
-use Model\Cond\AbstractCond;
 use Model\Db\Exception\ErrorException;
 use \PDO;
 
@@ -38,6 +37,8 @@ class Mysql
     private $profiler = array();
 
     private $profilerEnable = true;
+
+    protected $transactionCounter = 0;
 
     /**
      * @var PDO
@@ -92,8 +93,77 @@ class Mysql
         return $this;
     }
 
+    /**
+     * @return Mysql
+     */
+    public function beginTransaction()
+    {
+        if (!$this->transactionCounter++) {
+            $this->connect();
+
+            if ($this->profilerEnable) {
+                $this->profiler[] = array(
+                    'query' => 'BEGIN TRANSACTION',
+                    'runtime' => 0);
+            }
+
+            $this->pdo->beginTransaction();
+        } elseif (!$this->profilerEnable) {
+            $this->profiler[] = array(
+                'query' => 'BEGIN INNER TRANSACTION #' . $this->transactionCounter,
+                'runtime' => 0);
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Mysql
+     */
+    public function commit()
+    {
+        if (!--$this->transactionCounter) {
+            if ($this->isConnected) {
+                if ($this->profilerEnable) {
+                    $this->profiler[] = array(
+                        'query'   => 'COMMIT',
+                        'runtime' => 0
+                    );
+                }
+                $this->pdo->commit();
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Mysql
+     */
+    function rollback()
+    {
+        if ($this->transactionCounter > 0) {
+            $this->transactionCounter = 0;
+            if ($this->isConnected) {
+                if ($this->profilerEnable) {
+                    $this->profiler[] = array(
+                        'query'   => 'ROLLBACK',
+                        'runtime' => 0
+                    );
+                }
+                $this->pdo->rollBack();
+            }
+        }
+        $this->transactionCounter = 0;
+        return $this;
+    }
+
+    /**
+     * @return void
+     */
     public function disconnect()
     {
+        $this->rollback();
         unset($this->pdo);
         $this->isConnected = false;
     }
@@ -156,6 +226,11 @@ class Mysql
         }
 
         $bindParams = $this->prepareBindParams($bindParams);
+
+        foreach ($bindParams as $k => $v) {
+            $bindParams[':' . ltrim($k, ':')] = $this->quote($v);
+            unset($bindParams[ltrim($k, ':')]);
+        }
         //$sql = str_replace(array_keys($bindParams), array_values($bindParams), $sql);
         $sql = strtr($sql, $bindParams);
 
@@ -375,8 +450,8 @@ class Mysql
     {
         $where = array();
 
-        if ($cond instanceof  \Model\Db\Select) {
-            $where = $cond->getPart(\Model\Db\Select::WHERE);
+        if ($cond instanceof Select) {
+            $where = $cond->getPart(Select::WHERE);
 
             if (!$bind) {
                 $bind  = $cond->getBind();

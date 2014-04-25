@@ -223,7 +223,7 @@ class WeightDecorator
             case self::SYSTEM_G:
             case self::SYSTEM_KG:
             case self::SYSTEM_KG_G:
-                $this->_weight = $this->getTotalGramms();
+                $this->_weight = $this->getTotalGrams();
                 break;
             case self::SYSTEM_OZ:
             case self::SYSTEM_LB:
@@ -277,7 +277,7 @@ class WeightDecorator
      * Полный вес в граммах
      * @return float
      */
-    public function getTotalGramms()
+    public function getTotalGrams()
     {
         if (!$this->exists()) {
             return 0;
@@ -295,19 +295,21 @@ class WeightDecorator
                 return $this->_roundWeight($this->_weight * 28.3495231, self::PRECISION_G);
                 break;
         }
+
+        return 0;
     }
 
     /**
      * Граммовая составляющая веса
      * @return float
      */
-    public function getGramms()
+    public function getGrams()
     {
         if (!$this->exists()) {
             return 0;
         }
 
-        return $this->_roundWeight($this->getTotalGramms() - $this->getKilos() * 1000, self::PRECISION_G);
+        return $this->_roundWeight($this->getTotalGrams() - $this->getKilos() * 1000, self::PRECISION_G);
     }
 
     /**
@@ -320,7 +322,7 @@ class WeightDecorator
             return 0;
         }
 
-        return $this->_roundWeight($this->getTotalGramms() / 1000, self::PRECISION_KG);
+        return $this->_roundWeight($this->getTotalGrams() / 1000, self::PRECISION_KG);
     }
 
     /**
@@ -333,7 +335,7 @@ class WeightDecorator
             return 0;
         }
 
-        return intval($this->_roundWeight($this->getTotalGramms(), self::PRECISION_G) / 1000);
+        return intval($this->_roundWeight($this->getTotalGrams(), self::PRECISION_G) / 1000);
     }
 
     /**
@@ -358,6 +360,8 @@ class WeightDecorator
                 return $this->_roundWeight($this->_weight / 28.3495231, self::PRECISION_OZ);
                 break;
         }
+
+        return 0;
     }
 
     /**
@@ -430,7 +434,7 @@ class WeightDecorator
      * Вес в виде "12 kg 345 g"
      * @return string
      */
-    public function toKgGrammsString()
+    public function toKgGramsString()
     {
         return $this->toString(self::SYSTEM_KG_G);
     }
@@ -448,7 +452,7 @@ class WeightDecorator
      * Вес в виде "12345 g"
      * @return string
      */
-    public function toGrammsString()
+    public function toGramsString()
     {
         return $this->toString(self::SYSTEM_G);
     }
@@ -463,7 +467,7 @@ class WeightDecorator
     {
         switch ($system) {
             case self::SYSTEM_G:
-                return $this->getTotalGramms();
+                return $this->getTotalGrams();
             case self::SYSTEM_KG:
                 return $this->getTotalKilos();
             case self::SYSTEM_OZ:
@@ -492,12 +496,12 @@ class WeightDecorator
 
         switch ($system) {
             case self::SYSTEM_G:
-                return $this->getTotalGramms() . ' g';
+                return $this->getTotalGrams() . ' g';
             case self::SYSTEM_KG:
                 return $this->getTotalKilos() . ' kg';
             case self::SYSTEM_KG_G:
                 $kg     = $this->getKilos();
-                $gr     = $this->getGramms();
+                $gr     = $this->getGrams();
                 $result = '';
 
                 if ($kg) {

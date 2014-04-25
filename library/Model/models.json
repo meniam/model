@@ -175,7 +175,7 @@
             ]
         },
         {
-            "comment" : "VALIDATOR: Date",
+            "comment" : "VALIDATOR: DateTime",
             "match" : [
                 {"type"  : [ "timestamp"]}
             ],

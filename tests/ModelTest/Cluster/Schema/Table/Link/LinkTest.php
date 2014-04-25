@@ -52,14 +52,6 @@ class LinkTest extends TestCase
 
     }
 
-    /*
-    protected function tearDown()
-    {
-        $this->getSchema() = null;
-        $this->_table  = null;
-        $this->_link  = null;
-    }*/
-
     public function testGetName()
     {
         $this->assertEquals('ManyToMany___Product___Tag', $this->_link->getName());

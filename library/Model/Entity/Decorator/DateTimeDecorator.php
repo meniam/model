@@ -1,6 +1,11 @@
 <?php
 
-class DateDecorator extends Model_Entity_Decorator_Abstract
+namespace Model\Entity\Decorator;
+
+use Model\DateTime\DateTime;
+use Model\Entity\EntityInterface;
+
+class DateTimeDecorator extends AbstractDecorator
 {
 	const FORMAT_FULL = 'd F Y, H:i';
 
@@ -74,22 +79,21 @@ class DateDecorator extends Model_Entity_Decorator_Abstract
 	/**
 	 * Объект времени
 	 *
-	 * @var App_DateTime
+	 * @var DateTime
 	 */
 	protected $_date = null;
 
-	public function __construct($date = null)
-	{
-		$this->_date = new App_DateTime($date);
-		try {
-		    self::$_language = $this->_getTranslator()->getLocale();
-            if (!in_array(self::$_language, self::$_availableLanguages)) {
-                self::$_language = 'en';
-            }
-        } catch (Model_Entity_Exception $ex) {}
+    public function __construct($input = null, EntityInterface $entity = null)
+    {
+		$this->_date = new DateTime($input);
 	}
 
-	public function format($format = 'Y-m-d H:i:s')
+    /**
+     * @param string $format
+     *
+     * @return string
+     */
+    public function format($format = 'Y-m-d H:i:s')
 	{
 		return $this->_date->format($format);
 	}
@@ -100,7 +104,7 @@ class DateDecorator extends Model_Entity_Decorator_Abstract
 	}
    
    /**
-    * @return App_DateTime
+    * @return DateTime
     */
 	public function getDate()
 	{
@@ -161,48 +165,6 @@ class DateDecorator extends Model_Entity_Decorator_Abstract
         return '';
     }
 
-	/**
-	 * Получить интервал времени, прошедшего от заданной даты и времени до текущей  
-	 */
-	public function getIntervalDate()
-	{
-		$interval =  $this->getDate()->diff(new App_DateTime(), true);
-		
-		$minutes = $interval->getTotalMinutes();
-		$hours = $interval->getTotalHours();
-		$days = $interval->getTotalDays();
-		
-		if ($days > 60) {
-			return Model_Translator::translate('ago');
-		}
-		
-		if (($hours % 24 > 12) && ($days !== 0)) {
-			$days++;
-		}
-		if (($minutes % 60 > 30) && ($hours !== 0)) {
-			$hours++;
-		}
-		
-		if ($days > 0) {
-			return $days . Model_Translator::translate('short_days');
-		}
-		
-		if ($hours > 12) {
-			return '~1' . Model_Translator::translate('short_days');
-		} elseif ($hours > 0) {
-			return $hours . Model_Translator::translate('short_hours');
-		}
-		
-		if ($minutes > 45) {
-			return '~1' . Model_Translator::translate('short_hours');
-		} elseif ($minutes > 1) {
-			return $minutes . Model_Translator::translate('short_minutes');
-		} else {
-			return Model_Translator::translate('now');
-		}
-	}
-
-	
 	/**
 	 *
 	 * @return string

@@ -46,15 +46,7 @@ class UsernameDecorator extends Model_Entity_Decorator_Abstract
         return (bool)$this->_useLocale;
     }
 
-    /**
-     * Конструктор
-     *
-     * @param string $name
-     * @internal param $price цена
-     * @internal param $currency валюта
-     * @return \UsernameDecorator
-     */
-	public function __construct($input)
+    public function __construct($input = null, \Model\Entity\EntityInterface $entity = null)
 	{
         $this->_name = $input;
 	}

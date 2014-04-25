@@ -1,4 +1,8 @@
 <phpunit bootstrap="./Bootstrap.php" colors="true">
+    <php>
+        <env name="TMP" value="/tmp"/>
+    </php>
+
     <testsuites>
         <testsuite name="Model Test Suite">
             <directory>./ModelTest</directory>
