@@ -152,7 +152,7 @@ class Generator
 
         $this->showLine("Usage# ./models --deploy-dir=<dir> \\", ColorInterface::LIGHT_WHITE, $shiftLen);
         $this->showLine("                --output-dir=<dir> \\", ColorInterface::LIGHT_WHITE, $shiftLen);
-        $this->showLine("               [--config-path=<file>] \\", ColorInterface::LIGHT_WHITE, $shiftLen);
+        $this->showLine("               [--config=<file>] \\", ColorInterface::LIGHT_WHITE, $shiftLen);
         $this->showLine("               [--db-host=<str>] \\", ColorInterface::LIGHT_WHITE, $shiftLen);
         $this->showLine("               [--db-schema=<str>] \\", ColorInterface::LIGHT_WHITE, $shiftLen);
         $this->showLine("               [--db-user=<str>] \\", ColorInterface::LIGHT_WHITE, $shiftLen);
@@ -172,7 +172,7 @@ class Generator
             "очищается перед каждым запуском генерации" . PHP_EOL,
             8);
 
-        $this->showParam("[--config-path=<file>]", "Путь к файлу json конфига",
+        $this->showParam("[--config=<file>]", "Путь к файлу json конфига",
             "вы можете использовать свой файл конфигурации для генерации моделей" . PHP_EOL.
             "если не указать будет использован стандартный конфиг моделей models.json" . PHP_EOL,
             8);
@@ -295,7 +295,7 @@ class Generator
 
         $params = new DefaultRouteMatcher("[--output-dir=] "
                                         . "[--deploy-dir=] "
-                                        . "[--config-path=] "
+                                        . "[--config=] "
                                         . "[--db-host=] "
                                         . "[--db-schema=]  "
                                         . "[--db-user=] "
@@ -508,8 +508,10 @@ class Generator
         $outDirArray = $this->outDirArray;
 
         foreach ($outDirArray as $dir) {
-            foreach (glob("{$dir}/*.php") as $filename) {
-                unlink($filename);
+            if (is_dir($dir)) {
+                foreach (glob("{$dir}/*.php") as $filename) {
+                    unlink($filename);
+                }
             }
         }
     }
