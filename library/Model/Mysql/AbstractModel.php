@@ -538,9 +538,15 @@ class AbstractModel extends \Model\AbstractModel
      * @throws \Model\Exception\ErrorException
      * @return null|mixed
      */
-    public function get(Cond $cond = null)
+    public function get($cond = null)
     {
-        $cond = $this->prepareCond($cond);
+        if ($cond instanceof Result) {
+            $cond = $this->prepareCond()->where(array('id' => $cond->getResult()));
+        } elseif ($cond instanceof Cond || is_null($cond)) {
+            $cond = $this->prepareCond($cond);
+        } else {
+            $cond = $this->prepareCond()->where(array('id' => $this->getIdsFromMixed($cond)));
+        }
 
         $cond->type($cond->getType());
 
