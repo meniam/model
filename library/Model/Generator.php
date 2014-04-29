@@ -355,6 +355,10 @@ class Generator
          */
         $classmap = '';
         foreach ($this->getCluster()->getTableList() as $table) {
+            if (substr($table->getName(), 0, 1) == '_' || substr($table->getName(), -5) == '_link') {
+                continue;
+            }
+
             $aliasList = $table->getAliasLinkList();
             if (!empty($aliasList)) {
                 foreach ($aliasList as $aliasName => $tableName) {
