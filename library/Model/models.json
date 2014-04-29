@@ -57,6 +57,16 @@
         },
 
         {
+            "comment" : "Unique stem fields",
+            "match" : [
+                { "regexp": "#^(ustem|.*_ustem)?$#", "type" : [ "char", "varchar" ]}
+            ],
+            "filters"   : [
+                {"name" : "\\Model\\Filter\\UniqStem"}
+            ]
+        },
+
+        {
             "comment" : "Email fields",
             "match" : [
                 { "regexp": "#^(email|.*_email)?$#", "type" : [ "char", "varchar" ]}
