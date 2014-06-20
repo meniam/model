@@ -9,13 +9,16 @@ namespace Model\Filter;
  */
 class Stem extends StripText
 {
+    /**
+     * @var array
+     */
+    protected static $_stopwords = array();
+
 	public function filter($value)
 	{
         $value = preg_replace('#-#is', ' ', parent::filter($value));
 		return self::process($value, false);
 	}
-
-    protected static $_stopwords = array();
 
     /**
      * Грузим список стопслов
@@ -31,6 +34,9 @@ class Stem extends StripText
         return self::$_stopwords;
     }
 
+    /**
+     * @return $this
+     */
     public function stemer()
     {
         return $this;

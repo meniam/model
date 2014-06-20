@@ -2,16 +2,17 @@
 
 namespace Model\Generator\Part;
 
+use Model\Cluster;
 use Model\Generator\Log;
 use Model\Cluster\Schema;
 use Model\Cluster\Schema\Table;
-
+use Model\Exception\ErrorException;
 use Model\Code\Generator\FileGenerator;
 use Zend\Code\Generator\ClassGenerator;
 
 class FrontCond extends AbstractPart
 {
-    public function __construct(\Model\Cluster\Schema\Table $table, \Model\Cluster $cluster, $outputFilename = null, array $options = array())
+    public function __construct(Table $table, Cluster $cluster, $outputFilename = null, array $options = array())
     {
         $this->_table = $table;
         $this->outputFilename = $outputFilename;
@@ -40,7 +41,7 @@ class FrontCond extends AbstractPart
         $class = new ClassGenerator();
         $file->setClass($class);
 
-        $this->_runPlugins(self::PART_COND, self::RUNTIME_PRE);
+        $this->_runPlugins(self::PART_FRONT_COND, self::RUNTIME_PRE);
 
         $class->setNamespaceName('Model\Cond');
         $class->setName($className);
@@ -51,7 +52,7 @@ class FrontCond extends AbstractPart
         if ($filename = $this->getOutputFilename()) {
             $result = file_put_contents($filename, $file->generate());
             if (!$result) {
-                throw new \Model\Exception\ErrorException('File is not writeable: ' . $filename);
+                throw new ErrorException('File is not writeable: ' . $filename);
             }
         }
     }
