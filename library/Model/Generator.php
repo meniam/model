@@ -152,12 +152,14 @@ class Generator
 
         $this->showLine("Usage# ./models --deploy-dir=<dir> \\", ColorInterface::LIGHT_WHITE, $shiftLen);
         $this->showLine("                --output-dir=<dir> \\", ColorInterface::LIGHT_WHITE, $shiftLen);
+        $this->showLine("               [--config=<file>] \\", ColorInterface::LIGHT_WHITE, $shiftLen);
         $this->showLine("               [--db-host=<str>] \\", ColorInterface::LIGHT_WHITE, $shiftLen);
         $this->showLine("               [--db-schema=<str>] \\", ColorInterface::LIGHT_WHITE, $shiftLen);
         $this->showLine("               [--db-user=<str>] \\", ColorInterface::LIGHT_WHITE, $shiftLen);
         $this->showLine("               [--db-password=<str>] \\", ColorInterface::LIGHT_WHITE, $shiftLen);
         $this->showLine("               [--force] \\", ColorInterface::LIGHT_WHITE, $shiftLen);
         $this->showLine("               [--verbose] \\", ColorInterface::LIGHT_WHITE, $shiftLen);
+        $this->showLine("               [--erase] \\", ColorInterface::LIGHT_WHITE, $shiftLen);
         $this->showLine("               [--cache-dir=<dir>]", ColorInterface::LIGHT_WHITE, $shiftLen);
 
         $this->showLine("");
@@ -168,6 +170,11 @@ class Generator
 
         $this->showParam("--output-dir=<dir>", "Директория в которую генерируются модели",
             "очищается перед каждым запуском генерации" . PHP_EOL,
+            8);
+
+        $this->showParam("[--config=<file>]", "Путь к файлу json конфига",
+            "вы можете использовать свой файл конфигурации для генерации моделей" . PHP_EOL.
+            "если не указать будет использован стандартный конфиг моделей models.json" . PHP_EOL,
             8);
 
         $this->showParam("[--db-host=<str>]", "Адрес Mysql сервера",
@@ -191,6 +198,7 @@ class Generator
             "в обычном режиме кеша нет" . PHP_EOL,
 
             8);
+
         $this->showParam("[--verbose]", "Вывод действий на экран",
             "показывает что происходит в режиме реального времени" . PHP_EOL,
             8);
@@ -200,6 +208,9 @@ class Generator
             "кеш игнорируется" . PHP_EOL,
             8);
 
+        $this->showParam("[--erase]", "Очистка output директори",
+            "очищает директорию output после выгрузки моделей" . PHP_EOL,
+            8);
 
         return null;
     }
@@ -245,7 +256,7 @@ class Generator
 
         $paramName = str_pad($param, 22, " ", STR_PAD_LEFT);
         $paramName = $console->colorize($paramName, ColorInterface::LIGHT_WHITE);
-        $paramName = preg_replace("#<(dir|str)>#", $console->colorize("<\\1>", ColorInterface::WHITE), $paramName);
+        $paramName = preg_replace("#<(dir|str|file)>#", $console->colorize("<\\1>", ColorInterface::WHITE), $paramName);
         $paramName = preg_replace("#(\\[\\-\\-.*?\\])#", $console->colorize("\\1", ColorInterface::WHITE), $paramName);
 
         $console->write($shiftStr . $paramName . "  " . $console->colorize($name, ColorInterface::LIGHT_WHITE) . PHP_EOL);
@@ -284,6 +295,7 @@ class Generator
 
         $params = new DefaultRouteMatcher("[--output-dir=] "
                                         . "[--deploy-dir=] "
+                                        . "[--config=] "
                                         . "[--db-host=] "
                                         . "[--db-schema=]  "
                                         . "[--db-user=] "
@@ -292,6 +304,7 @@ class Generator
                                         . "[--verbose] "
                                         . "[--help] "
                                         . "[--force] "
+                                        . "[--erase] "
                                         . "[--cache-dir=] ");
         $argv   = $commandString;
         array_shift($argv);
@@ -328,7 +341,18 @@ class Generator
         $this->cluster = new Cluster();
         $this->cluster->addSchema((new Schema($dbSchema, $db))->init());
 
-        $config = json_decode(file_get_contents(__DIR__ . '/models.json'), true);
+        $configPath = isset($consoleParams['config-path']) ? $consoleParams['config-path'] : __DIR__ . '/models.json';
+        if (!is_file($configPath) || !is_readable($configPath)) {
+            $console = Console::getInstance();
+            $console->write("Config file not exists or not readable. Use ./models --help\n", ColorInterface::RED);
+            exit();
+        }
+        $config = json_decode(file_get_contents($configPath), true);
+        if (!$config) {
+            $console = Console::getInstance();
+            $console->write("Bad config file. Use ./models --help\n", ColorInterface::RED);
+            exit();
+        }
         $this->setConfig($config);
 
         // Register plugins
@@ -397,6 +421,10 @@ class Generator
 
             }
             $this->deploy($consoleParams['deploy-dir']);
+        }
+
+        if (isset($consoleParams['erase']) && $consoleParams['erase']) {
+            $this->eraseFolders();
         }
 
         return null;
@@ -472,6 +500,22 @@ class Generator
 
             if (!is_file($deployFile)) {
                 copy($filename, $deployFile);
+            }
+        }
+    }
+
+    /**
+     * Удалить output модели
+     */
+    public function eraseFolders()
+    {
+        $outDirArray = $this->outDirArray;
+
+        foreach ($outDirArray as $dir) {
+            if (is_dir($dir)) {
+                foreach (glob("{$dir}/*.php") as $filename) {
+                    unlink($filename);
+                }
             }
         }
     }
