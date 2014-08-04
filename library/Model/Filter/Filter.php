@@ -46,7 +46,7 @@ class Filter
      */
     public static function getFilterInstance($class, array $args = array(), array $namespaces = array())
     {
-        $namespaces = array_merge($namespaces, array('', '\\Model\\Filter', '\\App\\Filter', '\\Zend\\Filter'));
+        $namespaces = array_merge($namespaces, array('', '\\Model\\Filter', '\\Zend\\Filter'));
 
         $argsHash = empty($args) ? '' : md5(serialize($args));
 
