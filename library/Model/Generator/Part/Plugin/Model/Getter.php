@@ -103,7 +103,6 @@ class Getter extends AbstractModel
 
                 $methodDocBlockName = 'getById';
                 if (!isset($dbRegistry[$methodDocBlockName]) && !$file->getClass()->hasMethod($methodDocBlockName)) {
-                    $methodReturnTypePrefix = $table->getNameAsCamelCase();
                     $file->getClass()->getDocBlock()->setTag(array(
                         'name' => 'method',
                         'description' => $table->getNameAsCamelCase() ."Entity {$methodDocBlockName}() {$methodDocBlockName}(\$id, Cond \$cond = null) get entity by id"
