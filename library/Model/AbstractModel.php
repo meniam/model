@@ -2,7 +2,7 @@
 
 namespace Model;
 
-use App\ServiceManager\ServiceManager;
+use Zend\ServiceManager\ServiceManager;
 use Model\Collection\AbstractCollection as Collection;
 use Model\Cond\AbstractCond as Cond;
 use Model\Entity\AbstractEntity as Entity;

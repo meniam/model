@@ -341,7 +341,7 @@ class Generator
         $this->cluster = new Cluster();
         $this->cluster->addSchema((new Schema($dbSchema, $db))->init());
 
-        $configPath = isset($consoleParams['config-path']) ? $consoleParams['config-path'] : __DIR__ . '/models.json';
+        $configPath = isset($consoleParams['config']) ? $consoleParams['config'] : __DIR__ . '/models.json';
         if (!is_file($configPath) || !is_readable($configPath)) {
             $console = Console::getInstance();
             $console->write("Config file not exists or not readable. Use ./models --help\n", ColorInterface::RED);
