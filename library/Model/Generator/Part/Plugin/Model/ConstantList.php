@@ -7,12 +7,11 @@ use Model\Code\Generator\DocBlockGenerator;
 use Zend\Code\Generator\PropertyGenerator;
 
 /**
- * Плагин для генерации методов linkSomething
+ * Плагин для генерации константных значений модели
  *
  * @category   CategoryName
  * @package    PackageName
- * @author     Eugene Myazin <meniam@gmail.com>
- * @copyright  2008-2012 ООО "Америка"
+ * @author     Mihail Rybalka <ruspanzer@gmail.com>
  * @version    SVN: $Id$
  */
 class ConstantList extends AbstractModel
