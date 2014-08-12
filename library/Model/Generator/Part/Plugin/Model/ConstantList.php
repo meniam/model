@@ -1,0 +1,90 @@
+<?php
+
+namespace Model\Generator\Part\Plugin\Model;
+
+use Model\Cluster\Schema\Table\Column;
+use Model\Exception\ErrorException;
+use Model\Generator\Part\PartInterface;
+use Model\Cluster\Schema\Table\Link\AbstractLink;
+use Model\Code\Generator\DocBlockGenerator;
+use Zend\Code\Generator\ParameterGenerator;
+use Zend\Code\Generator\MethodGenerator;
+use Zend\Code\Generator\AbstractMemberGenerator;
+use Zend\Code\Generator\PropertyGenerator;
+
+/**
+ * Плагин для генерации методов linkSomething
+ *
+ * @category   CategoryName
+ * @package    PackageName
+ * @author     Eugene Myazin <meniam@gmail.com>
+ * @copyright  2008-2012 ООО "Америка"
+ * @version    SVN: $Id$
+ */
+class ConstantList extends AbstractModel
+{
+    public function __construct()
+    {
+        $this->_setName('ConstantList');
+    }
+
+    public function preRun(PartInterface $part)
+    {
+    }
+
+    public function postRun(PartInterface $part)
+    {
+        /** @var $part \Model\Generator\Part\Model */
+        $file = $part->getFile();
+
+        $this->generateEnumConstantList($part);
+
+        return $file;
+    }
+
+    /**
+     * @param \Model\Generator\Part\Model $part
+     */
+    public function generateEnumConstantList($part)
+    {
+        $file = $part->getFile();
+        
+        $table = $part->getTable();
+
+        foreach ($table->getColumn() as $column) {
+            if ($column->getColumnType() == 'enum') {
+
+                $enumList = $column->getEnumValuesAsArray();
+
+                // пропускаем флаги
+                if (substr($column->getName(), 0, 3) == 'is_' && $enumList == array('y', 'n')) {
+                    continue;
+                }
+
+                foreach ($enumList as $enumValue) {
+                    $columnName = $column->getName();
+                    $name = strtoupper($columnName . '_' . $enumValue);
+
+                    $property = new PropertyGenerator($name, $enumValue, PropertyGenerator::FLAG_CONSTANT);
+                    $tags = array(
+                        array(
+                            'name'        => 'const'
+                        ),
+                        array(
+                            'name'        => 'var',
+                            'description' => 'string',
+                        ),
+                    );
+
+                    $docblock = new DocBlockGenerator("Значение {$enumValue} поля {$columnName}");
+                    $docblock->setTags($tags);
+
+                    $property->setDocBlock($docblock);
+
+                    $file->getClass()->addPropertyFromGenerator($property);
+                }
+            }
+        }
+    }
+
+}
