@@ -2,14 +2,8 @@
 
 namespace Model\Generator\Part\Plugin\Model;
 
-use Model\Cluster\Schema\Table\Column;
-use Model\Exception\ErrorException;
 use Model\Generator\Part\PartInterface;
-use Model\Cluster\Schema\Table\Link\AbstractLink;
 use Model\Code\Generator\DocBlockGenerator;
-use Zend\Code\Generator\ParameterGenerator;
-use Zend\Code\Generator\MethodGenerator;
-use Zend\Code\Generator\AbstractMemberGenerator;
 use Zend\Code\Generator\PropertyGenerator;
 
 /**
