@@ -316,7 +316,7 @@ class Table extends \ArrayIterator
      * Get column by name 
      * 
      * @param string $column
-     * @return Column
+     * @return Column|Column[]
      */
     public function getColumn($column = null)
     {

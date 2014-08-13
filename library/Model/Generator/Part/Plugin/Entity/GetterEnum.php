@@ -1,6 +1,7 @@
 <?php
 
 namespace Model\Generator\Part\Plugin\Entity;
+use Model\Generator\Part\AbstractPart;
 use Model\Generator\Part\PartInterface;
 use Model\Cluster\Schema\Table\Column;
 
@@ -67,8 +68,15 @@ class GetterEnum extends AbstractEntity
                 $method->setVisibility(\Zend\Code\Generator\AbstractMemberGenerator::VISIBILITY_PUBLIC);
                 $method->setDocBlock($docblock);
 
+                if ($part->hasPlugin('ConstantList', AbstractPart::PART_MODEL)) {
+                    $modelName = $table->getNameAsCamelCase() . 'Model';
+                    $file->addUse("\\Model\\{$modelName}");
+                    $enumValue = $modelName . '::' . strtoupper($column->getName() . '_' . $enumValue);
+                } else {
+                    $enumValue = "'{$enumValue}'";
+                }
                 $method->setBody(<<<EOS
-return \$this->get('{$columnName}') == '{$enumValue}';
+return \$this->get('{$columnName}') == {$enumValue};
 EOS
                 );
 

@@ -165,6 +165,28 @@ abstract class AbstractPart implements PartInterface
 	}
 
     /**
+     * @param      $pluginName
+     * @param null $part
+     *
+     * @return bool
+     */
+    public function hasPlugin($pluginName, $part = null)
+    {
+        if ($part) {
+            $pluginList = $this->getPlugins($part);
+            return isset($pluginList[$pluginName]);
+        } else {
+            foreach (self::$_plugins as $pluginList) {
+                if (isset($pluginList[$pluginName])) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * @param array $options
      */
     public function setOptions($options)

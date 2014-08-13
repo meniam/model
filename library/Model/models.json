@@ -314,7 +314,8 @@
                 {"name" : "Getter"},
                 {"name" : "GetInstance"},
                 {"name" : "Link"},
-                {"name" : "Tree"}
+                {"name" : "Tree"},
+                {"name" : "ConstantList"}
             ]
         },
 
