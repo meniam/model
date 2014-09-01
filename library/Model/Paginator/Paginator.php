@@ -121,7 +121,12 @@ class Paginator implements \Countable
      */
     public function getTotalPageCount()
     {
-        return (int)ceil($this->getTotalItemCount() / $this->getItemCountPerPage());
+        try {
+            return (int)ceil($this->getTotalItemCount() / $this->getItemCountPerPage());
+        } catch (\Exception $e) {
+            return 0;
+        }
+
     }
 
     /**
