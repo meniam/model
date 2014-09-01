@@ -49,8 +49,8 @@ class ConstantList extends AbstractModel
 
                 $enumList = $column->getEnumValuesAsArray();
 
-                // пропускаем флаги
-                if (substr($column->getName(), 0, 3) == 'is_' && $enumList == array('y', 'n')) {
+                // пропускаем флаги и enum поля с числом параметров >10
+                if (substr($column->getName(), 0, 3) == 'is_' || $enumList == array('y', 'n') || count($enumList) > 10) {
                     continue;
                 }
 
