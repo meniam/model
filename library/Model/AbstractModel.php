@@ -9,8 +9,7 @@ use Model\Entity\AbstractEntity as Entity;
 use Model\Exception\ErrorException as ErrorException;
 use Model\Result\Result;
 use Model\Validator\ValidatorSet;
-use Zend\Filter\FilterInterface;
-use Zend\InputFilter\InputFilter;
+use Model\Filter\AbstractFilter;
 use Zend\Validator\AbstractValidator;
 
 /**
@@ -605,30 +604,6 @@ class AbstractModel extends Singleton implements ModelInterface
     }
 
     /**
-     * Получить объект FilterInput для валидации данных
-     *
-     * @param bool $required
-     * @return InputFilter
-    private function getInputFilter($required = false)
-    {
-        $inputFilter = (bool)$required ? $this->filterInputOnAdd : $this->filterInputOnUpdate;
-        if (!$inputFilter) {
-            $validatorRules = $this->getValidatorRules($required);
-            $factory = new Factory();
-            $inputFilter = $factory->createInputFilter($validatorRules);
-
-            if ($required) {
-                $this->filterInputOnAdd = $inputFilter;
-            } else {
-                $this->filterInputOnUpdate = $inputFilter;
-            }
-        }
-
-        return $inputFilter;
-    }
-     */
-
-    /**
      * Фильтрация данных при добавлении в базу данных
      *
      * @param                   $data
@@ -758,7 +733,7 @@ class AbstractModel extends Singleton implements ModelInterface
     }
 
     /**
-     * Получить объект FilterInput для валидации данных
+     * Получить объект для валидации данных
      *
      * @param bool $required
      * @return ValidatorSet
@@ -872,7 +847,7 @@ class AbstractModel extends Singleton implements ModelInterface
         $validatorRules = $this->getValidatorRules(false);
 
         if (isset($validatorRules[$field]['validators'])) {
-            /** @var $validatorRules InputFilter[] */
+            /** @var $validatorRules AbstractFilter[] */
             $validatorRules = $validatorRules[$field]['validators'];
 
             foreach ($validatorRules as $validator) {
@@ -914,11 +889,11 @@ class AbstractModel extends Singleton implements ModelInterface
      * Добавить правило фильтрации для поля
      *
      * @param $field
-     * @param FilterInterface $filter
+     * @param AbstractFilter $filter
      *
      * @return $this
      */
-    protected function addFilterRule($field, FilterInterface $filter)
+    protected function addFilterRule($field, AbstractFilter $filter)
     {
         $this->filterRules[(string) $field][] = $filter;
         return $this;

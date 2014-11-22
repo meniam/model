@@ -2,8 +2,6 @@
 
 namespace Model\Filter;
 
-use Zend\Filter\AbstractFilter;
-
 /**
  * Превращает строку в MD5
  *

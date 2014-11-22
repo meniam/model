@@ -2,9 +2,7 @@
 
 namespace Model\Filter;
 
-use Zend\Filter\FilterInterface;
-
-class Ucwords implements FilterInterface
+class Ucwords extends AbstractFilter
 {
     public function filter($value)
     {

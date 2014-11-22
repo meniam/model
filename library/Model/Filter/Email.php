@@ -16,8 +16,6 @@
  */
 namespace Model\Filter;
 
-use Zend\Filter\AbstractFilter;
-
 /***
  * Class Email
  * @package Model\Filter

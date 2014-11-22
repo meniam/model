@@ -4,8 +4,6 @@
  */
 namespace Model\Filter;
 
-use Zend\Filter\AbstractFilter;
-
 class Xml extends AbstractFilter
 {
 	public function filter($value)

@@ -2,8 +2,6 @@
 
 namespace Model\Filter;
 
-use Zend\Filter\AbstractFilter;
-
 class Float extends AbstractFilter
 {
 	/**

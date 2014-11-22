@@ -11,7 +11,7 @@ namespace Model\Filter;
  * @copyright  2008-2012 ООО "Америка"
  * @version    SVN: $Id$
  */
-class Sha1 extends \Zend\Filter\AbstractFilter
+class Sha1 extends AbstractFilter
 {
     public function filter($value)
     {

@@ -7,7 +7,7 @@ use Model\Validator\Exception\ErrorException;
 /**
  * Валидация данных
  *
- * @category   App
+ * @category   Model
  * @package    Validator
  * @author     Eugene Myazin <meniam@gmail.com>
  * @copyright  2008-2012 ООО "Америка"

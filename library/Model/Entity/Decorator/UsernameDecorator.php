@@ -107,31 +107,9 @@ class UsernameDecorator extends Model_Entity_Decorator_Abstract
      */
     protected function _translit($name)
     {
-        if ($this->isUseLocale() && $this->getTranslator()->getLocale() != 'ru') {
-            $name = App_Translit::text($name);
-        }
+        $name = App_Translit::text($name);
 
         return $name;
-    }
-
-    /**
-     * Получить локаль
-     *
-     * @return Zend_Locale
-     */
-    protected function getLocale()
-    {
-        return Model_Locale::getDefaultLocale();
-    }
-
-    /**
-     * Получить локаль
-     *
-     * @return Zend_Translate
-     */
-    protected function getTranslator()
-    {
-        return Model_Translator::getDefaultTranslator();
     }
 
 	/**

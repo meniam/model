@@ -67,7 +67,7 @@ class InitFilterRules extends AbstractModel
             }
 */
             if ($column->isNullable()) {
-                $template .= "\$this->addFilterRule('$name', Filter::getFilterInstance('\\Zend\\Filter\\Null'));\n";
+                $template .= "\$this->addFilterRule('$name', Filter::getFilterInstance('\\Model\\Filter\\Null'));\n";
             }
         }
 

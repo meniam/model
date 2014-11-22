@@ -2,8 +2,26 @@
 
 namespace Model\Filter;
 
-class StringTrim extends \Zend\Filter\StringTrim
+class StringTrim extends AbstractFilter
 {
+    /**
+     * Defined by Zend\Filter\FilterInterface
+     *
+     * Returns the string $value with characters stripped from the beginning and end
+     *
+     * @param  string $value
+     * @return string
+     */
+    public function filter($value)
+    {
+        if (!is_string($value)) {
+            return $value;
+        }
+
+        $value = (string) $value;
+
+        return $this->unicodeTrim($value);
+    }
     /**
      * Unicode aware trim method
      * Fixes a PHP problem

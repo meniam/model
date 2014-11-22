@@ -2,7 +2,7 @@
 
 namespace Model\Filter;
 
-class Int extends \Zend\Filter\AbstractFilter
+class Int extends AbstractFilter
 {
     /**
      * Defined by Zend_Filter_Interface

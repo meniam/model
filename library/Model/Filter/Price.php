@@ -2,7 +2,7 @@
 
 namespace Model\Filter;
 
-class Price extends \Zend\Filter\AbstractFilter
+class Price extends AbstractFilter
 {
 	public function filter($value)
 	{

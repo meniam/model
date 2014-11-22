@@ -2,8 +2,6 @@
 
 namespace Model\Filter;
 
-use Zend\Filter\AbstractFilter;
-
 class Translit extends AbstractFilter
 {
     const TR_NO_SLASHES = 0;

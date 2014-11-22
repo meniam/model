@@ -16,8 +16,6 @@
  */
 namespace Model\Filter;
 
-use Zend\Filter\AbstractFilter;
-
 /**
  * @category   Zend
  * @package    Zend_Filter

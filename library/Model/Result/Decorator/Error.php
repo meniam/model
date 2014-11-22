@@ -14,7 +14,7 @@ class Error
      * ├ field
      *   └ code => message
      *
-     * @param array|Result|InputFilter $errors
+     * @param array|Result|InputFilter $error
      */
     public function __construct($errors)
     {

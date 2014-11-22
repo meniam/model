@@ -17,8 +17,6 @@
 
 namespace Model\Filter;
 
-use Zend\Filter\AbstractFilter;
-
 /**
  * Фильтр для даты
  *

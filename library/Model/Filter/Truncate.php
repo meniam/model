@@ -2,8 +2,6 @@
 
 namespace Model\Filter;
 
-use Zend\Filter\AbstractFilter;
-
 class Truncate extends AbstractFilter
 {
     protected static $_encoding = 'UTF-8';

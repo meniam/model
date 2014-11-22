@@ -3,7 +3,7 @@
 namespace Model\Filter;
 
 use Model\Filter\Exception\InvalidArgumentException;
-use Zend\Filter\AbstractFilter;
+use Model\Filter\AbstractFilter;
 
 /**
  * Фильтрация данных

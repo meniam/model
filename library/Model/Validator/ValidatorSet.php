@@ -2,8 +2,6 @@
 
 namespace Model\Validator;
 
-use Zend\Validator\AbstractValidator;
-
 class ValidatorSet
 {
 
