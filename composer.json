@@ -15,7 +15,7 @@
         }
     ],
     "support": {
-        "email": "meniam@gmail.com",
+        "email": "meniam@gmail.com"
     },
     "require":{
         "php"           :">=5.4.0,<5.6",
