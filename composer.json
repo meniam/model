@@ -1,5 +1,5 @@
 {
-    "name": "esteit/model",
+    "name": "meniam/model",
     "type": "library",
     "description": "Database models for MySql",
     "keywords": ["model","mysql", "orm"],
@@ -11,11 +11,6 @@
         "email": "meniam@gmail.com",
         "homepage": "http://meniam.ru",
         "role": "Maintainer"
-        },
-        {
-            "name": "Yaroslav Kiseliov",
-            "email": "slkxmail@gmail.com",
-            "role": "Developer"
         }
     ],
     "require":{
