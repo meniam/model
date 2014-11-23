@@ -327,7 +327,8 @@ class AbstractModel extends \Model\AbstractModel
      */
     public function truncate()
     {
-        $sql = "DELETE FROM `" . $this->getRawName() . "`";
+        $rawName = $this->getRawName();
+        $sql = "DELETE FROM `{$rawName}`";
         $this->getDb()->query($sql);
     }
 

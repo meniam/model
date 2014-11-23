@@ -16,7 +16,7 @@ use Zend\Validator\AbstractValidator;
  * Class AbstractModel
  * @package Model
  */
-class AbstractModel extends Singleton implements ModelInterface
+class AbstractModel extends Singleton
 {
     /**
      * Связь много ко многим

@@ -3,13 +3,15 @@
 namespace Model;
 
 use Model\Cluster\Schema;
+use Model\Cluster\Schema\Table;
+
 use Model\Db\Mysql;
 use Model\Exception\ErrorException;
-use Model\Generator\Part\AbstractPart;
 use Model\Db\Mysql as DbAdapter;
 
-use Model\Cluster\Schema\Table;
+use Model\Generator\Part\AbstractPart;
 use Model\Generator\Part\Entity;
+
 use Zend\Console\ColorInterface;
 use Zend\Console\Console;
 use Zend\Console\RouteMatcher\DefaultRouteMatcher;
