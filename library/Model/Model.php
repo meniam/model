@@ -1,6 +1,9 @@
 <?php
 
 namespace Model;
+use Model\Config\Config;
+use Model\Db\Mysql;
+use Model\Exception\ErrorException;
 
 /**
  * Основной класс моделей
@@ -10,28 +13,95 @@ namespace Model;
  * @author     Eugene Myazin <meniam@gmail.com>
  * @version    SVN: $Id$
  */
-class Model
+abstract class Model
 {
     /**
-     * @var array
+     * @var Config
      */
-    private static $configuration;
+    private static $config;
 
     /**
-     * Sets the configuration for Propel and all dependencies.
-     *
-     * @param      mixed The Configuration (array or PropelConfiguration)
+     * @var Mysql
      */
-    public static function setConfiguration($configuration)
+    private static $defaultConnection;
+
+    /**
+     * @var Mysql[]
+     */
+    private static $connections = array();
+
+    /**
+     * @return bool
+     */
+    public static function isInit()
     {
-        if (is_array($configuration)) {
-            if (isset($configuration['model']) && is_array($configuration['model'])) {
-                $configuration = $configuration['model'];
-            }
-            $configuration = new PropelConfiguration($configuration);
-        }
-        self::$configuration = $configuration;
+        return (self::$config !== null);
     }
 
+    /**
+     * @param Config $configuration
+     * @return array|Config
+     */
+    public static function setConfig(Config $configuration)
+    {
+        self::$config = $configuration;
+
+        $connections = self::$config['connections'];
+
+        foreach ($connections as $name => $connectionData) {
+            if (!isset($connectionData['connection'])) {
+                continue;
+            }
+
+            $connection = $connectionData['connection'];
+            self::addDb(new Mysql($connection['dsn'], $connection['user'], $connection['password']), $name, $connection['default']);
+        }
+
+        return self::$config;
+    }
+
+    public static function initialize()
+    {
+        if (self::isInit()) {
+            throw new ErrorException("Models cannot be initialized without a valid configuration");
+        }
+    }
+
+    /**
+     * @param Mysql $connection
+     * @param null $connectionName
+     * @param bool $isDefault
+     * @throws ErrorException
+     */
+    public static function addDb(Mysql $connection, $connectionName = null, $isDefault = false)
+    {
+        $connectionName = $connectionName ? (string)$connectionName : $connection->getSchema();
+
+        if (isset(self::$connections[$connectionName])) {
+            throw new ErrorException("Connection with the same name already registered");
+        }
+
+        self::$connections[$connectionName] = $connection;
+
+        if ($isDefault) {
+            self::$defaultConnection = $connection;
+        }
+    }
+
+    /**
+     * @param string|null $connectionName
+     * @return Mysql
+     * @throws ErrorException
+     */
+    public static function getDb($connectionName = null)
+    {
+        if (!$connectionName) {
+            return self::$defaultConnection;
+        } elseif (isset(self::$connections[$connectionName])) {
+            return self::$connections[$connectionName];
+        }
+
+        throw new ErrorException('Connection not defined');
+    }
 
 }

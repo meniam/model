@@ -7,6 +7,6 @@ namespace Model\Db\Mysql\Exception;
  * @package    Zend_Db
  * @subpackage Exception
  */
-class ErrorException extends \Exception implements ExceptionInterface
+class ErrorException extends \Exception
 {
 }

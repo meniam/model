@@ -28,6 +28,8 @@ class Mysql
 
     private $dsn = 'dblib:host=your_hostname;dbname=your_db;charset=UTF-8';
 
+    private $schema;
+
     private $user;
 
     private $password;
@@ -62,13 +64,29 @@ class Mysql
         self::FLOAT_TYPE  => self::FLOAT_TYPE
     );
 
-
     public function __construct($dsn, $user, $password, array $params = array())
     {
         $this->dsn = $dsn;
         $this->user = $user;
         $this->password = $password;
         $this->params = $params;
+    }
+
+    /**
+     * @return string
+     * @throws ErrorException
+     */
+    public function getSchema()
+    {
+        if (!$this->schema) {
+            if (preg_match('#;dbname=([^;]+)#si', $this->dsn, $m)) {
+                $this->schema = (string)$m[1];
+            } else {
+                throw new ErrorException('Schema not found');
+            }
+        }
+
+        return $this->schema;
     }
 
     public function connect()
