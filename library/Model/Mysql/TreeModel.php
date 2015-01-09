@@ -5,6 +5,7 @@ namespace Model\Mysql;
 use Model\Collection\AbstractCollection;
 use Model\Cond\AbstractCond;
 use Model\Entity\AbstractEntity;
+use Model\Result\Result;
 
 /**
  *
@@ -87,5 +88,79 @@ class TreeModel extends AbstractModel
         }
 
         return null;
+    }
+
+    /**
+     * Хук вызываемый после обработки данных при добавлении или изменении
+     *
+     * Подобным образом работают следующие методы:
+     *  - afterPrepareOnAdd - выполняется после обработки данных только при добавлении
+     *  - afterPrepareOnUpdate - выполняется после обработки данных только при обновлении
+     */
+    protected function afterPrepareOnAddOrUpdate(array $data = null, AbstractCond $cond = null)
+    {
+        if (isset($data['parent_id'])) {
+            /** @var  $parent */
+            $parent = $this->getById($data['parent_id']);
+
+            $data['level'] = $parent->getLevel() + 1;
+        }
+    }
+
+    protected function afterAdd(Result $result, $data)
+    {
+        if (!$result->isError() && $result->getResult()) {
+            $parentId = isset($data['parent_id']) ? $data['parent_id'] : null;
+            $parent = $this->getById($parentId);
+
+            $updateData = array(
+                'tree_path' => trim($parent->getTreePath() . ',' . $result->getResult(), ','));
+
+            $this->updateById($updateData, $result->getResult());
+        }
+    }
+
+    public function getChildCollection($id, AbstractCond $cond = null)
+    {
+        $cond = $this->prepareCond($cond, $this->getRawName());
+        $id = $this->getFirstIdFromMixed($id);
+
+        $cond->where(array('parent_id' => $id));
+
+        return $this->getCollection($cond);
+    }
+
+    /**
+     * @param $parent
+     * @param AbstractCond $cond
+     * @return array|mixed|AbstractCollection|\Model\Entity\AbstractEntity[]|null|string
+     * @throws \Model\Exception\ErrorException
+     */
+    public function getCollectionByParent($parent, AbstractCond $cond = null)
+    {
+        $parentIds = $this->getIdsFromMixed($parent);
+
+        if (!$parentIds) {
+            $parentIds = null;
+        }
+
+        $cond = $this->prepareCond($cond, $this->getRawName())
+                ->where(array('parent_id' => $parentIds));
+
+        return $this->getCollection($parentIds, $cond);
+    }
+
+    public function repairBranchByParent($parent = null)
+    {
+        $rubricCollection = $this->getCollectionByParent($parent);
+
+        if ($rubricCollection->isEmpty()) {
+            return true;
+        }
+
+        $parentItem = $this->getById($parent);
+
+        print_r($parentItem);
+        die;
     }
 }

@@ -176,7 +176,12 @@ abstract class AbstractCond
     const VALIDATE_ON_UPDATE    = 'validate_update_values';
 
     /**
-     * Тип выборки
+     * Enable hook after add item into database
+     */
+    const HOOK_AFTER_ADD = 'hook_after_add';
+
+    /**
+     * Fetch type
      *
      * @var string
      */
@@ -1385,7 +1390,7 @@ abstract class AbstractCond
             $this->cond(self::UPDATE_ALLOWED, $this->parent->isUpdateAllowed());
         }
 
-        return $this->getCond(self::UPDATE_ALLOWED, false);
+        return $this->getCond(self::UPDATE_ALLOWED, true);
     }
 
     /**

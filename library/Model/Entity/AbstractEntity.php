@@ -168,10 +168,10 @@ class AbstractEntity extends \ArrayObject implements EntityInterface
      * @param EntityInterface $value
      * @return bool
      */
-    public function equals(EntityInterface $value)
+    /*public function equals(EntityInterface $value)
     {
         return ($this->getId() == $value->getId());
-    }
+    }*/
 
     /**
      * Вынуть элемент из данных

@@ -661,7 +661,7 @@ class AbstractModel extends Singleton
             }
         }
 
-        if ($cond->getCond($condFilterRemoveUnknownValues, true) == true) {
+        if ($cond->getCond($condFilterRemoveUnknownValues, false) == true) {
             foreach (array_keys($data) as $k) {
                 if (!isset($filterRules[$k])) {
                     unset($data[$k]);
@@ -1158,6 +1158,19 @@ class AbstractModel extends Singleton
         }
 
         return $ids;
+    }
+
+    /**
+     * @param $data
+     * @param string $callbackPrepare
+     * @return int
+     * @throws ErrorException
+     */
+    public static function getFirstIdFromMixed($data, $callbackPrepare = 'intval')
+    {
+        $ids = self::getIdsFromMixed($data, $callbackPrepare);
+
+        return (int)reset($ids);
     }
 
     /**

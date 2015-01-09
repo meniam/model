@@ -6,7 +6,7 @@ use Model\Db\Mysql;
 use Model\Exception\ErrorException;
 
 /**
- * Основной класс моделей
+ * Base model class
  *
  * @category   Model
  * @package    Model
@@ -45,15 +45,14 @@ abstract class Model
     public static function setConfig(Config $configuration)
     {
         self::$config = $configuration;
-
         $connections = self::$config['connections'];
 
-        foreach ($connections as $name => $connectionData) {
-            if (!isset($connectionData['connection'])) {
-                continue;
-            }
-
-            $connection = $connectionData['connection'];
+        foreach ($connections as $name => $connection) {
+//            if (!isset($connectionData['connection'])) {
+//                continue;
+//            }
+//
+//            $connection = $connectionData['connection'];
             self::addDb(new Mysql($connection['dsn'], $connection['user'], $connection['password']), $name, $connection['default']);
         }
 
@@ -62,7 +61,7 @@ abstract class Model
 
     public static function initialize()
     {
-        if (self::isInit()) {
+        if (!self::isInit()) {
             throw new ErrorException("Models cannot be initialized without a valid configuration");
         }
     }

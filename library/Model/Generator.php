@@ -288,7 +288,7 @@ class Generator
             }
             $commandString = explode(' ', $commandString);
         } else {
-            $commandString = $GLOBALS['argv'];
+            $commandString = $_SERVER['argv'];
         }
 
         if (count($commandString) < 2) {

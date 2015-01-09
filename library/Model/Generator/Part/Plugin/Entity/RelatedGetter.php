@@ -53,9 +53,6 @@ class RelatedGetter extends AbstractEntity
                     $docblock = new \Zend\Code\Generator\DocBlockGenerator($shortDescr);
                     $docblock->setTags(array(
                         array(
-                            'name'        => 'related',
-                        ),
-                        array(
                             'name'        => 'return',
                             'description' => '\\Model\\Collection\\' . $link->getForeignColumn()->getTable()->getNameAsCamelCase() . 'Collection',
                         ),
@@ -85,9 +82,6 @@ EOS
 
                     $docblock = new \Zend\Code\Generator\DocBlockGenerator($shortDescr);
                     $docblock->setTags(array(
-                        array(
-                            'name'        => 'related',
-                        ),
                         array(
                             'name'        => 'return',
                             'description' => '\\Model\\Entity\\' . $link->getForeignColumn()->getTable()->getNameAsCamelCase() . 'Entity',

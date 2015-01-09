@@ -19,7 +19,7 @@
         {
             "comment" : "Name fields",
             "match" : [
-                { "regexp": "#^(name|title|h1|meta_title)(_alias|_translate)?$#", "type" : [ "char", "varchar" ]}
+                { "regexp": "#\\.(name|title|h1|meta_title)(_alias|_translate)?$#", "type" : [ "char", "varchar" ]}
             ],
             "filters"   : [
                 {"name" : "\\Model\\Filter\\Name"}
@@ -29,7 +29,7 @@
         {
             "comment" : "Slug fields",
             "match" : [
-                { "regexp": "#^(slug|.*_slug)?$#", "type" : [ "char", "varchar" ]}
+                { "regexp": "#\\.(slug|.*_slug)?$#", "type" : [ "char", "varchar" ]}
             ],
             "filters"   : [
                 {"name" : "\\Model\\Filter\\Slug"}
@@ -39,7 +39,7 @@
         {
             "comment" : "Hash fields",
             "match" : [
-                { "regexp": "#^(hash|md5|.*_hash|.*_md5)?$#", "type" : [ "char", "varchar" ]}
+                { "regexp": "#\\.(hash|md5|.*_hash|.*_md5)?$#", "type" : [ "char", "varchar" ]}
             ],
             "filters"   : [
                 {"name" : "\\Model\\Filter\\Hash"}
@@ -97,7 +97,7 @@
         },
 
         {
-            "comment" : "Slug fields",
+            "comment" : "Price fields",
             "match" : [
                 { "regexp": "#^(price|.*_price)?$#", "type" : [ "decimal" ]}
             ],
@@ -177,10 +177,10 @@
         {
             "comment" : "VALIDATOR: Hash fields check",
             "match" : [
-                {"regexp": "#^(.*)_hash$#", "type"  : [ "char", "varchar"]}
+                {"regexp": "#(.*)_hash$#", "type"  : [ "char", "varchar"]}
             ],
             "validators" : [
-                {"name" : "\\Zend\\Validator\\StringLength", "params" : {"min" : "COLUMN_CHAR_LENGTH", "max" : "COLUMN_CHAR_LENGTH"}},
+                {"name" : "\\Zend\\Validator\\StringLength", "params" : {"min" : "COLUMN_CHAR_LENGTH", "max" : "COLUMN_CHAR_LENGTH",  "encoding" : "UTF-8"}},
                 {"name" : "\\Zend\\Validator\\Hex"}
             ]
         },

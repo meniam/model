@@ -5,6 +5,7 @@ namespace Model\Result;
 use Model\Exception\ErrorException;
 use Model\Result\Decorator\Error;
 use Model\Validator\ValidatorSet;
+use Symfony\Component\Form\FormError;
 
 /**
  * Result содержит
@@ -238,6 +239,29 @@ class Result
         }
 
         return $result;
+    }
+
+    public function handleFormErrors(\Symfony\Component\Form\Form $form)
+    {
+        if (!$this->isError()) {
+            return $form;
+        }
+
+        $errorList = $this->getErrorList();
+
+        foreach ($errorList as $field => $errors) {
+            if ($form->has($field)) {
+                foreach ($errors as $errorCode => $errorMessage) {
+                    $form->get($field)->addError(new FormError($field . ": [$errorCode] $errorMessage"));
+                }
+            } else {
+                foreach ($errors as $errorCode => $errorMessage) {
+                    $form->addError(new FormError($field . ": [$errorCode] $errorMessage"));
+                }
+            }
+        }
+
+        return $form;
     }
 
     /**

@@ -11,6 +11,7 @@ use Model\Db\Expr;
 use Model\Entity\AbstractEntity;
 use Model\Entity\EntityInterface as Entity;
 use Model\Collection\AbstractCollection as Collection;
+use Model\Model;
 use Model\Paginator\Adapter\Mysql;
 use Model\Paginator\Paginator;
 use Model\Result\Result;
@@ -668,8 +669,24 @@ class AbstractModel extends \Model\AbstractModel
         }
 
         // Устанавливаем идентификатор добавленной записи
-        return $result->setResult((int)$id);
+        $result->setResult((int)$id);
+
+        if ($cond->checkCond(Cond::HOOK_AFTER_ADD, true)) {
+            $result = $this->runHookAfterAdd($result, $data, $cond);
+        }
+
+        return $result;
     }
+
+    protected function runHookAfterAdd(Result $result, $data, Cond $cond = null)
+    {
+        if (method_exists($this, 'afterAdd')) {
+            $result = $this->afterAdd($result, $data, $cond);
+        }
+
+        return $result;
+    }
+
 
     /**
      * Подготавливаем данные перед добавлением
@@ -824,6 +841,22 @@ class AbstractModel extends \Model\AbstractModel
     }
 
     /**
+     * @param      $id
+     * @param Cond $cond
+     *
+     * @return Result
+     * @throws Exception\ErrorException
+     * @throws \Model\Exception\ErrorException
+     */
+    public function deleteById($id, Cond $cond = null)
+    {
+        $cond = $this->prepareCond($cond)
+            ->where(array('`' . $this->getRawName() . '`.`id`' => $this->getIdsFromMixed($id)));
+
+        return $this->delete($cond);
+    }
+
+    /**
      * @param $dbName
      */
     protected function setDbAdapterName($dbName)
@@ -851,6 +884,8 @@ class AbstractModel extends \Model\AbstractModel
             $this->db = $this->getServiceManager()->get($this->dbAdapterName);
         } elseif (isset($GLOBALS['db'])) { // very dirty hack!!!
             $this->db = $GLOBALS['db'];
+        } else {
+            $this->db = Model::getDb();
         }
 
         return $this->db;
