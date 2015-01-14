@@ -111,6 +111,16 @@ class Getter extends AbstractModel
                     $dbRegistry[$methodDocBlockName]=1;
                 }
 
+                $methodDocBlockName = 'getCollection';
+                if (!isset($dbRegistry[$methodDocBlockName]) && !$file->getClass()->hasMethod($methodDocBlockName)) {
+                    $methodReturnTypePrefix = $table->getNameAsCamelCase();
+                    $file->getClass()->getDocBlock()->setTag(array(
+                        'name' => 'method',
+                        'description' => "{$methodReturnTypePrefix}Collection|{$methodReturnTypePrefix}Entity[] {$methodDocBlockName}() {$methodDocBlockName}(\$id, Cond \$cond = null) get collection"
+                    ));
+                    $dbRegistry[$methodDocBlockName]=1;
+                }
+
                 $methodDocBlockName = 'getById';
                 if (!isset($dbRegistry[$methodDocBlockName]) && !$file->getClass()->hasMethod($methodDocBlockName)) {
                     $file->getClass()->getDocBlock()->setTag(array(

@@ -5,7 +5,7 @@ namespace Model\Collection;
 use Model\Collection\Exception\ErrorException;
 use Model\Entity\AbstractEntity;
 use Model\Entity\EntityInterface;
-use \Model\Paginator\Paginator;
+use Model\Paginator\Paginator;
 
 /**
  * Абстрактный класс набора
@@ -180,8 +180,7 @@ class AbstractCollection extends \ArrayIterator
      *
      * @param bool $extended
      *
-     * @internal param bool $type
-     * @return array const \Model\Collection\AbstractCollection::ARRAY_
+     * @return array
      */
     public function toArray($extended = false)
     {
@@ -490,7 +489,7 @@ class AbstractCollection extends \ArrayIterator
      *
      * @param int    $id
      * @param string $entityType
-     * @internal \Model\Entity\AbstractEntity $entity
+     *
      * @return \Model\Entity\AbstractEntity
      */
     public function getEntityById($id, $entityType)
