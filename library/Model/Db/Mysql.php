@@ -279,15 +279,18 @@ class Mysql
         }
 
         foreach ($bindParams as $k => &$paramValue) {
-            switch (\getType($paramValue)) {
+            switch (gettype($paramValue)) {
                 case 'array':
                     $paramValue = implode(',', array_map(array($this, '_quote'), $paramValue));
                     break;
-                case 'int':
+                case 'integer':
                     $paramValue = (int)$paramValue;
                     break;
                 case 'boolean':
                     $paramValue = ((bool)$paramValue ? 1 : 0);
+                    break;
+                case 'NULL':
+                    $paramValue = null;
                     break;
                 default:
                     $paramValue = (string)$paramValue;

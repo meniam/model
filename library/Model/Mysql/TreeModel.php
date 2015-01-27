@@ -4,8 +4,11 @@ namespace Model\Mysql;
 
 use Model\Collection\AbstractCollection;
 use Model\Cond\AbstractCond;
+use Model\Cond\TreeCond;
+use Model\Db\Expr;
 use Model\Entity\AbstractEntity;
 use Model\Result\Result;
+use Model\RubricModel;
 
 /**
  *
@@ -28,9 +31,16 @@ class TreeModel extends AbstractModel
             }
         }
 
-        if ($cond->checkWith('with_all_child_collection') && $cond->getWith('with_all_child_collection', $this->getRawName()) instanceof AbstractCond) {
-            if ($res = $this->getChildCollectionByData($data, $cond->getWith('with_all_child_collection', $this->getRawName())->with('with_all_child', $this->getRawName()))) {
-                $data['_all_child_collection'] = $res;
+        if ($cond->checkWith(TreeCond::WITH_ALL_CHILD_COLLECTION) &&
+            $cond->getWith(TreeCond::WITH_ALL_CHILD_COLLECTION, $this->getRawName())
+        ) {
+            /** @var TreeCond $innerCond */
+            $innerCond = $cond->getWith(TreeCond::WITH_ALL_CHILD_COLLECTION, $this->getRawName());
+
+            $allChildCollection = $this->getAllChildCollectionById($data['id'], $innerCond->condIncludeSelf(false));
+
+            if ($allChildCollection->count() > 0) {
+                $data['_all_child_collection'] = $allChildCollection;
             }
         }
 
@@ -44,27 +54,70 @@ class TreeModel extends AbstractModel
 
     /**
      * @param              $id
-     * @param AbstractCond $cond
+     * @param TreeCond $cond
      *
      * @return AbstractCollection|AbstractEntity[]
      */
-    public function getParentCollectionById($id, AbstractCond $cond = null)
+    public function getParentCollectionById($id, TreeCond $cond = null)
     {
         $cond = $this->prepareCond($cond, $this->getRawName());
-
         $item = $this->getById($id, $cond);
 
+        if (!$item->exists()) {
+            return $this->prepareCollection(array(), $cond);
+        }
+
+        $treePath = $item->getTreePath();
+        $parentListIds = explode(',', $treePath);
+
+        if (!$cond->getCond(TreeCond::COND_INCLUDE_SELF, true)) {
+            array_pop($parentListIds);
+        }
+
+        $sort = $cond->getCond(TreeCond::COND_PARENT_LIST_REVERSE, false)  ? 'DESC' : 'ASC';
+
+        $cond->where(array($this->qi('id') => $parentListIds))
+            ->order($this->qi('level') . ' ' . $sort)
+            ->showQuery(true);
+
+        return $this->getCollection($cond);
+    }
+
+    /**
+     * @param $id
+     * @param TreeCond $cond
+     * @return mixed
+     * @throws \Model\Exception\ErrorException
+     */
+    public function getAllChildCollectionById($id, TreeCond $cond = null)
+    {
+        $cond = $this->prepareCond($cond, $this->getRawName())
+                     ->withoutPrepare(true);
+
+        $itemId = $this->getFirstIdFromMixed($id);
+        $item = $this->getById($itemId, $cond);
+
+        if (!$item || !isset($item['id'])) {
+            return $this->prepareCollection(array(), $cond);
+        }
+
         $result = array();
-        if ($cond->checkCond('include_self')) {
+
+        if ($cond->getCond(TreeCond::COND_INCLUDE_SELF, false)) {
             $result[] =  $item;
         }
 
-        while ($item->exists()) {
-            $item = $this->getById($item->getParentId(), $cond);
+        $allChildCond = $this->prepareCond($cond, $this->getRawName())
+                            ->where(new Expr($this->qi('tree_path') . " LIKE '{$item['tree_path']},%'"))
+                            ->order($this->qi('level') . ' ASC')
+                            ->order($this->qi('pos') . ' ASC');
 
-            if ($item->exists()) {
-                $result[] = $item->toArray();
-            }
+        $childCollection = $this->getCollection($allChildCond);
+
+        if (!empty($result) && !empty($childCollection)) {
+            $result = array_merge($result, $childCollection);
+        } elseif (empty($result) && !empty($childCollection)) {
+            $result = $childCollection;
         }
 
         return $this->prepareCollection($result, $cond);
@@ -120,13 +173,18 @@ class TreeModel extends AbstractModel
         }
     }
 
+    /**
+     * Get Direct child Collection
+     *
+     * @param $id
+     * @param AbstractCond $cond
+     * @return array|mixed|AbstractCollection|\Model\Entity\AbstractEntity[]|null|string
+     */
     public function getChildCollection($id, AbstractCond $cond = null)
     {
         $cond = $this->prepareCond($cond, $this->getRawName());
         $id = $this->getFirstIdFromMixed($id);
-
-        $cond->where(array('parent_id' => $id));
-
+        $cond->where(array($this->qi('parent_id') => $id));
         return $this->getCollection($cond);
     }
 
@@ -144,23 +202,43 @@ class TreeModel extends AbstractModel
             $parentIds = null;
         }
 
-        $cond = $this->prepareCond($cond, $this->getRawName())
-                ->where(array('parent_id' => $parentIds));
-
-        return $this->getCollection($parentIds, $cond);
+        $cond = $this->prepareCond($cond, $this->getRawName())->where(array('parent_id' => $parentIds));
+        return $this->getCollection($cond);
     }
 
     public function repairBranchByParent($parent = null)
     {
-        $rubricCollection = $this->getCollectionByParent($parent);
+        $parentCollectionCond = RubricModel::getInstance()
+                                    ->getCond()
+                                    ->order($this->qi('level') . ' ASC')
+                                    ->order($this->qi('pos') . ' ASC');
 
+        $rubricCollection = $this->getCollectionByParent($parent, $parentCollectionCond);
+
+        // If nothing to repair return result
         if ($rubricCollection->isEmpty()) {
             return true;
         }
 
+        $pos = 1;
         $parentItem = $this->getById($parent);
 
-        print_r($parentItem);
-        die;
+        foreach ($rubricCollection as $rubric) {
+            $updateData = array(
+                'id'    => $rubric->getId(),
+                'level' => $parentItem->getLevel() + 1,
+                'tree_path' =>  trim($parentItem->getTreePath() . ',' . $rubric->getId(), ','),
+                'pos' => $pos++
+            );
+
+            if (method_exists($this, 'afterPrepareRepairTreeData')) {
+                $updateData = call_user_func_array(array($this, 'afterPrepareRepairTreeData'), array($updateData, $rubric, $parentItem));
+            }
+
+            $this->updateById($updateData, $rubric->getId());
+            $this->repairBranchByParent($rubric);
+        }
+
+        return true;
     }
 }

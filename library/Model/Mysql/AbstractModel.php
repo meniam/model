@@ -396,10 +396,42 @@ class AbstractModel extends \Model\AbstractModel
      */
     public function getById($id, Cond $cond = null)
     {
+        if ($id) {
+            $ids = $this->getIdsFromMixed($id);
+
+            if (empty($ids)) {
+                $ids = null;
+            }
+        } else {
+            $ids = null;
+        }
+
         $cond = $this->prepareCond($cond)
-                        ->where(array('`' . $this->getRawName() . '`.`id`' => $this->getIdsFromMixed($id)));
+                        ->where(array($this->qi('id') => $ids));
 
         return $this->get($cond);
+    }
+
+    /**
+     * Quote Identifier
+     *
+     * @param $name
+     * @param null $table
+     * @return string
+     */
+    public function qi($name, $table = null)
+    {
+        if (!$table) {
+            $table = $this->getRawName();
+        } elseif ($table[0] = '`') {
+            $table = trim($table, '`');
+        }
+
+        if ($name[0] == '`') {
+            $name = trim($name, '`');
+        }
+
+        return "`{$table}`.`{$name}`";
     }
 
     /**
@@ -962,7 +994,7 @@ class AbstractModel extends \Model\AbstractModel
 
         $item = $this->db->fetchRow($select->__toString(), $select->getBind());
 
-        if (!$cond->checkCond(Cond::WITHOUT_PREPARE)) {
+        if (!$cond->getCond(Cond::WITHOUT_PREPARE, false)) {
             $item = call_user_func_array(array($this, 'prepare'), array($item, $cond));
         }
 

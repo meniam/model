@@ -481,6 +481,11 @@ abstract class AbstractCond
         }
     }
 
+    public function getCondClass()
+    {
+        return $this->condClass;
+    }
+
     /**
      * Инициализация Entity
      */
@@ -938,7 +943,7 @@ abstract class AbstractCond
     public function getWith($entity, $type = null)
     {
         if (!$this->checkWith($entity)) {
-            return AbstractModel::condFactory($entity, $type);
+            $this->_params['with'][$entity] = AbstractModel::condFactory($entity, $type);
         }
 
         return $this->_params['with'][$entity];

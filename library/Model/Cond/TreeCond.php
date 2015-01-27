@@ -19,8 +19,16 @@
 
 namespace Model\Cond;
 
+use Model\AbstractModel;
+
 class TreeCond extends Cond
 {
+    const COND_INCLUDE_SELF = 'include_self';
+
+    const COND_PARENT_LIST_REVERSE = 'parent_list_reverse';
+
+    const WITH_ALL_CHILD_COLLECTION = 'all_child_collection';
+
     /**
      * @param      $type
      * @param bool $includeSelf
@@ -29,16 +37,47 @@ class TreeCond extends Cond
      */
     public function withChild($type, $includeSelf = false)
     {
-        $this->cond('include_self', (bool)$includeSelf);
+        $this->condIncludeSelf($includeSelf);
         $this->with('with_child', $type);
         return $this;
     }
 
     public function withChildCollection($type, $includeSelf = false)
     {
-        $this->cond('include_self', (bool)$includeSelf);
+        $this->condIncludeSelf($includeSelf);
         $this->with('with_child_collection', $type);
         return $this;
     }
 
+    /**
+     * @param bool $is
+     * @return $this
+     * @throws \Model\Exception\ErrorException
+     */
+    public function condIncludeSelf($is = true)
+    {
+        $this->cond(self::COND_INCLUDE_SELF, (bool)$is);
+        return $this;
+    }
+
+    /**
+     * @param bool $is
+     * @return $this
+     * @throws \Model\Exception\ErrorException
+     */
+    public function condParentListReverse($is = true)
+    {
+        $this->cond(self::COND_PARENT_LIST_REVERSE, (bool)$is);
+        return $this;
+    }
+
+    public function withAllChildCollection(TreeCond $cond = null)
+    {
+        if (!$cond) {
+            $cond = $this->init(self::WITH_ALL_CHILD_COLLECTION, $this->getName());
+        }
+
+        $this->with($cond);
+        return $this;
+    }
 }
