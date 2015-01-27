@@ -1,7 +1,7 @@
 {
     "name": "meniam/model",
     "type": "library",
-    "version" : "1.0.0",
+    "version" : "v0.0.3-dev",
     "description": "Database models for MySql",
     "keywords": ["model","mysql", "orm"],
     "homepage": "http://github.com/meniam/model",
@@ -38,8 +38,8 @@
 
     "extra": {
         "branch-alias": {
-            "dev-master": "2.2-dev",
-            "dev-develop": "2.3-dev"
+            "dev-master": "v0.0.2-dev",
+            "dev-develop": "v0.0.2-dev"
         }
     },
 
