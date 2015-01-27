@@ -973,7 +973,7 @@ class AbstractModel extends Singleton implements ModelInterface
         $key = $key ? : 'general';
 
         // Настраиваем валидатор
-        $vd = Validator::getValidatorInstance('\App\Validator\GeneralError');
+        $vd = Model::getValidatorAdapter()->getValidatorInstance('\App\Validator\GeneralError');
 
         if ($message) {
             $vd->setMessage($message, $key);

@@ -4,6 +4,8 @@ namespace Model;
 use Model\Config\Config;
 use Model\Db\Mysql;
 use Model\Exception\ErrorException;
+use Model\Validator\Adapter\AbstractAdapter;
+use Model\Validator\Adapter\Zend;
 
 /**
  * Base model class
@@ -30,6 +32,8 @@ abstract class Model
      */
     private static $connections = array();
 
+    private static $validatorAdapter;
+
     /**
      * @return bool
      */
@@ -52,6 +56,26 @@ abstract class Model
         }
 
         return self::$config;
+    }
+
+    /**
+     * @param AbstractAdapter $validatorAdapter
+     */
+    public static function setValidatorAdapter(AbstractAdapter $validatorAdapter)
+    {
+        self::$validatorAdapter = $validatorAdapter;
+    }
+
+    /**
+     * @return AbstractAdapter
+     */
+    public static function getValidatorAdapter()
+    {
+        if (!self::$validatorAdapter) {
+            self::setValidatorAdapter(new Zend());
+        }
+
+        return self::$validatorAdapter;
     }
 
     public static function initialize()
