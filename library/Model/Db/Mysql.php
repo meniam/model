@@ -79,7 +79,6 @@ class Mysql
         self::FLOAT_TYPE  => self::FLOAT_TYPE
     );
 
-
     public function __construct($dsn, $user, $password, array $params = array())
     {
         $this->dsn = $dsn;
@@ -346,7 +345,7 @@ class Mysql
             return null;
         }
 
-        $sql = "INSERT INTO `" . $table . '` SET ';
+        $sql = "INSERT INTO `{$table}` SET ";
 
         foreach (array_keys($data) as $k) {
             $sql .= '`' . $k . '` = :' . $k . ', ';
