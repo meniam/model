@@ -27,7 +27,7 @@ class Dockblock extends AbstractModel
          */
 
         /**
-         * @var $file \Zend\Code\Generator\FileGenerator
+         * @var $file \Model\Code\Generator\FileGenerator
          */
         $file = $part->getFile();
 
@@ -60,6 +60,11 @@ class Dockblock extends AbstractModel
                                  'name'        => 'author',
                                  'description' => 'Anton Sedyshev <madtoha@yandex.ru>',
                              ),
+                            array(
+                                 'name' => 'method',
+                                'description' => $tableNameAsCamelCase . "Cond getCond() getCond()(Cond \$cond = null) get condition"
+                            )
+
                     );
 
         if ($file->getClass()->getDocblock()) {

@@ -345,6 +345,17 @@ class Schema extends \ArrayIterator
                     }
                 }
             }
+
+            if ($table->getColumn('parent_id')) {
+                $link = $this->getLinkByColumns($table->getColumn('id'), $table->getColumn('parent_id'));
+
+                if (isset($link)) {
+                    if (!isset($tableLinkRegistry[$link->getLocalTable()->getName()][$link->getUniqId()])) {
+                        $tableLinkRegistry[$link->getLocalTable()->getName()][$link->getUniqId()] = $link;
+                        $link->getLocalTable()->addLink($link);
+                    }
+                }
+            }
         }
     }
 

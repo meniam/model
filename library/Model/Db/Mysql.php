@@ -1,4 +1,19 @@
 <?php
+/**
+ * LICENSE: THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NON INFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+ * LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+ * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
+ * @category   Collection
+ * @package    Model
+ * @author     Eugene Myazin <eugene.myazin@gmail.com>
+ * @copyright  2008-2015 Eugene Myazin <eugene.myazin@gmail.com>
+ * @license    https://github.com/meniam/model/blob/master/MIT-LICENSE.txt  MIT License
+ */
 
 namespace Model\Db;
 
@@ -8,8 +23,8 @@ use \PDO;
 /**
  * Работа с базой данных
  *
- * @category   category
- * @package    package
+ * @category   Db
+ * @package    Model
  * @author     Eugene Myazin <meniam@gmail.com>
  * @since      25.11.12 15:34
  * @copyright  2008-2012 ООО "Америка"
@@ -26,7 +41,9 @@ class Mysql
 
     private $isConnected = false;
 
-    private $dsn = 'dblib:host=your_hostname;dbname=your_db;charset=UTF-8';
+    private $dsn = 'dblib:host=your_hostname;dbname=your_db;charset=UTF8';
+
+    private $schema;
 
     private $user;
 
@@ -37,6 +54,8 @@ class Mysql
     private $profiler = array();
 
     private $profilerEnable = true;
+
+    protected $transactionCounter = 0;
 
     /**
      * @var PDO
@@ -60,13 +79,29 @@ class Mysql
         self::FLOAT_TYPE  => self::FLOAT_TYPE
     );
 
-
     public function __construct($dsn, $user, $password, array $params = array())
     {
         $this->dsn = $dsn;
         $this->user = $user;
         $this->password = $password;
         $this->params = $params;
+    }
+
+    /**
+     * @return string
+     * @throws ErrorException
+     */
+    public function getSchema()
+    {
+        if (!$this->schema) {
+            if (preg_match('#;dbname=([^;]+)#si', $this->dsn, $m)) {
+                $this->schema = (string)$m[1];
+            } else {
+                throw new ErrorException('Schema not found');
+            }
+        }
+
+        return $this->schema;
     }
 
     public function connect()
@@ -78,7 +113,7 @@ class Mysql
         }
 
         $defaultParams = array(
-            PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8',
+            PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES UTF8, @@session.time_zone = '+00:00'",
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
         );
@@ -91,8 +126,77 @@ class Mysql
         return $this;
     }
 
+    /**
+     * @return Mysql
+     */
+    public function beginTransaction()
+    {
+        if (!$this->transactionCounter++) {
+            $this->connect();
+
+            if ($this->profilerEnable) {
+                $this->profiler[] = array(
+                    'query' => 'BEGIN TRANSACTION',
+                    'runtime' => 0);
+            }
+
+            $this->pdo->beginTransaction();
+        } elseif (!$this->profilerEnable) {
+            $this->profiler[] = array(
+                'query' => 'BEGIN INNER TRANSACTION #' . $this->transactionCounter,
+                'runtime' => 0);
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Mysql
+     */
+    public function commit()
+    {
+        if (!--$this->transactionCounter) {
+            if ($this->isConnected) {
+                if ($this->profilerEnable) {
+                    $this->profiler[] = array(
+                        'query'   => 'COMMIT',
+                        'runtime' => 0
+                    );
+                }
+                $this->pdo->commit();
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Mysql
+     */
+    function rollback()
+    {
+        if ($this->transactionCounter > 0) {
+            $this->transactionCounter = 0;
+            if ($this->isConnected) {
+                if ($this->profilerEnable) {
+                    $this->profiler[] = array(
+                        'query'   => 'ROLLBACK',
+                        'runtime' => 0
+                    );
+                }
+                $this->pdo->rollBack();
+            }
+        }
+        $this->transactionCounter = 0;
+        return $this;
+    }
+
+    /**
+     * @return void
+     */
     public function disconnect()
     {
+        $this->rollback();
         unset($this->pdo);
         $this->isConnected = false;
     }
@@ -155,6 +259,11 @@ class Mysql
         }
 
         $bindParams = $this->prepareBindParams($bindParams);
+
+        foreach ($bindParams as $k => $v) {
+            $bindParams[':' . ltrim($k, ':')] = $this->quote($v);
+            unset($bindParams[ltrim($k, ':')]);
+        }
         //$sql = str_replace(array_keys($bindParams), array_values($bindParams), $sql);
         $sql = strtr($sql, $bindParams);
 
@@ -170,15 +279,18 @@ class Mysql
         }
 
         foreach ($bindParams as $k => &$paramValue) {
-            switch (\getType($paramValue)) {
+            switch (gettype($paramValue)) {
                 case 'array':
                     $paramValue = implode(',', array_map(array($this, '_quote'), $paramValue));
                     break;
-                case 'int':
+                case 'integer':
                     $paramValue = (int)$paramValue;
                     break;
                 case 'boolean':
                     $paramValue = ((bool)$paramValue ? 1 : 0);
+                    break;
+                case 'NULL':
+                    $paramValue = null;
                     break;
                 default:
                     $paramValue = (string)$paramValue;
@@ -268,6 +380,11 @@ class Mysql
      */
     public function insert($table, array $bind = array())
     {
+        $start = 0;
+        if ($this->profilerEnable) {
+            $start = microtime(true);
+        }
+
         $this->connect();
 
         /** @var $stmt \PDOStatement */
@@ -291,6 +408,12 @@ class Mysql
             }
 
             $result = $stmt->execute();
+
+            if ($this->profilerEnable) {
+                $this->profiler[] = array(
+                    'query' => $this->buildSql($stmt->queryString, $bind),
+                    'runtime' => (microtime(true) - $start));
+            }
 
             if ($result) {
                 return isset($bind['id']) ? $bind['id'] : $this->pdo->lastInsertId();
@@ -394,8 +517,8 @@ class Mysql
     {
         $where = array();
 
-        if ($cond instanceof  \Model\Db\Select) {
-            $where = $cond->getPart(\Model\Db\Select::WHERE);
+        if ($cond instanceof Select) {
+            $where = $cond->getPart(Select::WHERE);
 
             if (!$bind) {
                 $bind  = $cond->getBind();

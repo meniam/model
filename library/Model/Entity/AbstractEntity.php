@@ -2,7 +2,7 @@
 
 namespace Model\Entity;
 
-use Model\Entity\EntityInterface;
+use Model\Collection\AbstractCollection;
 use Model\Exception\ErrorException;
 
 /**
@@ -118,7 +118,7 @@ class AbstractEntity extends \ArrayObject implements EntityInterface
         if (preg_match('#(.*?)As(.*?Decorator)$#si', $method, $m)) {
             $baseMethod = $m[1];
             $decorator = '\\Model\Entity\\Decorator\\' . $m[2];
-            return new $decorator($this->$baseMethod());
+            return new $decorator($this->$baseMethod(), $this);
         } else {
             throw new ErrorException('Method "' . $method . '" do not exists');
         }
@@ -168,10 +168,10 @@ class AbstractEntity extends \ArrayObject implements EntityInterface
      * @param EntityInterface $value
      * @return bool
      */
-    public function equals(EntityInterface $value)
+    /*public function equals(EntityInterface $value)
     {
         return ($this->getId() == $value->getId());
-    }
+    }*/
 
     /**
      * Вынуть элемент из данных
@@ -262,15 +262,20 @@ class AbstractEntity extends \ArrayObject implements EntityInterface
     public function toArray()
     {
         $resultArray = $this->getArrayCopy();
-        foreach($resultArray as $key => $value) {
-            if ($key[0] == '_') {
-                if (isset($this[$key])) {
-                    $resultArray[$key] = $this[$key]->toArray();
-                } else {
-                    unset($resultArray[$key]);
-                }
+
+        /** @var AbstractEntity|AbstractCollection $value */
+        foreach($resultArray as $key => &$value) {
+            $value = $this->get($key);
+
+            if ($key[0] == '_' && is_object($value)) {
+                $value = $value->toArray();
+            }
+
+            if ($key[0] == '_' && !isset($this[$key])) {
+                unset($resultArray[$key]);
             }
         }
+
         return $resultArray;
     }
 
@@ -283,7 +288,7 @@ class AbstractEntity extends \ArrayObject implements EntityInterface
     {
         $array = $this->toArray();
 
-        foreach ($array as $k => &$null) {
+        foreach (array_keys($array) as $k) {
             if ($k[0] == '_') {
                 unset($array[$k]);
             }

@@ -18,6 +18,7 @@ class JoinTest extends \ModelTest\Model\TestCase
 {
     /**
      * @group Model
+     * @group itrun
      */
     public function testJoin()
     {
@@ -42,8 +43,8 @@ class JoinTest extends \ModelTest\Model\TestCase
         /** @var UserEntity $data */
         $data = $userModel->getByEmail('test@example.com');
         $this->assertInstanceOf('Model\Entity\UserEntity', $data);
-        $this->assertFalse($data->exists());
 
+        $this->assertFalse($data->exists());
         $user = array('email' => 'test@example.com',
                      '_user_info' => array('about' => 'just a test'));
         $userModel->import($user);

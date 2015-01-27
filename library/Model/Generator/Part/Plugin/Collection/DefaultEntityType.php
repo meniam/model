@@ -20,7 +20,7 @@ class DefaultEntityType extends AbstractCollection
          */
 
         /**
-         * @var $file \Zend\Code\Generator\FileGenerator
+         * @var $file \Model\Code\Generator\FileGenerator
          */
         $file = $part->getFile();
 
@@ -46,7 +46,7 @@ class DefaultEntityType extends AbstractCollection
         $method->setDocBlock($docblock);
 
         $method->setBody(<<<EOS
-\$this->_defaultEntityType = '\Model\Entity\\{$tableNameAsCamelCase}Entity';
+\$this->defaultEntityType = '\Model\Entity\\{$tableNameAsCamelCase}Entity';
 EOS
         );
 

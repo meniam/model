@@ -2,12 +2,19 @@
 
 namespace Model;
 
-use Model\Generator\Part\AbstractPart;
+use Model\Cluster\Schema;
+use Model\Cluster\Schema\Table;
+
+use Model\Db\Mysql;
+use Model\Exception\ErrorException;
 use Model\Db\Mysql as DbAdapter;
 
-use Model\Cluster\Schema\Table;
-use Model\Generator\Part\Cond;
-use Model\Generator\Part\FrontCond;
+use Model\Generator\Part\AbstractPart;
+use Model\Generator\Part\Entity;
+
+use Zend\Console\ColorInterface;
+use Zend\Console\Console;
+use Zend\Console\RouteMatcher\DefaultRouteMatcher;
 
 /**
  * Основной класс генератора
@@ -42,251 +49,359 @@ class Generator
      */
     protected $_outDir;
 
+    protected $outDirArray = array();
+
     /**
      * @var
      */
     protected $_deployDir;
 
+    private function setOutDir($outDir)
+    {
+        $this->_outDir = rtrim($outDir, '/');
+
+        if (!is_dir($outDir) || !is_writeable($outDir)) {
+            throw new ErrorException('Directory is not writable: ' . $outDir);
+        }
+
+        $this->outDirArray = array(
+            AbstractPart::PART_FRONT_COLLECTION => $outDir . '/collections',
+            AbstractPart::PART_COLLECTION       => $outDir . '/collections/abstract',
+
+            AbstractPart::PART_FRONT_COND       => $outDir . '/cond',
+            AbstractPart::PART_COND             => $outDir . '/cond/abstract',
+
+            AbstractPart::PART_FRONT_ENTITY     => $outDir . '/entities',
+            AbstractPart::PART_ENTITY           => $outDir . '/entities/abstract',
+
+            AbstractPart::PART_FRONT_MODEL      => $outDir . '/',
+            AbstractPart::PART_MODEL            => $outDir . '/abstract');
+
+        foreach ($this->outDirArray as $dir) {
+            @mkdir($dir, 0755, true);
+
+            if (!is_dir($dir) || !is_readable($dir)) {
+                throw new ErrorException('Directory is not writable: ' . $dir);
+            }
+        }
+    }
+
+    private $config = array();
+
     /**
-     * @var
+     * @return array
      */
-    private $sm;
-
-	public function __construct($sm, $cluster, $outDir)
-	{
-        $this->sm = $sm;
-        $this->cluster = $cluster;
-		$this->_outDir = rtrim($outDir, '/');
-
-		if (!is_dir($outDir) || !is_writeable($outDir)) {
-			throw new \Model\Exception\ErrorException('Directory is not writable');
-		}
-
-        @mkdir($outDir . '/abstract');
-        @mkdir($outDir . '/entities');
-        @mkdir($outDir . '/entities/abstract');
-        @mkdir($outDir . '/collections');
-        @mkdir($outDir . '/collections/abstract');
-
-        @mkdir($outDir . '/cond');
-        @mkdir($outDir . '/cond/abstract');
-
-		if (!is_dir($outDir . '/abstract') || !is_readable($outDir . '/abstract')) {
-			throw new \Model\Exception\ErrorException('Directory model abstract "' . $outDir . '/abstract" is not writable');
-		}
-
-		if (!is_dir($outDir . '/entities') || !is_readable($outDir . '/entities')) {
-			throw new \Model\Exception\ErrorException('Directory entities "' . $outDir . '/entities" is not writable');
-		}
-
-		if (!is_dir($outDir . '/entities/abstract') || !is_readable($outDir . '/entities/abstract')) {
-			throw new \Model\Exception\ErrorException('Directory entity abstract "' . $outDir . '/entities/abstract" is not writable');
-		}
-
-		if (!is_dir($outDir . '/collections') || !is_readable($outDir . '/collections')) {
-			throw new \Model\Exception\ErrorException('Directory collections is not writable');
-		}
-
-		if (!is_dir($outDir . '/collections/abstract') || !is_readable($outDir . '/collections/abstract')) {
-			throw new \Model\Exception\ErrorException('Directory collections abstract "' . $outDir . '/collections/abstract" is not writable');
-		}
-	}
-
-
-    public function buildPartEntity($tableName)
+    public function getConfig()
     {
-        $table = $this->getCluster()->getTable($tableName);
-        $tableNameAsCamelCase = $table->getNameAsCamelCase();
-
-        new \Model\Generator\Part\Entity($table, $this->getCluster(), $this->_outDir . '/entities/abstract/Abstract' . $tableNameAsCamelCase . 'Entity.php');
-    }
-
-    public function buildPartFrontEntity($tableName)
-    {
-        $table = $this->getCluster()->getTable($tableName);
-        $tableNameAsCamelCase = $table->getNameAsCamelCase();
-
-        new \Model\Generator\Part\FrontEntity($table, $this->getCluster(), $this->_outDir . '/entities/' . $tableNameAsCamelCase . 'Entity.php');
+        return $this->config;
     }
 
     /**
+     * @param array $config
+     */
+    public function setConfig($config)
+    {
+        $this->config = $config;
+    }
+
+    /**
+     * @param Table $table
+     * @param       $part
+     * @param null  $aliasName
+     */
+    public function buildPart(Table $table, $part, $aliasName = null)
+    {
+        if ($part == 'front_cond') {
+            $aliasList = $table->getAliasLinkList();
+            if (!empty($aliasList) && !$aliasName) {
+                foreach ($aliasList as $_aliasName => $tableName) {
+                    $this->buildPart($table, $part, $_aliasName);
+                }
+            }
+        }
+
+        $partConst = constant('\\Model\\Generator\\Part\\AbstractPart::PART_' . strtoupper($part));
+        $partAsCameCase = implode('', array_map('ucfirst', explode('_', $part)));
+        if ($aliasName) {
+            $aliasNameAsCamelCase = implode('', array_map('ucfirst', explode('_', $aliasName)));
+        } else {
+            $aliasNameAsCamelCase = $table->getNameAsCamelCase();
+        }
+
+        $partClass = '\\Model\\Generator\\Part\\' . $partAsCameCase;
+
+        $outputFile = $this->outDirArray[$partConst];
+        $outputFile = rtrim($outputFile, '/') . '/';
+        if (preg_match('#abstract/?$#', $outputFile)) {
+            $outputFile .= 'Abstract';
+        }
+        $outputFile .= str_replace('Front', '', $aliasNameAsCamelCase . $partAsCameCase) . '.php';
+        $options = $aliasName ? array('alias' => $aliasName, 'config' => $this->getConfig()) : array('config' => $this->getConfig());
+
+        new $partClass($table, $this->getCluster(), $outputFile, $options);
+    }
+
+    public function showUsage()
+    {
+        $shiftLen = 16;
+
+        $help = array(
+            "Models 1.0.0 by Eugene Myazin <github.com/meniam/models>.",
+            ''
+        );
+
+        $this->showLine($help, ColorInterface::WHITE);
+
+        $this->showLine("Usage# ./models --deploy-dir=<dir> \\", ColorInterface::LIGHT_WHITE, $shiftLen);
+        $this->showLine("                --output-dir=<dir> \\", ColorInterface::LIGHT_WHITE, $shiftLen);
+        $this->showLine("               [--config=<file>] \\", ColorInterface::LIGHT_WHITE, $shiftLen);
+        $this->showLine("               [--db-host=<str>] \\", ColorInterface::LIGHT_WHITE, $shiftLen);
+        $this->showLine("               [--db-schema=<str>] \\", ColorInterface::LIGHT_WHITE, $shiftLen);
+        $this->showLine("               [--db-user=<str>] \\", ColorInterface::LIGHT_WHITE, $shiftLen);
+        $this->showLine("               [--db-password=<str>] \\", ColorInterface::LIGHT_WHITE, $shiftLen);
+        $this->showLine("               [--force] \\", ColorInterface::LIGHT_WHITE, $shiftLen);
+        $this->showLine("               [--verbose] \\", ColorInterface::LIGHT_WHITE, $shiftLen);
+        $this->showLine("               [--erase] \\", ColorInterface::LIGHT_WHITE, $shiftLen);
+        $this->showLine("               [--cache-dir=<dir>]", ColorInterface::LIGHT_WHITE, $shiftLen);
+
+        $this->showLine("");
+        $this->showParam("--deploy-dir=<dir>", "Директория для выгрузки готовых моделей",
+                                         "в которую с заменой копируются абстрактные классы," . PHP_EOL .
+                                         "базовые классы копируются если отсутствует в папке." . PHP_EOL,
+            $shiftLen);
+
+        $this->showParam("--output-dir=<dir>", "Директория в которую генерируются модели",
+            "очищается перед каждым запуском генерации" . PHP_EOL,
+            8);
+
+        $this->showParam("[--config=<file>]", "Путь к файлу json конфига",
+            "вы можете использовать свой файл конфигурации для генерации моделей" . PHP_EOL.
+            "если не указать будет использован стандартный конфиг моделей models.json" . PHP_EOL,
+            8);
+
+        $this->showParam("[--db-host=<str>]", "Адрес Mysql сервера",
+            "по умолчанию: localhost" . PHP_EOL,
+            8);
+
+        $this->showParam("[--db-schema=<str>]", "Имя базы данных",
+            "по умолчанию: test" . PHP_EOL,
+            8);
+
+        $this->showParam("[--db-user=<str>]", "Пользователь MySql",
+            "по умолчанию: root" . PHP_EOL,
+            8);
+
+        $this->showParam("[--db-password=<str>]", "Пароль MySql",
+            "по умолчанию: пустой" . PHP_EOL,
+            8);
+
+        $this->showParam("[--cache-dir=<str>]", "Директория для кеша",
+            "если указана директория кеш включается," . PHP_EOL .
+            "в обычном режиме кеша нет" . PHP_EOL,
+
+            8);
+
+        $this->showParam("[--verbose]", "Вывод действий на экран",
+            "показывает что происходит в режиме реального времени" . PHP_EOL,
+            8);
+
+        $this->showParam("[--force]", "Режим бога",
+            "в этом режиме скрипт игнорирует ошибки, все что может..." . PHP_EOL.
+            "кеш игнорируется" . PHP_EOL,
+            8);
+
+        $this->showParam("[--erase]", "Очистка output директори",
+            "очищает директорию output после выгрузки моделей" . PHP_EOL,
+            8);
+
+        return null;
+    }
+
+    /**
+     * @param array $lines
+     * @param null  $color
+     * @param int   $shift
      *
-     * @param $tableName
-     * @return bool
+     * @return null
      */
-    public function buildPartCollection($tableName)
+    public function showLine($lines = array(), $color = null, $shift = 0)
     {
-        $table = $this->getCluster()->getTable($tableName);
-        if (!$table) {
-            return false;
-        }
+        $console = Console::getInstance();
+        $shiftStr = str_repeat(" ", $shift);
 
-        $tableNameAsCamelCase = $table->getNameAsCamelCase();
-
-        new \Model\Generator\Part\Collection($table, $this->getCluster(), $this->_outDir . '/collections/abstract/Abstract' . $tableNameAsCamelCase . 'Collection.php');
-
-        return true;
-    }
-
-    /**
-     * @param $tableName
-     * @return bool
-     */
-    public function buildPartFrontCollection($tableName)
-    {
-        $table = $this->getCluster()->getTable($tableName);
-        if (!$table) {
-            return false;
-        }
-
-        $tableNameAsCamelCase = $table->getNameAsCamelCase();
-
-        new \Model\Generator\Part\FrontCollection($table, $this->getCluster(), $this->_outDir . '/collections/' . $tableNameAsCamelCase . 'Collection.php');
-
-        return true;
-    }
-
-    /**
-     * @param $tableName
-     * @return bool
-     */
-    public function buildPartModel($tableName)
-    {
-        $table = $this->getCluster()->getTable($tableName);
-
-        if (!$table) {
-            return false;
-        }
-
-        $tableNameAsCamelCase = $table->getNameAsCamelCase();
-
-        new \Model\Generator\Part\Model($table, $this->getCluster(), $this->_outDir . '/abstract/Abstract' . $tableNameAsCamelCase . 'Model.php');
-
-        return true;
-    }
-
-    /**
-     * @param $tableName
-     * @return bool
-     */
-    public function buildPartFrontModel($tableName)
-    {
-        $table = $this->getCluster()->getTable($tableName);
-
-        if (!$table) {
-            return false;
-        }
-
-        $tableNameAsCamelCase = $table->getNameAsCamelCase();
-
-        new \Model\Generator\Part\FrontModel($table, $this->getCluster(), $this->_outDir . '/' . $tableNameAsCamelCase . 'Model.php');
-
-        return true;
-    }
-
-    /**
-     * @param      $tableName
-     * @param null $aliasName
-     * @return bool
-     */
-    public function buildPartCond($tableName, $aliasName = null)
-    {
-        $table = $this->getCluster()->getTable($tableName);
-        if (!$table) {
-            return false;
-        }
-
-        $tableNameAsCamelCase = $table->getNameAsCamelCase();
-
-        if ($aliasName) {
-            $file = $this->_outDir . '/cond/abstract/Abstract' . implode('', array_map('ucfirst', explode('_', $aliasName))) . 'Cond.php';
+        if (!is_array($lines)) {
+            $descriptionArray = explode("\n", $lines);
+            foreach ($descriptionArray as $descriptionItem) {
+                $console->write($shiftStr . $descriptionItem . "\n", $color);
+            }
         } else {
-            $file = $this->_outDir . '/cond/abstract/Abstract' . $tableNameAsCamelCase . 'Cond.php';
+            foreach ($lines as $line) {
+                $console->write($shiftStr . $line . PHP_EOL, $color);
+            }
         }
 
-        $cond = new Cond($table, $this->getCluster(), $file);
-        $cond->generate(array('alias' => $aliasName));
-
-        return true;
+        return null;
     }
 
-    public function buildPartFrontCond($tableName, $aliasName = null)
+    /**
+     * @param $param
+     * @param $name
+     * @param $description
+     *
+     * @return null
+     */
+    public function showParam($param, $name, $description)
     {
-        $table = $this->getCluster()->getTable($tableName);
-        $tableNameAsCamelCase = $table->getNameAsCamelCase();
+        $console = Console::getInstance();
 
-        if ($aliasName) {
-            $file = $this->_outDir . '/cond/' . implode('', array_map('ucfirst', explode('_', $aliasName))) . 'Cond.php';
+        $shiftStr = str_repeat(" ", 8);
+
+        $paramName = str_pad($param, 22, " ", STR_PAD_LEFT);
+        $paramName = $console->colorize($paramName, ColorInterface::LIGHT_WHITE);
+        $paramName = preg_replace("#<(dir|str|file)>#", $console->colorize("<\\1>", ColorInterface::WHITE), $paramName);
+        $paramName = preg_replace("#(\\[\\-\\-.*?\\])#", $console->colorize("\\1", ColorInterface::WHITE), $paramName);
+
+        $console->write($shiftStr . $paramName . "  " . $console->colorize($name, ColorInterface::LIGHT_WHITE) . PHP_EOL);
+
+        $descriptionArray = array_map('trim', explode("\n", $description));
+        foreach ($descriptionArray as $descriptionItem) {
+            $console->write($shiftStr . str_repeat(" ", 24) . $descriptionItem . "\n");
+        }
+
+        return null;
+    }
+
+    public function initLog($isVerbose, $logfile)
+    {
+
+    }
+
+
+    /**
+     * @throws \Exception
+     */
+    public function run($commandString = array())
+    {
+        if ($commandString) {
+            if (!is_array($commandString)) {
+                $commandString = 'models ' . $commandString;
+            }
+            $commandString = explode(' ', $commandString);
         } else {
-            $file = $this->_outDir . '/cond/' . $tableNameAsCamelCase . 'Cond.php';
+            $commandString = $_SERVER['argv'];
         }
 
-        $cond = new FrontCond($table, $this->getCluster(), $file);
-        $cond->generate(array('alias' => $aliasName));
+        if (count($commandString) < 2) {
+            return $this->showUsage();
+        }
 
-        return true;
-    }
+        $params = new DefaultRouteMatcher("[--output-dir=] "
+                                        . "[--deploy-dir=] "
+                                        . "[--config=] "
+                                        . "[--db-host=] "
+                                        . "[--db-schema=]  "
+                                        . "[--db-user=] "
+                                        . "[--db-password=] "
+                                        . "[--deploy=] "
+                                        . "[--verbose] "
+                                        . "[--help] "
+                                        . "[--force] "
+                                        . "[--erase] "
+                                        . "[--cache-dir=] ");
+        $argv   = $commandString;
+        array_shift($argv);
+        $consoleParams = $params->match($argv);
 
+        if (!isset($consoleParams['output-dir'])) {
+            $console = Console::getInstance();
+            $console->write("Unknown output dir. Use ./models --help\n", ColorInterface::RED);
 
-    public function run()
-    {
-        AbstractPart::addPlugin(new \Model\Generator\Part\Plugin\Cond\JoinConst(), \Model\Generator\Part\AbstractPart::PART_COND);
-        AbstractPart::addPlugin(new \Model\Generator\Part\Plugin\Cond\WithConst(), \Model\Generator\Part\AbstractPart::PART_COND);
-        AbstractPart::addPlugin(new \Model\Generator\Part\Plugin\Cond\SetupEntity(), \Model\Generator\Part\AbstractPart::PART_COND);
+            $this->showUsage();
+            exit();
+        }
 
+        if (!is_dir($consoleParams['output-dir']) || !is_writeable($consoleParams['output-dir'])) {
+            $console = Console::getInstance();
+            $console->write("Unknown output dir not exists or not writable. Use ./models --help\n", ColorInterface::RED);
+            exit();
+        }
 
-        AbstractPart::addPlugin(new \Model\Generator\Part\Plugin\Entity\Dockblock(),       \Model\Generator\Part\AbstractPart::PART_ENTITY);
-        AbstractPart::addPlugin(new \Model\Generator\Part\Plugin\Entity\DecoratorMethod(), \Model\Generator\Part\AbstractPart::PART_ENTITY);
-        AbstractPart::addPlugin(new \Model\Generator\Part\Plugin\Entity\DataTypes(),       \Model\Generator\Part\AbstractPart::PART_ENTITY);
-        AbstractPart::addPlugin(new \Model\Generator\Part\Plugin\Entity\Getter(),          \Model\Generator\Part\AbstractPart::PART_ENTITY);
-        AbstractPart::addPlugin(new \Model\Generator\Part\Plugin\Entity\GetterEnum(),          \Model\Generator\Part\AbstractPart::PART_ENTITY);
-        AbstractPart::addPlugin(new \Model\Generator\Part\Plugin\Entity\RelatedGetter(),   \Model\Generator\Part\AbstractPart::PART_ENTITY);
+        $this->setOutDir($consoleParams['output-dir']);
 
-        AbstractPart::addPlugin(new \Model\Generator\Part\Plugin\Collection\DefaultEntityType(), \Model\Generator\Part\AbstractPart::PART_COLLECTION);
-        AbstractPart::addPlugin(new \Model\Generator\Part\Plugin\Collection\Dockblock(), \Model\Generator\Part\AbstractPart::PART_COLLECTION);
+        // Read Db Configuration
 
-        AbstractPart::addPlugin(new \Model\Generator\Part\Plugin\Model\Dockblock(), \Model\Generator\Part\AbstractPart::PART_MODEL);
-        AbstractPart::addPlugin(new \Model\Generator\Part\Plugin\Model\InitDefaults(), \Model\Generator\Part\AbstractPart::PART_MODEL);
-        AbstractPart::addPlugin(new \Model\Generator\Part\Plugin\Model\Relationdefine(), \Model\Generator\Part\AbstractPart::PART_MODEL);
-        AbstractPart::addPlugin(new \Model\Generator\Part\Plugin\Model\IndexList(), \Model\Generator\Part\AbstractPart::PART_MODEL);
-        AbstractPart::addPlugin(new \Model\Generator\Part\Plugin\Model\Construct(), \Model\Generator\Part\AbstractPart::PART_MODEL);
-        AbstractPart::addPlugin(new \Model\Generator\Part\Plugin\Model\InitFilterRules(), \Model\Generator\Part\AbstractPart::PART_MODEL);
-        AbstractPart::addPlugin(new \Model\Generator\Part\Plugin\Model\InitValidatorRules(), \Model\Generator\Part\AbstractPart::PART_MODEL);
-        AbstractPart::addPlugin(new \Model\Generator\Part\Plugin\Model\Getter(), \Model\Generator\Part\AbstractPart::PART_MODEL);
-        AbstractPart::addPlugin(new \Model\Generator\Part\Plugin\Model\GetInstance(), \Model\Generator\Part\AbstractPart::PART_MODEL);
-        AbstractPart::addPlugin(new \Model\Generator\Part\Plugin\Model\Link(), \Model\Generator\Part\AbstractPart::PART_MODEL);
+        $host     = isset($consoleParams['db-host']) ? $consoleParams['db-host'] : '127.0.0.1';
+        $dbSchema = isset($consoleParams['db-schema']) ? $consoleParams['db-schema'] : 'test';
+        $user     = isset($consoleParams['db-user']) ? $consoleParams['db-user'] : 'root';
+        $password = isset($consoleParams['db-password']) ? $consoleParams['db-password'] : '';
 
+        $dsn = "mysql:host=" . $host . ';'
+               . 'dbname=' . $dbSchema . ';'
+               . 'charset=utf8';
+        $db  = new Mysql($dsn, $user, $password);
+
+        $this->cluster = new Cluster();
+        $this->cluster->addSchema((new Schema($dbSchema, $db))->init());
+
+        $configPath = isset($consoleParams['config']) ? $consoleParams['config'] : __DIR__ . '/models.json';
+        if (!is_file($configPath) || !is_readable($configPath)) {
+            $console = Console::getInstance();
+            $console->write("Config file not exists or not readable. Use ./models --help\n", ColorInterface::RED);
+            exit();
+        }
+        $config = json_decode(file_get_contents($configPath), true);
+        if (!$config) {
+            $console = Console::getInstance();
+            $console->write("Bad config file. Use ./models --help\n", ColorInterface::RED);
+            exit();
+        }
+        $this->setConfig($config);
+
+        // Register plugins
+        if (isset($config['plugins'])) {
+            foreach ($config['plugins'] as $partType => $pluginArray)
+                if (isset($pluginArray['list'])) {
+                    foreach ($pluginArray['list'] as $condPluginArray) {
+                        if ($pluginName = (isset($condPluginArray['name']) ? $condPluginArray['name'] : null)) {
+                            $partTypeAsCamelCalse = implode('', array_map('ucfirst', explode('_', $partType)));
+
+                            $condPluginClassName = '\\Model\\Generator\\Part\\Plugin\\' . $partTypeAsCamelCalse . '\\' . $pluginName;
+                            $partConst           = constant('\\Model\\Generator\\Part\\AbstractPart::PART_' . strtoupper($partType));
+
+                            AbstractPart::addPlugin(new $condPluginClassName(), $partConst);
+                        }
+                    }
+                }
+        }
+
+        // Fields prepare
 
         /**
          * Generate Alias cond
          */
         $classmap = '';
-        foreach ($this->getCluster()->getTablelist() as $table) {
-            $aliasList = $table->getAliasLinkList();
+        foreach ($this->getCluster()->getTableList() as $table) {
+            if (substr($table->getName(), 0, 1) == '_' || substr($table->getName(), -5) == '_link') {
+                continue;
+            }
 
+            $aliasList = $table->getAliasLinkList();
             if (!empty($aliasList)) {
                 foreach ($aliasList as $aliasName => $tableName) {
-                    $this->buildPartFrontCond($tableName, $aliasName);
-
+                    $this->buildPart($this->getCluster()->getTable($tableName), 'front_cond', $aliasName);
                     $aliasAsCamelCase = implode('', array_map('ucfirst', explode('_', $aliasName)));
-
                     $classmap .= "\t\t'Model\\\\Cond\\\\{$aliasAsCamelCase}Cond' => __DIR__ . '/cond/{$aliasAsCamelCase}Cond.php',\n";
                 }
             }
-        }
 
-        /** @var  $table Table */
-        foreach ($this->getCluster()->getTableList() as $table) {
-            $this->buildPartModel($table->getName());
-            $this->buildPartFrontModel($table->getName());
-            $this->buildPartCond($table->getName());
-            $this->buildPartFrontCond($table->getName());
-
-            $this->buildPartEntity($table->getName());
-            $this->buildPartFrontEntity($table->getName());
-
-            $this->buildPartCollection($table->getName());
-            $this->buildPartFrontCollection($table->getName());
+            $this->buildPart($table, 'cond');
+            $this->buildPart($table, 'front_cond');
+            $this->buildPart($table, 'collection');
+            $this->buildPart($table, 'front_collection');
+            $this->buildPart($table, 'entity');
+            $this->buildPart($table, 'front_entity');
+            $this->buildPart($table, 'model');
+            $this->buildPart($table, 'front_model');
 
             $tableNameAsCamelCase = $table->getNameAsCamelCase();
             $classmap .= "\t\t'Model\\\\Abstract{$tableNameAsCamelCase}Model' => __DIR__ . '/abstract/Abstract{$tableNameAsCamelCase}Model.php',\n";
@@ -299,9 +414,22 @@ class Generator
             $classmap .= "\t\t'Model\\\\Cond\\\\{$tableNameAsCamelCase}Cond' => __DIR__ . '/cond/{$tableNameAsCamelCase}Cond.php',\n";
         }
 
-
-
         file_put_contents($this->_outDir . '/_autoload_classmap.php', "<?php\nreturn array(" . $classmap . ");\n");
+
+        if (isset($consoleParams['deploy-dir'])) {
+            if (!is_dir($consoleParams['deploy-dir'])) {
+                echo "Deploy dir doesn't exists: ". $consoleParams['deploy-dir'] . "\n";
+                exit();
+
+            }
+            $this->deploy($consoleParams['deploy-dir']);
+        }
+
+        if (isset($consoleParams['erase']) && $consoleParams['erase']) {
+            $this->eraseFolders();
+        }
+
+        return null;
     }
 
     public function deploy($outDir)
@@ -309,25 +437,20 @@ class Generator
         $this->_deployDir = rtrim($outDir, '/');
 
         if (!is_dir($outDir) || !is_writeable($outDir)) {
-            throw new \Model\Exception\ErrorException('Directory is not writable: ' . $outDir);
+            throw new ErrorException ('Directory is not writable: ' . $outDir);
         }
 
-        @mkdir($outDir . '/abstract');
-        @mkdir($outDir . '/entities');
-        @mkdir($outDir . '/entities/abstract');
-        @mkdir($outDir . '/collections');
-        @mkdir($outDir . '/collections/abstract');
-
-        @mkdir($outDir . '/cond');
-        @mkdir($outDir . '/cond/abstract');
+        foreach ($this->outDirArray as $dir) {
+            $dir = str_replace($this->_outDir, $this->_deployDir, $dir);
+            @mkdir($dir);
+        }
 
         foreach (glob($this->_outDir . '/abstract/*.php') as $filename) {
             $deployFile = $this->_deployDir . '/abstract/' . basename($filename);
-            //echo $deployFile;
             copy($filename, $deployFile);
         }
 
-        unlink($this->_deployDir . '/_autoload_classmap.php');
+        @unlink($this->_deployDir . '/_autoload_classmap.php');
         foreach (glob($this->_outDir . '/*.php') as $filename) {
             $deployFile = $this->_deployDir . '/' . basename($filename);
             //echo $deployFile;
@@ -384,20 +507,26 @@ class Generator
     }
 
     /**
+     * Удалить output модели
+     */
+    public function eraseFolders()
+    {
+        $outDirArray = $this->outDirArray;
+
+        foreach ($outDirArray as $dir) {
+            if (is_dir($dir)) {
+                foreach (glob("{$dir}/*.php") as $filename) {
+                    unlink($filename);
+                }
+            }
+        }
+    }
+
+    /**
      * @return Cluster
      */
     public function getCluster()
     {
         return $this->cluster;
-    }
-
-    /**
-     * @return string
-     */
-    public function toXml()
-    {
-        $xml = $this->getCluster()->toXml();
-        $xml = simplexml_load_string($xml);
-        return $xml->asXml();
     }
 }

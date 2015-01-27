@@ -54,7 +54,7 @@ class Link extends AbstractModel
          */
 
         /**
-         * @var $file \Zend\Code\Generator\FileGenerator
+         * @var $file \Model\Code\Generator\FileGenerator
          */
         $file = $part->getFile();
 
@@ -113,7 +113,7 @@ class Link extends AbstractModel
 
             array(
                 'name'        => 'param',
-                'description' => "\$isAppend Если false, сначала очищяются по {$localEntityAsVar}, потом добавляются"
+                'description' => "boolean \$isAppend Если false, сначала очищяются по {$localEntityAsVar}, потом добавляются"
             ),
 
             array(
@@ -138,10 +138,9 @@ class Link extends AbstractModel
 \${$localEntityAsVar}Ids = array_unique(\$this->getIdsFromMixed(\${$localEntityAsVar}));
 
 \$result = new Result();
-\$resultFlag = true;
+\$result->setResult(true);
 
 if (count(\${$localEntityAsVar}Ids) == 0) {
-    \$result->setResult(\$resultFlag);
     return \$result;
 }
 
@@ -153,15 +152,12 @@ if (!\$isAppend) {
 \${$foreignEntityAsVar}Ids = array_unique(\${$foreignEntityAsVar}Ids);
 
 if (count(\${$foreignEntityAsVar}Ids) == 0) {
-    \$result->setResult(\$resultFlag);
     return \$result;
 }
 
 \$sql = "INSERT INTO `{$linkTableName}` SET `{$linkTableLocalColumn}` = :{$linkTableLocalColumn}, `{$linkTableForeignColumn}` = :{$linkTableForeignColumn}";
 \$stmt = \$this->getDb()->prepare(\$sql);
 
-\$result = new Result();
-\$resultFlag = true;
 foreach (\${$localEntityAsVar}Ids as \${$localEntityAsVar}Id) {
     foreach (\${$foreignEntityAsVar}Ids as \${$foreignEntityAsVar}Id) {
         try {
@@ -170,14 +166,12 @@ foreach (\${$localEntityAsVar}Ids as \${$localEntityAsVar}Id) {
             // Если операция добавления, то ничего страшного
             // если дубль базы, то тоже - все ок
             if (!\$isAppend || \$e->getCode() != 23000) {
-                \$resultFlag = false;
-                \$result->addChild('add_link_failed', \$this->getGeneralErrorResult("Add link {$localEntity} to {$foreignEntity} failed"));
+                \$result->setResult(false);
+                \$result->addError("Add link {$localEntity} to {$foreignEntity} failed", 'add_link_failed');
             }
        }
     }
 }
-
-\$result->setResult(\$resultFlag);
 
 return \$result;
 EOS
@@ -257,10 +251,9 @@ EOS
 \${$foreignEntityAsVar}Ids = {$foreignEntityAsCamelCase}Model::getInstance()->getIdsFromMixed(\${$foreignEntityAsVar});
 
 \$result = new Result();
-\$resultFlag = true;
+\$result->setResult(true);
 
 if (count(\${$localEntityAsVar}Ids) == 0 && count(\${$foreignEntityAsVar}Ids) == 0) {
-    \$result->setResult(\$resultFlag);
     return \$result;
 }
 
@@ -277,11 +270,10 @@ if (count(\${$foreignEntityAsVar}Ids) != 0) {
 try {
     \$this->delete(\$cond->from('{$linkTableName}'));
 } catch (\Exception \$e) {
-    \$result->addChild('delete_link_failed', \$this->getGeneralErrorResult("Delete link {$localEntity} to {$foreignEntity} failed"));
-    \$resultFlag = false;
+    \$result->setResult(false);
+    \$result->addError("Delete link {$localEntity} to {$foreignEntity} failed", 'delete_link_failed');
 }
 
-\$result->setResult(\$resultFlag);
 return \$result;
 EOS
             );
@@ -327,7 +319,7 @@ EOS
 
             array(
                 'name'        => 'param',
-                'description' => "\$isAppend Если false, сначала очищяются по {$localEntityAsVar}, потом добавляются"
+                'description' => "boolean \$isAppend Если false, сначала очищяются по {$localEntityAsVar}, потом добавляются"
             ),
 
             array(
@@ -352,10 +344,9 @@ EOS
 \${$localEntityAsVar}Ids = array_unique({$localEntityAsCamelCase}Model::getInstance()->getIdsFromMixed(\${$localEntityAsVar}));
 
 \$result = new Result();
-\$resultFlag = true;
+\$result->setResult(true);
 
 if (count(\${$localEntityAsVar}Ids) == 0) {
-    \$result->setResult(\$resultFlag);
     return \$result;
 }
 
@@ -365,8 +356,8 @@ if (!\$isAppend) {
     try {
         \$this->deleteLink{$localEntityAsCamelCase}To{$foreignEntityAsCamelCase}(\${$localEntityAsVar}Ids);
     } catch (\Exception \$e) {
-        \$result->addChild('delete_existed_link_failed', \$this->getGeneralErrorResult("Delete existed link {$localEntity} to {$foreignEntity} failed"));
         \$result->setResult(false);
+        \$result->addError("Delete existed link {$localEntity} to {$foreignEntity} failed", 'delete_existed_link_failed');
         return \$result;
     }
 }
@@ -375,7 +366,6 @@ if (!\$isAppend) {
 \${$foreignEntityAsVar}Ids = array_unique(\${$foreignEntityAsVar}Ids);
 
 if (!\${$foreignEntityAsVar}Ids) {
-    \$result->setResult(\$resultFlag);
     return \$result;
 }
 
@@ -387,13 +377,12 @@ foreach (\${$localEntityAsVar}Ids as \${$localEntityAsVar}Id) {
         try {
             \$stmt->execute(array('id' => \${$localEntityAsVar}Id, '{$localColumn}' => \${$foreignEntityAsVar}Id));
         } catch (\Exception \$e) {
-            \$result->addChild('add_link_failed', \$this->getGeneralErrorResult("Add link {$localEntity} to {$foreignEntity} failed"));
-            \$resultFlag = false;
+            \$result->setResult(false);
+            \$result->addError("Add link {$localEntity} to {$foreignEntity} failed", 'add_link_failed');
         }
     }
 }
 
-\$result->setResult(\$resultFlag);
 return \$result;
 EOS
             );
@@ -458,10 +447,9 @@ EOS
 \${$foreignEntityAsVar}Ids = array_unique({$foreignTableAsCamelCase}Model::getInstance()->getIdsFromMixed(\${$foreignEntityAsVar}));
 
 \$result = new Result();
-\$resultFlag = true;
+\$result->setResult(true);
 
 if (count(\${$localEntityAsVar}Ids) == 0 && count(\${$foreignEntityAsVar}Ids) == 0) {
-    \$result->setResult(\$resultFlag);
     return \$result;
 }
 
@@ -477,11 +465,10 @@ if (count(\${$foreignEntityAsVar}Ids) != 0) {
 try {
     \$this->getDb()->update(\$this->getRawName(), array('{$localColumn}' => null), \$cond);
 } catch (\Exception \$e) {
-    \$result->addChild('delete_link_failed', \$this->getGeneralErrorResult("Delete link {$localEntity} to {$foreignEntity} failed"));
-    \$resultFlag = false;
+    \$result->setResult(false);
+    \$result->addError("Delete link {$localEntity} to {$foreignEntity} failed", 'delete_link_failed');
 }
 
-\$result->setResult(\$resultFlag);
 return \$result;
 EOS
             );

@@ -28,7 +28,7 @@ class WithConst extends AbstractCond
 	public function preRun(PartInterface $part)
 	{
         /**
-         * @var $file \Zend\Code\Generator\FileGenerator
+         * @var $file \Model\Code\Generator\FileGenerator
          */
         $file = $part->getFile();
 
@@ -130,7 +130,7 @@ class WithConst extends AbstractCond
 	public function postRun(PartInterface $part)
 	{
         /**
-         * @var $file \Zend\Code\Generator\FileGenerator
+         * @var $file \Model\Code\Generator\FileGenerator
          */
         $file = $part->getFile();
 

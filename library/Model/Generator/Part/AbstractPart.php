@@ -2,8 +2,10 @@
 
 namespace Model\Generator\Part;
 
-use \Zend\Code\Generator\FileGenerator;
-use \Model\Generator\Log;
+use Model\Stdlib\ArrayUtils;
+use Model\Cluster\Schema\Table\Column;
+use Model\Code\Generator\FileGenerator;
+use Model\Generator\Log;
 
 /**
  * Абстрактный класс для элемента генератора
@@ -17,7 +19,7 @@ use \Model\Generator\Log;
 abstract class AbstractPart implements PartInterface
 {
 	const PART_MODEL                 = 'Model\Generator\Part\Plugin\Model\ModelInterface';
-    const PART_FRONT_MODEL           = 'Model\Generator\Part\Plugin\Front\Model\FrontModelInterface';
+    const PART_FRONT_MODEL           = 'Model\Generator\Part\Plugin\FrontModel\FrontModelInterface';
 
 	const PART_ENTITY                = 'Model\Generator\Part\Plugin\Entity\EntityInterface';
 	const PART_FRONT_ENTITY          = 'Model\Generator\Part\Plugin\FrontEntity\FrontEntityInterface';
@@ -163,6 +165,28 @@ abstract class AbstractPart implements PartInterface
 	}
 
     /**
+     * @param      $pluginName
+     * @param null $part
+     *
+     * @return bool
+     */
+    public function hasPlugin($pluginName, $part = null)
+    {
+        if ($part) {
+            $pluginList = $this->getPlugins($part);
+            return isset($pluginList[$pluginName]);
+        } else {
+            foreach (self::$_plugins as $pluginList) {
+                if (isset($pluginList[$pluginName])) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * @param array $options
      */
     public function setOptions($options)
@@ -200,6 +224,71 @@ abstract class AbstractPart implements PartInterface
     public function getOptions()
     {
         return $this->options;
+    }
+
+    public function getColumntConfig(Column $column)
+    {
+        $config = $this->getOption('config');
+        $configFields =  (isset($config['fields'])) ? $config['fields'] : array();
+
+        $result = array();
+        foreach ($configFields as $configField) {
+            if (isset($configField['match'])) {
+
+                $isMatched = false;
+                foreach ($configField['match'] as $match) {
+                    $isMatched = false;
+                    if (isset($match['type'])) {
+                        $matchTypes = is_array($match['type']) ? $match['type'] : array($match['type']);
+                        $isMatched = in_array($column->getColumnType(), $matchTypes);
+                    }
+
+                    if (isset($match['regexp'])) {
+                        $isMatched = $isMatched && preg_match($match['regexp'], $column->getFullName());
+                    }
+
+                    $columnLength = $column->getCharacterMaximumLength() ? $column->getCharacterMaximumLength() : $column->getNumericPrecision();
+
+                    if ($isMatched && isset($match['length'])) {
+                        foreach ($match['length'] as $operation => $lengthMatch) {
+                            $operation = preg_replace('#\s+#', '', $operation);
+                            switch ($operation) {
+                                case '<':
+                                    $isMatched = ($columnLength < $lengthMatch);
+                                    break;
+                                case '>':
+                                    $isMatched = ($columnLength > $lengthMatch);
+                                    break;
+                                case '>=':
+                                    $isMatched = ($columnLength >= $lengthMatch);
+                                    break;
+                                case '<=':
+                                    $isMatched = ($columnLength <= $lengthMatch);
+                                    break;
+                                case '==':
+                                    $isMatched = ($columnLength == $lengthMatch);
+                                    break;
+                                case '=':
+                                    $isMatched = ($columnLength == $lengthMatch);
+                                    break;
+                                default:
+                                    $isMatched = false;
+                            }
+                        }
+                    }
+
+                    if ($isMatched) {
+                        break;
+                    }
+                }
+
+                if ($isMatched) {
+                    $result = ArrayUtils::merge($result, $configField);
+                }
+            }
+        }
+
+        return $result;
     }
 
 }

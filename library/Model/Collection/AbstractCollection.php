@@ -2,6 +2,7 @@
 
 namespace Model\Collection;
 
+use Model\Collection\Exception\ErrorException;
 use Model\Entity\AbstractEntity;
 use Model\Entity\EntityInterface;
 use \Model\Paginator\Paginator;
@@ -39,6 +40,12 @@ class AbstractCollection extends \ArrayIterator
      */
     protected $_disableConstructInit = false;
 
+    /**
+     * @param null $data
+     * @param null $entityType
+     *
+     * @throws Exception\ErrorException
+     */
     public function __construct($data = null, $entityType = null)
     {
         if (!$this->_disableConstructInit) {
@@ -116,23 +123,23 @@ class AbstractCollection extends \ArrayIterator
             foreach ($data as $item) {
                 if (is_array($item) && $entityType) {
                     $array[] = new $entityType($item);
-                } else if ($item instanceof \Model\Entity\EntityInterface) {
+                } else if ($item instanceof EntityInterface) {
                     $array[] = $item;
                 } else if (is_array($item) && $this->defaultEntityType) {
                     $array[] = new $this->defaultEntityType($item);
                 }  else if (is_array($item) && !$this->defaultEntityType) {
-                    throw new \Model\Collection\Exception\ErrorException('Unknown entity type please set dataType');
+                    throw new ErrorException('Unknown entity type please set dataType');
                     //$array[] = new Model_Entity($item);
                 } else {
-                    throw new \Model\Collection\Exception\ErrorException('Cant create entity object');
+                    throw new ErrorException('Cant create entity object');
                 }
             }
-        } elseif ($data instanceof \Model\Collection\AbstractCollection) {
+        } elseif ($data instanceof AbstractCollection) {
             $array = $data;
-        } elseif ($data instanceof \Model\Entity\EntityInterface) {
+        } elseif ($data instanceof EntityInterface) {
             $array = array($data);
         } elseif (!empty($data)) {
-            throw new \Model\Collection\Exception\ErrorException('Cant - init collection');
+            throw new ErrorException('Cant - init collection');
         }
 
         return $array;
@@ -174,8 +181,10 @@ class AbstractCollection extends \ArrayIterator
     /**
      * Выгрузить в массив
      *
-     * @param bool $type
-     * @return array const \Model\Collection\AbstractCollection::ARRAY_*
+     * @param bool $extended
+     *
+     * @internal param bool $type
+     * @return array const \Model\Collection\AbstractCollection::ARRAY_
      */
     public function toArray($extended = false)
     {
@@ -319,7 +328,7 @@ class AbstractCollection extends \ArrayIterator
      */
     protected function _prepareNestedTreeArray($items)
     {
-        if ($items instanceof \Model\Collection\AbstractCollection) {
+        if ($items instanceof AbstractCollection) {
             $items = $items->toArray(true);
         }
 
@@ -504,10 +513,10 @@ class AbstractCollection extends \ArrayIterator
      * Вычитание коллекций из текущей коллекции
      * Поведение аналогично array_diff()
      *
-     * @param \Model\Collection\CollectionInterface $collection
-     * @return \Model\Collection\CollectionInterface
+     * @param AbstractCollection $collection
+     * @return AbstractCollection
      */
-    public function diff(\Model\Collection\CollectionInterface $collection)
+    public function diff(AbstractCollection $collection)
     {
         $className = get_class($this);
         $collectionNew = new $className();
@@ -522,11 +531,11 @@ class AbstractCollection extends \ArrayIterator
     /**
      * Добавить коллекцию к текущей коллекции и вернуть новую
      *
-     * @param \Model\Collection\CollectionInterface $collection Добавляемая коллекция
+     * @param AbstractCollection $collection Добавляемая коллекция
      * @param bool $checkContains Проверять, что элемент уже в коллекции
-     * @return \Model\Collection\CollectionInterface
+     * @return AbstractCollection
      */
-    public function merge(\Model\Collection\CollectionInterface $collection, $checkContains = false)
+    public function merge(AbstractCollection $collection, $checkContains = false)
     {
         $className = get_class($this);
 
@@ -549,7 +558,7 @@ class AbstractCollection extends \ArrayIterator
      * Отсортировать по столбцам
      *
      * @param int $cols Количество столбцов
-     * @return \Model\Collection\CollectionInterface
+     * @return \Model\Collection\AbstractCollection
      */
     public function sortAsCol($cols = 3)
     {

@@ -39,7 +39,7 @@ class InitDefaults extends AbstractModel
          */
 
         /**
-         * @var $file \Zend\Code\Generator\FileGenerator
+         * @var $file \Model\Code\Generator\FileGenerator
          */
         $file = $part->getFile();
         $table = $part->getTable();
@@ -60,7 +60,6 @@ class InitDefaults extends AbstractModel
             return;
         }
 
-        $relation = array();
         $defaults = '';
 
         /** @var $column Column */
@@ -68,20 +67,15 @@ class InitDefaults extends AbstractModel
             $columnName = $column->getName();
             $defaultValue = $column->getColumnDefault();
 
-
-            if ($defaultValue == 'CURRENT_TIMESTAMP') {
-                $defaults .= "        '{$columnName}' => date('Y-m-d H:i:s'),\n";
-            } elseif (empty($defaultValue)) {
-                $defaults .= "        '{$columnName}',\n";
-            } else {
-                $defaults .= "        '{$columnName}' => '{$defaultValue}',\n";
+            if (substr($columnName, -5) == '_date') {
+                $defaults .= "\$this->setDefaultRule('" . $columnName ."', date('Y-m-d H:i:s'));\n";
+            } elseif ($defaultValue == 'CURRENT_TIMESTAMP') {
+                $defaults .= "\$this->setDefaultRule('" . $columnName ."', date('Y-m-d H:i:s'));\n";
+            } elseif (!empty($defaultValue)) {
+                $defaults .= '$this->setDefaultRule(\'' . $columnName . '\', \'' . (string)$defaultValue . '\');' . "\n";
             }
-
         }
 
-        $defaults = "array(\n" . rtrim($defaults, "\r\n, ") . "\n    )";
-        $value = new PropertyValueGenerator($defaults, PropertyValueGenerator::TYPE_CONSTANT);
-        $valueStr = $value->generate();
         $tags = array(
             array(
                 'name'        => 'return',
@@ -99,8 +93,8 @@ class InitDefaults extends AbstractModel
         $method->setDocBlock($docblock);
 
         $method->setBody(<<<EOS
-if (!\$this->defaultsRules) {
-    \$this->defaultsRules = {$valueStr}
+if (!\$this->isDefaultRules()) {
+    {$defaults}
     \$this->setupDefaultsRules();
 }
 EOS

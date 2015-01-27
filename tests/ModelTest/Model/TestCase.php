@@ -28,8 +28,11 @@ abstract class TestCase extends ParentTestCase
         /** @var Generator generator */
 
         if (!self::$generator) {
-            self::$generator = new Generator($this->getDb(), $cluster, GENERATE_OUTPUT);
-            self::$generator->run();
+            self::$generator = new Generator();
+
+            $runString = "--output-dir=" . GENERATE_OUTPUT . ' --db-user=' . DB_USER . ' --db-password=' . DB_PASSWORD . ' --db-schema=' . DB_NAME . ' --db-host=' . DB_HOST;
+            //$this->getDb(), $cluster, GENERATE_OUTPUT
+            self::$generator->run($runString);
         }
     }
 

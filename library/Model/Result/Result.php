@@ -4,10 +4,15 @@ namespace Model\Result;
 
 use Model\Exception\ErrorException;
 use Model\Result\Decorator\Error;
-use Zend\InputFilter\InputFilter;
-use Zend\InputFilter\InputFilterInterface;
+use Model\Validator\ValidatorSet;
+use Symfony\Component\Form\FormError;
 
 /**
+ * Result содержит
+ * - значение результата
+ * - валидатор в виде ValidatorSet
+ * - детей
+ *
  * Description
  *
  * @category   Model
@@ -22,9 +27,9 @@ class Result
     private $result;
 
     /**
-     * @var InputFilterInterface
+     * @var array
      */
-    private $validator;
+    protected $errorList = array();
 
     /**
      * Вложенные результаты
@@ -33,18 +38,14 @@ class Result
      */
     protected $childs = array();
 
+
     /**
      * @param mixed $result Результат действия, например айдишник
-     * @param InputFilterInterface $validator
      * @return Result
      */
-    public function __construct($result = null, InputFilterInterface $validator = null)
+    public function __construct($result = null)
     {
         $this->setResult($result);
-
-        if ($validator !== null) {
-            $this->setValidator($validator);
-        }
     }
 
     /**
@@ -53,7 +54,15 @@ class Result
      */
     public function setResult($result)
     {
-        $this->result = $result;
+        if ($result instanceof Result) {
+            $this->result = $result->getResult();
+
+            $this->addErrorList($result->getErrorList());
+            $this->addChildList($result->getChildList());
+        } else {
+            $this->result = $result;
+        }
+
         return $this;
     }
 
@@ -66,43 +75,18 @@ class Result
     }
 
     /**
-     * @param InputFilterInterface $validator
-     * @return Result
-     */
-    public function setValidator(InputFilterInterface $validator)
-    {
-        $this->validator = $validator;
-        return $this;
-    }
-
-    /**
-     * Получить объект валидатора
-     *
-     * @return InputFilterInterface
-     */
-    public function getValidator()
-    {
-        if (!$this->validator) {
-            $this->validator = new InputFilter();
-            $this->validator->setData(array());
-        }
-
-        return $this->validator;
-    }
-
-    /**
      * Добавить дочерний результат
      *
      * @param string             $name
-     * @param Result|InputFilter $child
+     * @param Result|ValidatorSet $child
      * @throws ErrorException
      * @return Result
      */
     public function addChild($name, $child)
     {
-        if ($child instanceof InputFilter) {
+        if ($child instanceof ValidatorSet) {
             $child = new Result(null, $child);
-        } else if (!$child instanceof Result) {
+        } elseif (!$child instanceof Result) {
             throw new ErrorException('Child must be instance of \Model\Result\Result or InputFilter');
         }
 
@@ -116,28 +100,74 @@ class Result
         }
 
         $this->childs[$name . '.' . $i] = $child;
+
         return $this;
     }
 
     /**
-     * Верны ли данные
      *
-     * @param string $field
-     * @return boolean
+     * @param array|Result[] $childList
+     * @return $this
      */
-    public function isValid($field = null)
+    public function addChildList(array $childList = array())
     {
-        $result = $this->getValidator()->isValid($field);
+        foreach ($childList as $n => $v) {
+            $this->addChild($n, $v);
+        }
+        return $this;
+    }
 
-        if ($result && $field === null) {
-            foreach ($this->childs as &$childResult) {
-                if (!$result = $childResult->isValid()) {
-                    break;
-                }
+    /**
+     * @param $name
+     *
+     * @return array|bool|Result|Result[]
+     */
+    public function getChild($name)
+    {
+        if ($name == null) {
+            return $this->getChildList();
+        } elseif (isset($this->childs[$name])) {
+            return $this->childs[$name];
+        }
+
+        return false;
+    }
+
+    /**
+     * @return array|Result[]
+     */
+    public function getChildList()
+    {
+        return (array)$this->childs;
+    }
+
+    /**
+     * @param        $message
+     * @param string $code
+     * @param string $field
+     *
+     * @return $this
+     */
+    public function addError($message, $code = 'general', $field = 'global')
+    {
+        $this->errorList[(string) $field][(string) $code] = (string)$message;
+        return $this;
+    }
+
+    /**
+     * @param array $errorList
+     *
+     * @return $this
+     */
+    public function addErrorList(array $errorList)
+    {
+        foreach ($errorList as $field => $messageList) {
+            foreach ($messageList as $code => $message) {
+                $this->addError($message, $code, $field);
             }
         }
 
-        return $result;
+        return $this;
     }
 
     /**
@@ -148,7 +178,7 @@ class Result
      */
     public function getErrors($decorate = false)
     {
-        $errors = $this->getValidator()->getMessages();
+        $errors = $this->getErrorList();
 
         foreach ($this->childs as $name => &$childResult) {
             $_errors = $childResult->getErrors();
@@ -166,6 +196,72 @@ class Result
         }
 
         return $errors;
+    }
+
+    /**
+     * @return array
+     */
+    public function getErrorList()
+    {
+        return $this->errorList;
+    }
+
+    /**
+     * @param ValidatorSet $validatorSet
+     *
+     * @return $this
+     */
+    public function addErrorFromValidatorSet(ValidatorSet $validatorSet)
+    {
+        if ($messageList = $validatorSet->getMessageList()) {
+            return $this->addErrorList($messageList);
+        }
+
+        return $this;
+    }
+
+
+    /**
+     * Верны ли данные
+     *
+     * @return boolean
+     */
+    public function isValid()
+    {
+        $result = !$this->isError();
+
+        if ($result) {
+            foreach ($this->childs as &$childResult) {
+                if (!$result = $childResult->isValid()) {
+                    break;
+                }
+            }
+        }
+
+        return $result;
+    }
+
+    public function handleFormErrors(\Symfony\Component\Form\Form $form)
+    {
+        if (!$this->isError()) {
+            return $form;
+        }
+
+        $errorList = $this->getErrorList();
+
+        foreach ($errorList as $field => $errors) {
+            if ($form->has($field)) {
+                foreach ($errors as $errorCode => $errorMessage) {
+                    $form->get($field)->addError(new FormError($field . ": [$errorCode] $errorMessage"));
+                }
+            } else {
+                foreach ($errors as $errorCode => $errorMessage) {
+                    $form->addError(new FormError($field . ": [$errorCode] $errorMessage"));
+                }
+            }
+        }
+
+        return $form;
     }
 
     /**

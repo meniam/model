@@ -2,8 +2,11 @@
 
 namespace Model\Generator\Part\Plugin\Model;
 
+use Model\Code\Generator\DocBlockGenerator;
 use Model\Generator\Part\PartInterface;
 use Model\Cluster\Schema\Table\Link\AbstractLink;
+use Zend\Code\Generator\AbstractMemberGenerator;
+use Zend\Code\Generator\MethodGenerator;
 use \Zend\Code\Generator\PropertyGenerator;
 use \Zend\Code\Generator\PropertyValueGenerator;
 use \Zend\Code\Generator\ValueGenerator;
@@ -35,7 +38,7 @@ class Relationdefine extends AbstractModel
          */
 
         /**
-         * @var $file \Zend\Code\Generator\FileGenerator
+         * @var $file \Model\Code\Generator\FileGenerator
          */
         $file = $part->getFile();
         $table = $part->getTable();
@@ -51,6 +54,13 @@ class Relationdefine extends AbstractModel
         $docblock->setTags($tags);
 
         $linkList = $table->getLink();
+
+        /*if ($table->getColumn('parent_id')) {
+            echo $table->getName();
+
+            print_r($linkList);
+            die;
+        }*/
 
         $relation = array();
 
@@ -108,8 +118,21 @@ class Relationdefine extends AbstractModel
         }
 
         $property = new PropertyGenerator('relation', $relation, PropertyGenerator::FLAG_PROTECTED);
-        $property->setDocBlock($docblock);
+        //$property->setDocBlock($docblock);
 
-        $file->getClass()->addPropertyFromGenerator($property);
+        $method = new MethodGenerator();
+        $method->setName('setupRelation');
+        $method->setVisibility(AbstractMemberGenerator::VISIBILITY_PROTECTED);
+
+        $body = preg_replace("#^(\\s*)protected #", "\\1", $property->generate()) . "\n";
+        $body .= "\$this->setRelation(\$relation);";
+
+        $docblock = new DocBlockGenerator('Настройка связей');
+        $method->setDocBlock($docblock);
+        $method->setBody($body);
+
+        //$file->getClass()->addPropertyFromGenerator($property);
+        $file->getClass()->addMethodFromGenerator($method);
+
     }
 }

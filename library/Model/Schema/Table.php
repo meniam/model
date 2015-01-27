@@ -7,9 +7,6 @@ use Model\Schema\Table\Column as Column;
 use Model\Schema\Table\Index\AbstractIndex;
 use Model\Schema\Table\Link\AbstractLink;
 
-use Zend\Db\Sql\Select;
-use Zend\Db\ResultSet\ResultSet;
-
 class Table extends \ArrayIterator
 {
     /**

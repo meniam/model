@@ -6,9 +6,7 @@ use Model\Cluster\Schema as Schema;
 use Model\Cluster\Schema\Table\Column as Column;
 use Model\Cluster\Schema\Table\Index\AbstractIndex;
 use Model\Cluster\Schema\Table\Link\AbstractLink;
-
-use Zend\Db\Sql\Select;
-use Zend\Db\ResultSet\ResultSet;
+use Model\Exception\ErrorException;
 
 class Table extends \ArrayIterator
 {
@@ -46,7 +44,7 @@ class Table extends \ArrayIterator
     public function __construct($name, Schema $schema)
     {
         if (empty($name)) {
-            throw new \Model\Exception\ErrorException('Name cant be empty');
+            throw new ErrorException('Name cant be empty');
         }
         $this->_name   = $name;
         $this->_schema = $schema;
@@ -316,7 +314,7 @@ class Table extends \ArrayIterator
      * Get column by name 
      * 
      * @param string $column
-     * @return Column
+     * @return Column|Column[]
      */
     public function getColumn($column = null)
     {

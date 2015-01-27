@@ -9,6 +9,8 @@ use Zend\Code\Generator\AbstractMemberGenerator;
 
 class Construct extends AbstractModel
 {
+
+
     public function __construct()
     {
         $this->_setName('Construct');
@@ -25,12 +27,13 @@ class Construct extends AbstractModel
          */
 
         /**
-         * @var $file \Zend\Code\Generator\FileGenerator
+         * @var $file \Model\Code\Generator\FileGenerator
          */
         $file = $part->getFile();
 
 
         $tableName = $part->getTable()->getName();
+        $schema = $part->getTable()->getSchema()->getName();
 
         $docblock = new DocBlockGenerator('Конструктор');
 
@@ -41,7 +44,7 @@ class Construct extends AbstractModel
 
         $method->setBody(<<<EOS
 \$this->setName('{$tableName}');
-\$this->setDbAdapterName('db');
+\$this->setDbAdapterName('{$schema}_db');
 parent::__construct();
 EOS
         );

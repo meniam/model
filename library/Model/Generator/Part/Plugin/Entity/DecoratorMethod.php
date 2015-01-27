@@ -29,7 +29,7 @@ class DecoratorMethod extends AbstractEntity
          */
 
         /**
-         * @var $file \Zend\Code\Generator\FileGenerator
+         * @var $file \Model\Code\Generator\FileGenerator
          */
         $file = $part->getFile();
 
@@ -46,17 +46,92 @@ class DecoratorMethod extends AbstractEntity
         }
 
         $columnList = $table->getColumn();
-        
+
+        $config = $part->getOption('config');
+        $configFields =  (isset($config['fields'])) ? $config['fields'] : array();
+
+        $usedMethods = array();
+
         /** @var $columnList \Model\Cluster\Schema\Table\Column[]  */
         foreach ($columnList as $column) {
+            foreach ($configFields as $configField) {
+                if (isset($configField['match']) && $columnConfig = $part->getColumntConfig($column)) {
+                    /*foreach ($configField['match'] as $match) {
+                        $isMatched = false;
+                        if (isset($match['type'])) {
+                            $matchTypes = is_array($match['type']) ? $match['type'] : array($match['type']);
+                            $isMatched = in_array($column->getColumnType(), $matchTypes);
+                        }
+
+                        $isMatched = $isMatched && preg_match($match['regexp'], $column->getFullName());
+
+                        $columnLength = $column->getCharacterMaximumLength() ? $column->getCharacterMaximumLength() : $column->getNumericPrecision();
+
+                        if ($isMatched && isset($match['length'])) {
+                            foreach ($match['length'] as $operation => $lengthMatch) {
+                                $operation = preg_replace('#\s+#', '', $operation);
+                                switch ($operation) {
+                                    case '<':
+                                        $isMatched = ($columnLength < $lengthMatch);
+                                        break;
+                                    case '>':
+                                        $isMatched = ($columnLength > $lengthMatch);
+                                        break;
+                                    case '>=':
+                                        $isMatched = ($columnLength >= $lengthMatch);
+                                        break;
+                                    case '<=':
+                                        $isMatched = ($columnLength <= $lengthMatch);
+                                        break;
+                                    case '==':
+                                        $isMatched = ($columnLength == $lengthMatch);
+                                        break;
+                                    case '=':
+                                        $isMatched = ($columnLength == $lengthMatch);
+                                        break;
+                                    default:
+                                        $isMatched = false;
+                                }
+                            }
+                        }
+
+                        if ($isMatched) {
+                            break;
+                        }
+                    }*/
+
+                    if ($columnConfig && isset($configField['decorators'])) {
+                        foreach ($configField['decorators'] as $decorator) {
+                            $methodName = 'get' . $column->getNameAsCamelCase() . 'As' . $decorator['name'] . 'Decorator';
+
+                            if (!isset($usedMethods[$methodName])) {
+                                $file->addUse('\\Model\\Entity\\Decorator\\' . "{$decorator['name']}Decorator");
+                                $docBlock->setTag(array(
+                                    'name'        => 'method',
+                                    'description' => "{$decorator['name']}Decorator {$methodName}() {$methodName}() Декорируем данные как {$decorator['name']}"
+                                ));
+
+                                $usedMethods[$methodName] = 1;
+                            }
+                        }
+                    }
+                }
+            }
+
             $decoratorArray = $column->getDecorator();
 
             foreach ($decoratorArray as $decorator) {
                 $methodName = 'get' . $column->getNameAsCamelCase() . 'As' . $decorator['name'] . 'Decorator';
-                $docBlock->setTag(array(
-                    'name' => 'method',
-                    'description' => "{$decorator['name']}Decorator {$methodName}() {$methodName}() Декорируем данные как {$decorator['name']}"
-                ));
+
+                if (!isset($usedMethods[$methodName])) {
+                    $file->addUse('\\Model\\Entity\\Decorator\\' . "{$decorator['name']}Decorator");
+                    $docBlock->setTag(array(
+                        'name' => 'method',
+                        'description' => "{$decorator['name']}Decorator {$methodName}() {$methodName}() Декорируем данные как {$decorator['name']}"
+                    ));
+
+                    $usedMethods[$methodName] = 1;
+                }
             }
         }
     }

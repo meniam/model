@@ -15,15 +15,16 @@ class FrontModel extends AbstractPart
 
         $this->_table = $table;
 
-        $file = new \Zend\Code\Generator\FileGenerator();
+        $file = new \Model\Code\Generator\FileGenerator();
         $this->setFile($file);
+        $file->setNamespace('Model');
 
         $class = new \Zend\Code\Generator\ClassGenerator();
         $file->setClass($class);
+        //$class->setNamespaceName('Model');
 
-        $this->_runPlugins(self::PART_MODEL, self::RUNTIME_PRE);
+        $this->_runPlugins(self::PART_FRONT_MODEL, self::RUNTIME_PRE);
 
-        $class->setNamespaceName('Model');
         $class->setName($table->getNameAsCamelCase() . 'Model');
         $class->setExtendedClass('Abstract' . $table->getNameAsCamelCase() . 'Model');
 

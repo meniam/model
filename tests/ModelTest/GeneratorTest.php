@@ -3,6 +3,8 @@
 namespace ModelTest;
 
 use Model\Cluster\Schema;
+use Model\Cluster;
+use Model\Generator;
 
 /**
  * Тестирование генератора
@@ -23,11 +25,11 @@ class GeneratorTest extends \ModelTest\TestCase
 
     protected function setUp()
     {
-        $cluster = new \Model\Cluster();
+        $cluster = new Cluster();
         $schema = $this->getSchema();
         $cluster->addSchema($schema);
 
-        $this->generator = new \Model\Generator($this->getDb(), $cluster, '/tmp/generate');
+        $this->generator = new Generator();
     }
 
     protected function tearDown()
@@ -38,13 +40,6 @@ class GeneratorTest extends \ModelTest\TestCase
     public function testGetSchema()
     {
         $this->assertInstanceOf('Model\Generator', $this->generator);
-
-        $this->assertInstanceOf('Model\Cluster', $this->generator->getCluster());
-        $this->assertTrue($this->generator->getCluster()->hasSchema('model_test'));
-
-        $this->generator->buildPartEntity('product');
-        $this->generator->buildPartCollection('product');
-        $this->generator->buildPartModel('product');
-        $this->generator->buildPartCond('product');
+        $this->assertNull($this->generator->getCluster());
     }
 }

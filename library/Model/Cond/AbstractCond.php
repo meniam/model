@@ -16,7 +16,6 @@
  * @copyright  2008-20013 Eugene Myazin <eugene.myazin@gmail.com>
  * @license    https://github.com/meniam/model/blob/master/MIT-LICENSE.txt  MIT License
  */
-
 namespace Model\Cond;
 
 use Model\AbstractModel;
@@ -177,7 +176,12 @@ abstract class AbstractCond
     const VALIDATE_ON_UPDATE    = 'validate_update_values';
 
     /**
-     * Тип выборки
+     * Enable hook after add item into database
+     */
+    const HOOK_AFTER_ADD = 'hook_after_add';
+
+    /**
+     * Fetch type
      *
      * @var string
      */
@@ -475,6 +479,11 @@ abstract class AbstractCond
         if (empty($this->name)) {
             throw new \Model\Exception\ErrorException('Name is undefined');
         }
+    }
+
+    public function getCondClass()
+    {
+        return $this->condClass;
     }
 
     /**
@@ -885,13 +894,15 @@ abstract class AbstractCond
      * Добавить WITH
      *
      * @param AbstractCond|string $cond
+     * @param null                $type
+     *
      * @throws Exception\ErrorException
      * @return AbstractCond
      */
-    public function with($cond)
+    public function with($cond, $type = null)
     {
         if (is_scalar($cond)) {
-            $cond = AbstractModel::condFactory($cond);
+            $cond = AbstractModel::condFactory($cond, $type);
         } elseif (!$cond instanceof AbstractCond) {
             throw new ErrorException('Cond must be instance of Cond');
         }
@@ -932,7 +943,7 @@ abstract class AbstractCond
     public function getWith($entity, $type = null)
     {
         if (!$this->checkWith($entity)) {
-            return AbstractModel::condFactory($entity, $type);
+            $this->_params['with'][$entity] = AbstractModel::condFactory($entity, $type);
         }
 
         return $this->_params['with'][$entity];
@@ -1154,7 +1165,11 @@ abstract class AbstractCond
     public function checkCond($name, $default = false)
     {
         if (!is_array($name)) {
-            $name = array($name);
+            if (array_key_exists($name, $this->_params['cond'])) {
+                return true;
+            } else {
+                return $default;
+            }
         }
 
         foreach ($name as $n) {
@@ -1380,7 +1395,7 @@ abstract class AbstractCond
             $this->cond(self::UPDATE_ALLOWED, $this->parent->isUpdateAllowed());
         }
 
-        return $this->getCond(self::UPDATE_ALLOWED, false);
+        return $this->getCond(self::UPDATE_ALLOWED, true);
     }
 
     /**

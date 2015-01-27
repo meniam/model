@@ -2,6 +2,7 @@
 
 namespace Model\Result\Decorator;
 
+use Model\Result\Result;
 use Zend\InputFilter\InputFilter;
 
 class Error
@@ -13,15 +14,15 @@ class Error
      * ├ field
      *   └ code => message
      *
-     * @param array|Model_Result|Zend_Filter_Input $errors
+     * @param array|Result|InputFilter $error
      */
     public function __construct($errors)
     {
-        if ($errors instanceof \Model\Result\Result) {
+        if ($errors instanceof Result) {
             $errors = $errors->getErrors();
         }
 
-        if ($errors instanceof InputFilter || $errors instanceof \App\Form) {
+        if ($errors instanceof InputFilter) {
             $errors = $errors->getMessages();
         }
 
@@ -89,7 +90,6 @@ class Error
     }
 
     /**
-     * @param $fieldName
      * @return array
      */
     public function getMessagesGroupByFields()
@@ -169,6 +169,9 @@ class Error
         return implode($separator, $result);
     }
 
+    /**
+     * @return string
+     */
     public function __toString()
     {
         return $this->toString();

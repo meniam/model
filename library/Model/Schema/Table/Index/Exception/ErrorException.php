@@ -2,5 +2,5 @@
 
 namespace  Model\Schema\Table\Index\Exception;
 
-class ErrorException extends \Zend\Db\Exception\ErrorException
+class ErrorException extends \Model\Db\Exception\ErrorException
 {}

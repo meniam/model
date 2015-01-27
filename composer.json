@@ -19,32 +19,21 @@
     },
     "require":{
         "php"           :">=5.4.0,<5.6",
-        "ext-pdo"       : "~1.0.0",
-        "ext-mbstring"  : "*",
-        "ext-pdo_mysql" : "*",
-        "lib-libxml"    : "*",
-        "lib-iconv"     : "~1.14",
-        "lib-pcre"      : "*",
-        "esteit/app"    : "~2.0.0",
 
-        "doctrine/annotations": ">=1.0",
-        "ircmaxell/random-lib": "dev-master",
-        "ircmaxell/security-lib": "dev-master",
+        "doctrine/annotations"   : ">=1.0",
+
+        "cocur/slugify": "dev-master",
+
+        "zendframework/zend-validator": "2.3.*",
+        "zendframework/zend-console": "2.3.*",
+        "zendframework/zend-code": "2.3.*",
+        "zendframework/zend-uri": "2.3.*",
 
         "phpunit/phpunit": "3.7.22",
+        "phpunit/php-invoker" : "1.1.*",
         "phpunit/php-token-stream": "1.2.*@dev",
-        "phpunit/php-timer": "1.0.5",
-        "zendframework/zendframework": "2.*"
+        "phpunit/php-timer": "1.0.5"
 
-    },
-
-    "suggest": {
-        "ext-intl": "ext/intl for i18n features (included in default builds of PHP)",
-        "doctrine/annotations": "Doctrine Annotations >=1.0 for annotation features",
-        "ircmaxell/random-lib": "Fallback random byte generator for Zend\\Math\\Rand if OpenSSL/Mcrypt extensions are unavailable",
-        "ocramius/proxy-manager": "ProxyManager to handle lazy initialization of services",
-        "zendframework/zendpdf": "ZendPdf for creating PDF representations of barcodes",
-        "zendframework/zendservice-recaptcha": "ZendService\\ReCaptcha for rendering ReCaptchas in Zend\\Captcha and/or Zend\\Form"
     },
 
     "extra": {
@@ -54,33 +43,16 @@
         }
     },
 
-    "repositories":[
-        {
-            "type":"package",
-            "package":{
-                "name":"esteit/app",
-                "version":"v2.0.0",
-                "source":{
-                    "type":"git",
-                    "url":"git@github.com:esteit/app.git",
-                    "reference":"v2"
-                },
-
-                "autoload": {
-                    "psr-0": {
-                        "App": "/library/"
-                    }
-                }
-            }
-        },
+    "repositories": [
         {
             "type": "composer",
             "url": "https://packages.zendframework.com/"
         }
     ],
+    "bin": ["bin/models"],
     "autoload": {
-        "psr-0": {
-            "Model": "/library/"
-        }
+        "classmap": [
+            "library/"
+        ]
     }
 }

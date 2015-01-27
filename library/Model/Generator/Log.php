@@ -2,6 +2,8 @@
 
 namespace Model\Generator;
 
+use Zend\Log\Logger;
+
 /**
  * Логирование действий генератора
  *
@@ -48,11 +50,34 @@ class Log
                     $extras  = array_shift($params);
                     break;
             }
-            self::_getLogAdapter()->log($priority, $message, $extras);
+            self::_log($message, $priority, $extras);
         } else {
-            /** @see Zend_Log_Exception */
             throw new \Zend\Log\Exception\RuntimeException('Bad log priority');
         }
+    }
+
+    /**
+     * @param            $message
+     * @param int        $priority
+     * @param array|null $extras
+     *
+     * @throws \Zend\Log\Exception\InvalidArgumentException
+     * @throws \Zend\Log\Exception\RuntimeException
+     * @return Logger
+     */
+    protected static function _log($message, $priority = Logger::INFO, array $extras = array())
+    {
+        return self::_getLogAdapter()->log($priority, $message, $extras);
+    }
+
+    /**
+     * @param $message
+     *
+     * @return Logger
+     */
+    public static function debug($message)
+    {
+        return self::_log($message, Logger::DEBUG);
     }
 
 

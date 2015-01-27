@@ -5,12 +5,9 @@ namespace Model;
 use ArrayObject;
 use \Model\Cluster\Schema;
 use \Model\Cluster\Schema\Table;
-use \Model\Cluster\Schema\Table\Column;
 
 class Cluster extends ArrayObject
 {
-    const XML_HEADER = '<?xml version="1.0" encoding="UTF-8" ?>';
-
     /**
      * Реестр таблиц по имени
      * @var array
@@ -84,51 +81,5 @@ class Cluster extends ArrayObject
     public function getTablelist()
     {
         return $this->_tableByTableNameRegistry;
-    }
-
-    /**
-     * @param $xml
-     * @param $db
-     * @return Cluster
-     */
-    public static function fromXml($xml, $db)
-    {
-        if (is_array($xml)) {
-            $data = $xml;
-        } else {
-            $xml = simplexml_load_string($xml);
-            $data = json_decode(json_encode((array) $xml), 1);
-        }
-
-        $data = Column::prepareXmlArray($data);
-        $schemaArrayList = is_int(key($data['schema'])) ? $data['schema'] : array($data['schema']);
-
-        $cluster = new Cluster();
-        foreach ($schemaArrayList as $schemaArray) {
-            $schema = \Model\Cluster\Schema::fromXml($schemaArray, $db);
-            $cluster->addSchema($schema);
-        }
-
-        return $cluster;
-    }
-
-    public function toXml($withHeader = true, $tabStep = 0)
-    {
-        $tab = '    ';
-        $shift = str_repeat($tab, $tabStep);
-
-        $xml = $withHeader ? \Model\Cluster::XML_HEADER . "\n" : '';
-
-
-        $xml .= $shift . "<cluster>" . "\n";
-
-        /** @var $this Cluster|Schema[] */
-        foreach ($this as $schema) {
-            $xml .= $schema->toXml(false, 1);
-        }
-
-        $xml .= $shift . "</cluster>\n";
-
-        return $xml;
     }
 }

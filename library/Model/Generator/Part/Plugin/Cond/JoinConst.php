@@ -2,9 +2,10 @@
 
 namespace Model\Generator\Part\Plugin\Cond;
 use Model\Cluster\Schema\Table;
+use Model\Code\Generator\DocBlockGenerator;
 use Model\Generator\Part\PartInterface;
 use Model\Schema\Table\Link\AbstractLink;
-use Zend\Code\Generator\FileGenerator;
+use Model\Code\Generator\FileGenerator;
 use Zend\Code\Generator\PropertyGenerator;
 
 class JoinConst extends AbstractCond
@@ -35,7 +36,7 @@ class JoinConst extends AbstractCond
         $table = $part->getTable();
 
         /**
-         * @var $file \Zend\Code\Generator\FileGenerator
+         * @var $file \Model\Code\Generator\FileGenerator
          */
         $file = $part->getFile();
 
@@ -47,7 +48,7 @@ class JoinConst extends AbstractCond
             $name = 'JOIN_' . $_name;
 
 
-            $property = new \Zend\Code\Generator\PropertyGenerator($name, strtolower($_name), \Zend\Code\Generator\PropertyGenerator::FLAG_CONSTANT);
+            $property = new PropertyGenerator($name, strtolower($_name), PropertyGenerator::FLAG_CONSTANT);
 
             $tags = array(
                 array(
@@ -59,7 +60,7 @@ class JoinConst extends AbstractCond
                 ),
             );
 
-            $docblock = new \Zend\Code\Generator\DocBlockGenerator('JOIN сущность ' . $_name);
+            $docblock = new DocBlockGenerator('JOIN сущность ' . $_name);
             $docblock->setTags($tags);
 
             $property->setDocBlock($docblock);

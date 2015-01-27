@@ -11,32 +11,19 @@
             "email": "meniam@gmail.com",
             "homepage": "http://meniam.ru",
             "role": "Maintainer"
-        },
-        {
-            "name": "Yaroslav Kiseliov",
-            "email": "slkxmail@gmail.com",
-            "role": "Developer"
         }
     ],
     "require":{
         "php"           :">=5.4.0,<5.6",
-        "ext-pdo"       : "~1.0.0",
-        "ext-mbstring"  : "*",
-        "ext-pdo_mysql" : "*",
-        "lib-libxml"    : "*",
-        "lib-iconv"     : "~1.14",
-        "lib-pcre"      : "*",
-        "esteit/app"    : "~2.0.0",
 
-        "doctrine/annotations": ">=1.0",
-        "ircmaxell/random-lib": "dev-master",
-        "ircmaxell/security-lib": "dev-master",
+        "doctrine/annotations"   : ">=1.0",
+
+        "zendframework/zendframework": "2.3.*",
 
         "phpunit/phpunit": "3.7.22",
+        "phpunit/php-invoker" : "1.1.*",
         "phpunit/php-token-stream": "1.2.*@dev",
-        "phpunit/php-timer": "1.0.5",
-        "zendframework/zendframework": "2.*"
-
+        "phpunit/php-timer": "1.0.5"
     },
 
     "suggest": {
@@ -57,31 +44,15 @@
 
     "repositories":[
         {
-            "type":"package",
-            "package":{
-                "name":"esteit/app",
-                "version":"v2.0.0",
-                "source":{
-                    "type":"git",
-                    "url":"git@github.com:esteit/app.git",
-                    "reference":"v2"
-                },
-
-                "autoload": {
-                    "psr-0": {
-                        "App": "/library/"
-                    }
-                }
-            }
-        },
-        {
             "type": "composer",
             "url": "https://packages.zendframework.com/"
         }
     ],
+
     "autoload": {
-        "psr-0": {
-            "Model": "/library/"
-        }
+        "classmap": [
+            "../library/",
+            "ModelTest/"
+        ]
     }
 }

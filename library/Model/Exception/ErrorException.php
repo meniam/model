@@ -5,5 +5,5 @@ namespace Model\Exception;
 /**
  * @package Model
  */
-class ErrorException extends \Zend\Db\Exception\ErrorException
+class ErrorException extends \Model\Db\Exception\ErrorException
 {}

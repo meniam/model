@@ -12,5 +12,5 @@ interface EntityInterface
 
     public function getId();
     public function exists();
-    public function equals(EntityInterface $value);
+    //public function equals(EntityInterface $value);
 }

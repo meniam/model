@@ -1,6 +1,6 @@
 <?php
 
-namespace ModelTest\DB;
+namespace ModelTest\Db;
 
 use ModelTest\TestCase as ParentTestCase;
 

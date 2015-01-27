@@ -13,10 +13,9 @@
  * @category   Cond
  * @package    Model
  * @author     Eugene Myazin <eugene.myazin@gmail.com>
- * @copyright  2008-20013 Eugene Myazin <eugene.myazin@gmail.com>
+ * @copyright  2008-20014 Eugene Myazin <eugene.myazin@gmail.com>
  * @license    https://github.com/meniam/model/blob/master/MIT-LICENSE.txt  MIT License
  */
-
 namespace Model\Cond;
 
 class Cond extends AbstractCond

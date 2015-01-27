@@ -19,7 +19,7 @@ class Paginator implements \Countable
 
     private $pageRange;
 
-    private $defaultPageRange = 10;
+    private $defaultPageRange = 11;
 
     protected static $defaultScrollingStyle = 'Sliding';
 
@@ -34,13 +34,18 @@ class Paginator implements \Countable
         if (!$adapter) {
             $adapter = new \Model\Paginator\Adapter\Null();
         }
-
         $this->adapter = $adapter;
     }
 
+    /**
+     * @param int $itemCountPerPage
+     *
+     * @return $this
+     */
     public function setItemCountPerPage($itemCountPerPage = 10)
     {
         $this->itemCountPerPage = $itemCountPerPage;
+        return $this;
     }
 
     public function getItemCountPerPage()
@@ -62,7 +67,7 @@ class Paginator implements \Countable
 
     public function getCurrentPageNumber()
     {
-        return $this->currentPage;
+        return $this->currentPage > 100 ? 100 : $this->currentPage;
     }
 
     /**
@@ -84,7 +89,19 @@ class Paginator implements \Countable
      */
     private function calculatePageCount()
     {
-        return ceil((integer) $this->getTotalItemCount() / $this->getItemCountPerPage());
+        $pageCount = ceil((integer) $this->getTotalItemCount() / $this->getItemCountPerPage());
+        return $pageCount > 100 ? 100 : $pageCount;
+    }
+
+    /**
+     * @param int $totalItemCount
+     *
+     * @return $this
+     */
+    public function setTotalItemCount($totalItemCount = 0)
+    {
+        $this->totalItemCount = (int)$totalItemCount;
+        return $this;
     }
 
     /**
@@ -99,6 +116,22 @@ class Paginator implements \Countable
         return $this->totalItemCount;
     }
 
+    /**
+     * @return int
+     */
+    public function getTotalPageCount()
+    {
+        $itemCountPerPage = (int)$this->getItemCountPerPage();
+
+        if ($itemCountPerPage == 0) {
+            return 0;
+        }
+        return (int)ceil($this->getTotalItemCount() / $itemCountPerPage);
+    }
+
+    /**
+     * @return \StdClass
+     */
     public function getPages()
     {
         if (!$this->pages) {
