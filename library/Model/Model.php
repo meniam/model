@@ -1,6 +1,7 @@
 <?php
 
 namespace Model;
+
 use Model\Config\Config;
 use Model\Db\Mysql;
 use Model\Exception\ErrorException;

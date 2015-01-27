@@ -17,7 +17,7 @@ use Zend\Console\Console;
 use Zend\Console\RouteMatcher\DefaultRouteMatcher;
 
 /**
- * Основной класс генератора
+ * Base generator class
  *
  * @category   Model
  * @package    Model_Generator
@@ -146,7 +146,7 @@ class Generator
         $shiftLen = 16;
 
         $help = array(
-            "Models 1.0.0 by Eugene Myazin <github.com/meniam/models>.",
+            "Models by Eugene Myazin <github.com/meniam/models>.",
             ''
         );
 
@@ -165,18 +165,18 @@ class Generator
         $this->showLine("               [--cache-dir=<dir>]", ColorInterface::LIGHT_WHITE, $shiftLen);
 
         $this->showLine("");
-        $this->showParam("--deploy-dir=<dir>", "Директория для выгрузки готовых моделей",
-                                         "в которую с заменой копируются абстрактные классы," . PHP_EOL .
-                                         "базовые классы копируются если отсутствует в папке." . PHP_EOL,
+        $this->showParam("--deploy-dir=<dir>", "Directory for deployment models",
+                                         "In which the replacement copied abstract classes," . PHP_EOL .
+                                         "base classes are copied if there are not in folder." . PHP_EOL,
             $shiftLen);
 
-        $this->showParam("--output-dir=<dir>", "Директория в которую генерируются модели",
-            "очищается перед каждым запуском генерации" . PHP_EOL,
+        $this->showParam("--output-dir=<dir>", "The directory in which the generated model",
+            "cleaned before each run generation" . PHP_EOL,
             8);
 
-        $this->showParam("[--config=<file>]", "Путь к файлу json конфига",
-            "вы можете использовать свой файл конфигурации для генерации моделей" . PHP_EOL.
-            "если не указать будет использован стандартный конфиг моделей models.json" . PHP_EOL,
+        $this->showParam("[--config=<file>]", "Path to JSON config file",
+            "You can use your configuration file to generate models." . PHP_EOL.
+            "If you do not specify this option, it will be used default config - models.json" . PHP_EOL,
             8);
 
         $this->showParam("[--db-host=<str>]", "Адрес Mysql сервера",

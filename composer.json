@@ -1,48 +1,52 @@
 {
     "name": "meniam/model",
     "type": "library",
-    "version" : "v0.0.3-dev",
+    "version": "v0.0.3-dev",
     "description": "Database models for MySql",
-    "keywords": ["model","mysql", "orm"],
+    "keywords": [
+        "model",
+        "mysql",
+        "orm"
+    ],
     "homepage": "http://github.com/meniam/model",
     "license": "MIT",
     "authors": [
         {
-        "name": "Eugene Myazin",
-        "email": "meniam@gmail.com",
-        "homepage": "http://meniam.ru",
-        "role": "Maintainer"
+            "name": "Eugene Myazin",
+            "email": "meniam@gmail.com",
+            "homepage": "http://meniam.ru",
+            "role": "Maintainer"
+        },
+        {
+            "name": "Mihail Rybalka",
+            "email": "ruspanzer@gmail.com",
+            "homepage": "http://ruspanzer.ru",
+            "role": "Developer"
         }
     ],
     "support": {
-        "email": "meniam@gmail.com"
+        "email": "meniam@gmail.com",
+        "email": "ruspanzer@gmail.com"
     },
-    "require":{
-        "php"           :">=5.4.0,<5.6",
-
-        "doctrine/annotations"   : ">=1.0",
-
+    "require": {
+        "php": ">=5.4.0,<5.6",
+        "doctrine/annotations": ">=1.0",
         "cocur/slugify": "dev-master",
-
         "zendframework/zend-validator": "2.3.*",
         "zendframework/zend-console": "2.3.*",
         "zendframework/zend-code": "2.3.*",
         "zendframework/zend-uri": "2.3.*",
-
         "phpunit/phpunit": "3.7.22",
-        "phpunit/php-invoker" : "1.1.*",
+        "phpunit/php-invoker": "1.1.*",
         "phpunit/php-token-stream": "1.2.*@dev",
         "phpunit/php-timer": "1.0.5"
-
     },
-
     "extra": {
         "branch-alias": {
             "dev-master": "v0.0.2-dev",
             "dev-develop": "v0.0.2-dev"
         }
     },
-
     "repositories": [
         {
             "type": "composer",

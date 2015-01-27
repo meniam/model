@@ -2,18 +2,11 @@
 
 namespace Model;
 
-use App\Filter\Filter;
-use App\ServiceManager\ServiceManager;
-use App\Validator\Validator;
 use Model\Collection\AbstractCollection as Collection;
 use Model\Cond\AbstractCond as Cond;
 use Model\Entity\AbstractEntity as Entity;
 use Model\Exception\ErrorException;
 use Model\Result\Result;
-use Zend\Db\Sql\Select;
-use Zend\InputFilter\Factory;
-use Zend\InputFilter\InputFilter;
-use Zend\Validator\AbstractValidator;
 
 class AbstractModel extends Singleton implements ModelInterface
 {

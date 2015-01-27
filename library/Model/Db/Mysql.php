@@ -8,7 +8,7 @@
  * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
- * @category   Collection
+ * @category   Db
  * @package    Model
  * @author     Eugene Myazin <eugene.myazin@gmail.com>
  * @copyright  2008-2015 Eugene Myazin <eugene.myazin@gmail.com>
