@@ -48,11 +48,6 @@ abstract class Model
         $connections = self::$config['connections'];
 
         foreach ($connections as $name => $connection) {
-//            if (!isset($connectionData['connection'])) {
-//                continue;
-//            }
-//
-//            $connection = $connectionData['connection'];
             self::addDb(new Mysql($connection['dsn'], $connection['user'], $connection['password']), $name, $connection['default']);
         }
 
