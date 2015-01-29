@@ -43,8 +43,6 @@ class Mysql
 
     private $dsn = 'dblib:host=your_hostname;dbname=your_db;charset=UTF8';
 
-    private $schema;
-
     private $user;
 
     private $password;
@@ -64,7 +62,6 @@ class Mysql
 
     /**
      * Keys are UPPERCASE SQL datatypes or the constants
-     * Zend_Db::INT_TYPE, Zend_Db::BIGINT_TYPE, or Zend_Db::FLOAT_TYPE.
      *
      * Values are:
      * 0 = 32-bit integer
@@ -427,7 +424,7 @@ class Mysql
 
         $sql = "UPDATE `" . $table . '` SET ';
 
-        foreach ($data as $k => &$null) {
+        foreach (array_keys($data) as $k) {
             $sql .= '`' . $k . '` = :' . $k . ', ';
         }
 

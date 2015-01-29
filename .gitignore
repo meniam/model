@@ -13,3 +13,5 @@ composer.lock
 composer.phar
 /tests/runtest.bat
 vendor
+
+data/*

@@ -36,7 +36,7 @@ class AbstractModel extends \Model\AbstractModel
     protected $indexList = array();
 
     /**
-     * Текущее имя DB адптера из ServiceManager
+     * Current DB adapter name
      *
      * @var string
      */
@@ -897,27 +897,14 @@ class AbstractModel extends \Model\AbstractModel
     }
 
     /**
-     *
-     * @param \Model\Db\Mysql $db
-     * @return AbstractModel
-     */
-    public function setDbAdapter(DbAdapter $db)
-    {
-        $this->db = $db;
-        return $this;
-    }
-
-    /**
      * @return \Model\Db\Mysql
      */
     public function getDb()
     {
-        if (!$this->db && $this->getServiceManager()) {
-            $this->db = $this->getServiceManager()->get($this->dbAdapterName);
-        } elseif (isset($GLOBALS['db'])) { // very dirty hack!!!
+        if (isset($GLOBALS['db'])) { // very dirty hack!!!
             $this->db = $GLOBALS['db'];
         } else {
-            $this->db = Model::getDb();
+            $this->db = Model::getDb($this->dbAdapterName);
         }
 
         return $this->db;

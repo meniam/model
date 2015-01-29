@@ -77,7 +77,7 @@ class Driver
      * Set resource
      *
      * @param  \PDO $resource
-     * @return Mysql
+     * @return Driver
      */
     public function setResource(\PDO $resource)
     {

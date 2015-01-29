@@ -52,8 +52,10 @@ abstract class Model
         self::$config = $configuration;
         $connections = self::$config['connections'];
 
+        $connectionCount = count($connections);
         foreach ($connections as $name => $connection) {
-            self::addDb(new Mysql($connection['dsn'], $connection['user'], $connection['password']), $name, $connection['default']);
+            $isDefault = $connectionCount == 1 ? true : $connection['default'];
+            self::addDb(new Mysql($connection['dsn'], $connection['user'], $connection['password']), $name, $isDefault);
         }
 
         return self::$config;
@@ -94,7 +96,7 @@ abstract class Model
      */
     public static function addDb(Mysql $connection, $connectionName = null, $isDefault = false)
     {
-        $connectionName = $connectionName ? (string)$connectionName : $connection->getSchema();
+        $connectionName = $connectionName ? (string)$connectionName : 'db';
 
         if (isset(self::$connections[$connectionName])) {
             throw new ErrorException("Connection with the same name already registered");

@@ -1,20 +1,32 @@
 <?php
+/**
+ * LICENSE: THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NON INFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+ * LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+ * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
+ * @category   Generator
+ * @package    Model
+ * @author     Eugene Myazin <eugene.myazin@gmail.com>
+ * @copyright  2008-2015 Eugene Myazin <eugene.myazin@gmail.com>
+ * @license    https://github.com/meniam/model/blob/master/MIT-LICENSE.txt  MIT License
+ */
 
 namespace Model\Generator;
 
 use Zend\Log\Logger;
+use Zend\Log\Writer\Stream;
+use Zend\Log\Exception\RuntimeException;
 
 /**
- * Логирование действий генератора
+ * Logger class
  *
- * @method static void info($message)
+ * Class Log
  *
- * @category   CategoryName
- * @package    PackageName
- * @author     Eugene Myazin <meniam@gmail.com>
- * @copyright  2008-2012 ООО "Америка"
- * @version    SVN: $Id$
- *
+ * @package Model\Generator
  */
 class Log
 {
@@ -30,7 +42,7 @@ class Log
      *
      * @param  string  $method  priority name
      * @param  string  $params  message to log
-     * @throws \Zend\Log\Exception\RuntimeException
+     * @throws RuntimeException
      * @return void
      */
     public static function __callStatic($method, $params)
@@ -40,7 +52,7 @@ class Log
             switch (count($params)) {
                 case 0:
                     /** @see Zend_Log_Exception */
-                    throw new \Zend\Log\Exception\RuntimeException('Missing log message');
+                    throw new RuntimeException('Missing log message');
                 case 1:
                     $message = array_shift($params);
                     $extras = array();
@@ -52,7 +64,7 @@ class Log
             }
             self::_log($message, $priority, $extras);
         } else {
-            throw new \Zend\Log\Exception\RuntimeException('Bad log priority');
+            throw new RuntimeException('Bad log priority');
         }
     }
 
@@ -62,7 +74,7 @@ class Log
      * @param array|null $extras
      *
      * @throws \Zend\Log\Exception\InvalidArgumentException
-     * @throws \Zend\Log\Exception\RuntimeException
+     * @throws RuntimeException
      * @return Logger
      */
     protected static function _log($message, $priority = Logger::INFO, array $extras = array())
@@ -80,7 +92,9 @@ class Log
         return self::_log($message, Logger::DEBUG);
     }
 
-
+    /**
+     * @return array
+     */
     protected static function _getPriorities()
     {
     	if (empty(self::$_priorities)) {
@@ -91,17 +105,23 @@ class Log
     	return self::$_priorities;
     }
 
+    /**
+     * @return Logger
+     */
 	protected static function _getLogAdapter()
 	{
 		if (empty(self::$_logAdapter)) {
-			$writer = new \Zend\Log\Writer\Null();
-			self::$_logAdapter = new \Zend\Log\Logger();
+			$writer = new Stream('php://output');
+			self::$_logAdapter = new Logger();
             self::$_logAdapter->addWriter($writer);
 		}
 
 		return self::$_logAdapter;
 	}
 
+    /**
+     * @param $adapter
+     */
 	public static function setLogAdapter($adapter)
 	{
 		self::$_logAdapter = $adapter;

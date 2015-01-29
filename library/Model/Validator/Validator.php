@@ -26,7 +26,7 @@ class Validator
      * @param               $class
      * @param  array        $args          OPTIONAL
      * @param  array|string $namespaces    OPTIONAL
-     * @internal param string $classBaseName
+     *
      * @return mixed
      */
     public static function validatorStatic($value, $class, array $args = array(), $namespaces = array())

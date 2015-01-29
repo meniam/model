@@ -320,9 +320,7 @@
         },
 
         "front_model": {
-            "list" : [
-                {"name" : "Stubs"}
-            ]
+            "list" : []
         }
 
     }

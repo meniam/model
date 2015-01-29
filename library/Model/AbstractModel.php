@@ -8,7 +8,7 @@ use Model\Entity\AbstractEntity as Entity;
 use Model\Exception\ErrorException;
 use Model\Result\Result;
 
-class AbstractModel extends Singleton implements ModelInterface
+class AbstractModel extends Singleton
 {
     /**
      * Связь много ко многим
@@ -97,8 +97,6 @@ class AbstractModel extends Singleton implements ModelInterface
      */
     protected $relation;
 
-    private static $serviceManager;
-
     /**
      * Значения по-умолчанию для полей Entity
      *
@@ -132,22 +130,6 @@ class AbstractModel extends Singleton implements ModelInterface
      * @var InputFilter
      */
     protected $filterInputOnUpdate;
-
-    /**
-     * @return ServiceManager
-     */
-    public static function getServiceManager()
-    {
-        return self::$serviceManager;
-    }
-
-    /**
-     * @param ServiceManager $serviceManager
-     */
-    public static function setServiceManager(ServiceManager $serviceManager)
-    {
-        self::$serviceManager = $serviceManager;
-    }
 
     public function __construct()
     {
