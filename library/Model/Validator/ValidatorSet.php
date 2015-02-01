@@ -2,6 +2,8 @@
 
 namespace Model\Validator;
 
+use Model\Model;
+
 class ValidatorSet
 {
 
@@ -49,14 +51,13 @@ class ValidatorSet
 
     /**
      * @param         $name
-     * @param         $required
      *
      * @internal param bool $continueIfEmpty
      * @return $this
      */
-    public function setRequired($name, $required)
+    public function setRequired($name)
     {
-        $this->data[$name]['required'] = (bool)$required;
+        $this->data[$name]['required'] = true;
         return $this;
     }
 
@@ -182,15 +183,15 @@ class ValidatorSet
         foreach ($inputSpecification as $key => $validatorParamArray) {
             $name = $key;
             $validatorSet->setName($key, $key);
-            foreach ($validatorParamArray as $key => $value) {
-                switch($key) {
+            foreach ($validatorParamArray as $field => $value) {
+                switch($field) {
                     case 'validators':
                         if (isset($value)) {
                             $validatorSet->addValidatorList($name, $value);
                         }
                         break;
                     case 'required':
-                        $validatorSet->setRequired($name, $value);
+                        $validatorSet->setRequired($name);
                         if (isset($inputSpecification['allow_empty'])) {
                             $validatorSet->setAllowEmpty($name, $inputSpecification['allow_empty']);
                         }
@@ -228,8 +229,9 @@ class ValidatorSet
 
                 if (isset($validatorParamArray['validators']) && is_array($validatorParamArray['validators'])) {
                     foreach ($validatorParamArray['validators'] as $validator) {
-                        if (!$validator->isValid($value)) {
-                            foreach ($validator->getMessages() as $code => $message) {
+                        $messages = Model::getValidatorAdapter()->validate($validator, $value);
+                        if (count($messages)) {
+                            foreach ($messages as $code => $message) {
                                 $this->addMessage($field, $message, $code);
                             }
                             return false;

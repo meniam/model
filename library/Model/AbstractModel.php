@@ -7,6 +7,7 @@ use Model\Cond\AbstractCond as Cond;
 use Model\Entity\AbstractEntity as Entity;
 use Model\Exception\ErrorException;
 use Model\Result\Result;
+use Model\Validator\ValidatorSet;
 
 class AbstractModel extends Singleton
 {
@@ -85,12 +86,7 @@ class AbstractModel extends Singleton
      */
     protected $validatorRules;
 
-    /**
-     * Правила валидации
-     *
-     * @var array
-     */
-    protected $validatorRulesPresence;
+    protected $validatorRequiredFields = array();
 
     /**
      * @var array
@@ -120,16 +116,14 @@ class AbstractModel extends Singleton
     protected $filterCascadeRulesOnUpdate = array();
 
     /**
-     * Объект валидатора на добавлении
-     * @var InputFilter
+     * @var ValidatorSet
      */
-    protected $filterInputOnAdd;
+    protected $validatorOnAdd;
 
     /**
-     * Объект валидатора на изменении данных
-     * @var InputFilter
+     * @var ValidatorSet
      */
-    protected $filterInputOnUpdate;
+    protected $validatorOnUpdate;
 
     public function __construct()
     {
@@ -543,56 +537,67 @@ class AbstractModel extends Singleton
     }
 
     /**
-     * Проверить данные на добавлении
+     * Add validator rule for field
      *
+     * @param $field
+     * @param $validator
+     * @param $required
+     */
+    public function addValidatorRule($field, $validator, $required)
+    {
+        $this->validatorRules[$field][] = $validator;
+
+        if ((bool)$required && !isset($this->validatorRequiredFields[$field])) {
+            $this->validatorRequiredFields[] = $field;
+        }
+    }
+
+    /**
      * @param array $data
-     * @param Cond  $cond
-     * @return InputFilter
+     * @param Cond $cond
+     * @return ValidatorSet
      */
     public function validateOnAdd(array $data, Cond $cond = null)
     {
-        $inputFilter = $this->getInputFilter(true);
-        $inputFilter->setData($data);
-        return $inputFilter;
+        $validator = $this->getValidator(true);
+        $validator->setData($data);
+        return $validator;
     }
 
     /**
-     * Проверить данные при обновлении полей в базе данных
-     *
      * @param array $data
-     * @param Cond  $cond
-     * @return \Zend\InputFilter\InputFilterInterface
+     * @param Cond $cond
+     * @return ValidatorSet
      */
     public function validateOnUpdate(array $data, Cond $cond = null)
     {
-        $inputFilter = $this->getInputFilter(false);
-        $inputFilter->setData($data);
+        $validator = $this->getValidator(false);
+        $validator->setData($data);
 
-        return $inputFilter;
+        return $validator;
     }
 
     /**
-     * Получить объект FilterInput для валидации данных
-     *
      * @param bool $required
-     * @return InputFilter
+     *
+     * @return ValidatorSet
      */
-    private function getInputFilter($required = false)
+    private function getValidator($required)
     {
-        $inputFilter = (bool)$required ? $this->filterInputOnAdd : $this->filterInputOnUpdate;
-        if (!$inputFilter) {
-            $validatorRules = $this->getValidatorRules($required);
-            $factory = new Factory();
-            $inputFilter = $factory->createInputFilter($validatorRules);
+        $validatorName = (bool)$required ? 'validatorOnAdd' : 'validatorOnUpdate';
 
+        if (!$this->$validatorName) {
+            $config = array(
+                'validators' => $this->getValidatorRules(),
+            );
             if ($required) {
-                $this->filterInputOnAdd = $inputFilter;
-            } else {
-                $this->filterInputOnUpdate = $inputFilter;
+                $config['required'] = $this->validatorRequiredFields;
             }
+
+            $this->$validatorName = ValidatorSet::create($config);
         }
 
-        return $inputFilter;
+        return $this->$validatorName;
     }
 
     /**
@@ -698,51 +703,18 @@ class AbstractModel extends Singleton
     }
 
     /**
-     * Проверить значение поля на правильность
-     *
-     * @param $value
-     * @param $field
-     * @return bool|AbstractValidator
-     */
-    public function validateValue($value, $field)
-    {
-        if (!isset($this->validatorRules['not_required'])) {
-            $this->getValidatorRules(false);
-        }
-
-        $isValid = true;
-        if (isset($this->validatorRules['not_required'][$field]['validators'])) {
-            /** @var $validatorRules InputFilter[] */
-            $validatorRules = $this->validatorRules['not_required'][$field]['validators'];
-
-            foreach ($validatorRules as $validator) {
-                if (!($isValid = $validator->isValid($value))) {
-                    return $validator;
-                }
-            }
-        }
-
-        return $isValid;
-    }
-
-    /**
-     * Получить правила валидации
-     *
-     * @param bool $required указывает, что нужно проверять отсутствующие поля или нет
      * @return array
      */
-    public function getValidatorRules($required = false)
+    public function getValidatorRules()
     {
-        $r = $required ? 'required' : 'not_required';
-
-        if (isset($this->validatorRules[$r])) {
-            return $this->validatorRules[$r];
+        if (isset($this->validatorRules)) {
+            return $this->validatorRules;
         }
 
-        $this->validatorRules[$r] = array();
-        $this->initValidatorRules($r);
+        $this->validatorRules = array();
+        $this->initValidatorRules();
 
-        return $this->validatorRules[$r];
+        return $this->validatorRules;
     }
 
     /**
@@ -945,7 +917,8 @@ class AbstractModel extends Singleton
      */
     public function getGeneralErrorResult($message = null, $key = null)
     {
-        $key = $key ? : 'general';
+        //todo implements
+        /*$key = $key ? : 'general';
 
         // Настраиваем валидатор
         $vd = Model::getValidatorAdapter()->getValidatorInstance('\App\Validator\GeneralError');
@@ -965,7 +938,8 @@ class AbstractModel extends Singleton
 
         $inputFilter->setData(array($key => true))->isValid();
 
-        return new Result(null, $inputFilter);
+        return new Result(null, $inputFilter);*/
+        return null;
     }
 
     /**

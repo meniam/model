@@ -14,7 +14,7 @@ use Model\Validator\Exception\ErrorException;
  * @copyright  2008-2012 ООО "Америка"
  * @version    SVN: $Id$
  */
-class Zend extends AbstractAdapter
+class Zend implements AdapterInterface
 {
     /**
      * @var array
@@ -81,5 +81,10 @@ class Zend extends AbstractAdapter
         }
 
         throw new ErrorException("Validator class not found from basename '{$class}'");
+    }
+
+    public static function validate($validator, $value)
+    {
+
     }
 }

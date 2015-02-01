@@ -5,7 +5,7 @@ namespace Model;
 use Model\Config\Config;
 use Model\Db\Mysql;
 use Model\Exception\ErrorException;
-use Model\Validator\Adapter\AbstractAdapter;
+use Model\Validator\Adapter\AdapterInterface;
 use Model\Validator\Adapter\Zend;
 
 /**
@@ -62,15 +62,15 @@ abstract class Model
     }
 
     /**
-     * @param AbstractAdapter $validatorAdapter
+     * @param AdapterInterface $validatorAdapter
      */
-    public static function setValidatorAdapter(AbstractAdapter $validatorAdapter)
+    public static function setValidatorAdapter(AdapterInterface $validatorAdapter)
     {
         self::$validatorAdapter = $validatorAdapter;
     }
 
     /**
-     * @return AbstractAdapter
+     * @return AdapterInterface
      */
     public static function getValidatorAdapter()
     {
