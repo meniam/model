@@ -14,31 +14,10 @@ use Model\Validator\Exception\ErrorException;
  * @copyright  2008-2012 ООО "Америка"
  * @version    SVN: $Id$
  */
-class Zend implements AdapterInterface
+class Zend extends AbstractAdapter
 {
-    /**
-     * @var array
-     */
-    protected static $validatorInstance = array();
-
-    public static function validatorStatic($value, $class, array $args = array(), $namespaces = array())
+    public function getValidatorInstance($class, array $args = array(), array $namespaces = array())
     {
-        $validateObject = self::getValidatorInstance($class, $args, $namespaces);
-        return $validateObject->isValid($value);
-    }
-
-    public static function getValidatorInstance($class, array $args = array(), array $namespaces = array())
-    {
-        if (empty($args) && empty($namespaces)) {
-            if (isset(self::$validatorInstance[$class])) {
-                return self::$validatorInstance[$class];
-            }
-            if (class_exists($class)) {
-                self::$validatorInstance[$class] = new $class();
-                return self::$validatorInstance[$class];
-            }
-        }
-
         $namespaces = array_merge($namespaces, array('', '\\Zend\\Validator'));
 
         foreach ($namespaces as $namespace) {
@@ -46,16 +25,6 @@ class Zend implements AdapterInterface
                 $className = rtrim($namespace, '\\') . '\\' . ucfirst($class);
             } else {
                 $className  = $class;
-            }
-
-            if (!empty($args)) {
-                $argsHash = sha1(serialize($args));
-
-                if (isset(self::$validatorInstance[$className . '_' . $argsHash])) {
-                    return self::$validatorInstance[$className . '_' . $argsHash];
-                }
-            } elseif (isset(self::$validatorInstance[$className])) {
-                return self::$validatorInstance[$className];
             }
 
             $_class = new \ReflectionClass($className);
@@ -66,16 +35,6 @@ class Zend implements AdapterInterface
                     $object = $_class->newInstance();
                 }
 
-                if (!isset($argsHash)) {
-                    $argsHash = sha1(serialize($args));
-                }
-
-                if (empty($args)) {
-                    self::$validatorInstance[$className] = $object;
-                } else {
-                    self::$validatorInstance[$className . '_' . $argsHash] = $object;
-                }
-
                 return $object;
             }
         }
@@ -83,8 +42,14 @@ class Zend implements AdapterInterface
         throw new ErrorException("Validator class not found from basename '{$class}'");
     }
 
-    public static function validate($validator, $value)
+    /**
+     * @param \Zend\Validator\ValidatorInterface $validator
+     * @param $value
+     *
+     * @return bool
+     */
+    public function isValid($validator, $value)
     {
-
+        return $validator->isValid($value);
     }
 }
