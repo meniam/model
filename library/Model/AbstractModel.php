@@ -84,7 +84,7 @@ class AbstractModel extends Singleton
      *
      * @var array
      */
-    protected $validatorRules;
+    protected $validatorList;
 
     protected $validatorRequiredFields = array();
 
@@ -114,16 +114,6 @@ class AbstractModel extends Singleton
      * @var array
      */
     protected $filterCascadeRulesOnUpdate = array();
-
-    /**
-     * @var ValidatorSet
-     */
-    protected $validatorOnAdd;
-
-    /**
-     * @var ValidatorSet
-     */
-    protected $validatorOnUpdate;
 
     public function __construct()
     {
@@ -545,7 +535,7 @@ class AbstractModel extends Singleton
      */
     public function addValidatorRule($field, $validator, $required)
     {
-        $this->validatorRules[$field][] = $validator;
+        $this->validatorList[$field][] = $validator;
 
         if ((bool)$required && !isset($this->validatorRequiredFields[$field])) {
             $this->validatorRequiredFields[] = $field;
@@ -578,26 +568,20 @@ class AbstractModel extends Singleton
     }
 
     /**
-     * @param bool $required
+     * @param bool $withRequiredFields
      *
      * @return ValidatorSet
      */
-    private function getValidator($required)
+    private function getValidator($withRequiredFields)
     {
-        $validatorName = (bool)$required ? 'validatorOnAdd' : 'validatorOnUpdate';
+        $validator = new ValidatorSet();
 
-        if (!$this->$validatorName) {
-            $config = array(
-                'validators' => $this->getValidatorRules(),
-            );
-            if ($required) {
-                $config['required'] = $this->validatorRequiredFields;
-            }
-
-            $this->$validatorName = ValidatorSet::create($config);
+        $validator->setValidatorList($this->validatorList);
+        if ($withRequiredFields) {
+            $validator->addNotEmptyValidatorList($this->validatorRequiredFields);
         }
 
-        return $this->$validatorName;
+        return $validator;
     }
 
     /**
@@ -705,16 +689,16 @@ class AbstractModel extends Singleton
     /**
      * @return array
      */
-    public function getValidatorRules()
+    public function getValidatorList()
     {
-        if (isset($this->validatorRules)) {
-            return $this->validatorRules;
+        if (isset($this->validatorList)) {
+            return $this->validatorList;
         }
 
-        $this->validatorRules = array();
+        $this->validatorList = array();
         $this->initValidatorRules();
 
-        return $this->validatorRules;
+        return $this->validatorList;
     }
 
     /**
@@ -906,40 +890,6 @@ class AbstractModel extends Singleton
      */
     public function setupFilterCascadeRules()
     {
-    }
-
-    /**
-     * Получить результат General ошибки
-     *
-     * @param string $message
-     * @param string $key
-     * @return Result
-     */
-    public function getGeneralErrorResult($message = null, $key = null)
-    {
-        //todo implements
-        /*$key = $key ? : 'general';
-
-        // Настраиваем валидатор
-        $vd = Model::getValidatorAdapter()->getValidatorInstance('\App\Validator\GeneralError');
-
-        if ($message) {
-            $vd->setMessage($message, $key);
-        }
-
-        // Настраиваем InputFilter и передаем ему поле general и валидатор
-        $factory = new Factory();
-        $inputFilter = $factory->createInputFilter(array(
-            $key => array(
-                'name'       => $key,
-                'validators' => array($vd)
-            )
-        ));
-
-        $inputFilter->setData(array($key => true))->isValid();
-
-        return new Result(null, $inputFilter);*/
-        return null;
     }
 
     /**

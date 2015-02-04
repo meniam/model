@@ -25,4 +25,9 @@ abstract class AbstractAdapter
      * @return bool
      */
     abstract public function isValid($validator, $value);
+
+    /**
+     * @return mixed
+     */
+    abstract public function getNotEmptyValidator();
 }

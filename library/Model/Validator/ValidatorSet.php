@@ -6,254 +6,73 @@ use Model\Model;
 
 class ValidatorSet
 {
+    private $validatorList = array();
 
-    /**
-     * @param         $name
-     * @param boolean $allowEmpty
-     *
-     * @return $this
-     */
-    public function setAllowEmpty($name, $allowEmpty)
-    {
-        $this->data[$name]['allow_empty'] = (bool)$allowEmpty;
-        return $this;
-    }
-
-    /**
-     * @param $name
-     *
-     * @return boolean
-     */
-    public function getAllowEmpty($name)
-    {
-        return isset($this->data[$name]['allow_empty']) ? $this->data[$name]['allow_empty'] : false;
-    }
-
-    /**
-     * @param         $name
-     * @param boolean $continueIfEmpty
-     * @return $this
-     */
-    public function setContinueIfEmpty($name, $continueIfEmpty)
-    {
-        $this->data[$name]['continue_if_empty'] = (bool)$continueIfEmpty;
-        return $this;
-    }
-
-    /**
-     * @param $name
-     * @return boolean
-     */
-    public function getContinueIfEmpty($name)
-    {
-        return isset($this->data[$name]['continue_if_empty']) ? $this->data[$name]['continue_if_empty'] : false;
-    }
-
-    /**
-     * @param         $name
-     *
-     * @internal param bool $continueIfEmpty
-     * @return $this
-     */
-    public function setRequired($name)
-    {
-        $this->data[$name]['required'] = true;
-        return $this;
-    }
-
-    /**
-     * @param $name
-     * @return boolean
-     */
-    public function getRequired($name)
-    {
-        return isset($this->data[$name]['required']) ? $this->data[$name]['required'] : false;
-    }
-
-
-    public function setValue($name, $value)
-    {
-        $this->rawValues[$name] = $value;
-
-        if (isset($this->data[$name])) {
-            $this->data[$name]['value'] = $value;
-        }
-        return $this;
-    }
-
-
-    public function setValueList(array $valueList)
-    {
-        foreach ($valueList as $name => $value) {
-            $this->setValue($name, $value);
-        }
-        return $this;
-    }
-
-
-    public function setData(array $data)
-    {
-        return $this->setValueList($data);
-    }
-
-    protected $messageList = array();
-    protected $data = array();
-
-    /**
-     * @param mixed $name
-     *
-     * @return $this
-     */
-    public function setName($name)
-    {
-        $this->data[$name]['name'] = $name;
-        return $this;
-    }
-
-    /**
-     * @param $name
-     * @return bool
-     */
-    public function getName($name)
-    {
-        return isset($this->data[$name]['name']) ? $this->data[$name]['name'] : false;
-    }
-
-    public function setMessageList(array $messageList)
-    {
-        $this->messageList = $messageList;
-        return $this;
-    }
-
-    /**
-     * @return array
-     */
-    public function getMessageList()
-    {
-        return $this->messageList;
-    }
-
-    public function addMessage($field, $message, $code)
-    {
-        $this->messageList[$field][$code] = $message;
-        return $this;
-    }
-
-    public function setValidatorList(array $validatorList)
-    {
-        $this->validatorList = $validatorList;
-        return $this;
-    }
-
-    public function getValidatorList()
-    {
-        return $this->validatorList;
-    }
-
-    public function addValidatorList($name, array $validatorList)
-    {
-        foreach ($validatorList as $validator) {
-            $this->addValidator($name, $validator);
-        }
-
-        return $this;
-    }
-
-    public function addValidator($name, $validator)
-    {
-        $this->data[$name]['validators'][] = $validator;
-        return $this;
-    }
-
+    private $data = array();
 
     public function __construct()
     { }
 
-    public static function create($inputSpecification) {
-        if (!is_array($inputSpecification)) {
-            throw new Exception\InvalidArgumentException(sprintf(
-                '%s expects an array or Traversable; received "%s"',
-                __METHOD__,
-                (is_object($inputSpecification) ? get_class($inputSpecification) : gettype($inputSpecification))
-            ));
-        }
-
-        $validatorSet = new self();
-
-        foreach ($inputSpecification as $key => $validatorParamArray) {
-            $name = $key;
-            $validatorSet->setName($key, $key);
-            foreach ($validatorParamArray as $field => $value) {
-                switch($field) {
-                    case 'validators':
-                        if (isset($value)) {
-                            $validatorSet->addValidatorList($name, $value);
-                        }
-                        break;
-                    case 'required':
-                        $validatorSet->setRequired($name);
-                        if (isset($inputSpecification['allow_empty'])) {
-                            $validatorSet->setAllowEmpty($name, $inputSpecification['allow_empty']);
-                        }
-                        break;
-                    case 'allow_empty':
-                        $validatorSet->setAllowEmpty($name, $value);
-                        break;
-                    case 'continue_if_empty':
-                        $validatorSet->setContinueIfEmpty($name, $value);
-                        break;
-
-                }
-            }
-        }
-
-        return $validatorSet;
-    }
-
-
-    public function isValid($field = null)
+    public function isValid()
     {
-        if ($field == null) {
-            foreach ($this->data as $field => $validatorParamArray) {
-                $value = isset($validatorParamArray['value']) ? $validatorParamArray['value'] : null;
+        $result = true;
 
-                // Если значения нет и это нормально продолжаем
-                if (empty($value) && !$this->getRequired($field)) {
-                    continue;
-                }
-
-                if (empty($value) && $this->getRequired($field)) {
-                    $this->addMessage($field, 'Element can not be empty', 'Empty');
-                    return false;
-                }
-
-                if (isset($validatorParamArray['validators']) && is_array($validatorParamArray['validators'])) {
-                    foreach ($validatorParamArray['validators'] as $validator) {
-                        $messages = Model::getValidatorAdapter()->validate($validator, $value);
-                        if (count($messages)) {
-                            foreach ($messages as $code => $message) {
-                                $this->addMessage($field, $message, $code);
-                            }
-                            return false;
-                        }
+        foreach ($this->data as $field => $value) {
+            if (isset($this->validatorList[$field]) && is_array($this->validatorList[$field])) {
+                foreach ($this->validatorList[$field] as $validator) {
+                    $result = Model::getValidatorAdapter()->isValid($validator, $value);
+                    if (!$result) {
+                        break;
                     }
                 }
-            }
-        }
-
-        return true;
-    }
-
-    public function getMessages()
-    {
-        $result = array();
-        foreach ($this->messageList as $messageList) {
-            foreach ($messageList as $code => $message) {
-                $result[$code] = $message;
             }
         }
 
         return $result;
     }
 
+    /**
+     * @param array $validatorRequiredFields
+     * @return $this
+     */
+    public function addNotEmptyValidatorList(array $validatorRequiredFields)
+    {
+        foreach ($validatorRequiredFields as $field) {
+            array_unshift($this->validatorList[$field], Model::getValidatorAdapter()->getNotEmptyValidator());
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param array $validatorList
+     * @return $this
+     */
+    public function setValidatorList(array $validatorList)
+    {
+        foreach ($validatorList as $field => $validators) {
+            foreach ($validators as $validator) {
+                $this->validatorList[$field][] = clone $validator;
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param $name
+     * @param $validator
+     * @return $this
+     */
+    public function addValidator($name, $validator)
+    {
+        $this->validatorList[$name][] = clone $validator;
+        return $this;
+    }
+
+    public function setData(array $data)
+    {
+        $this->data = $data;
+        return $this;
+    }
 }
