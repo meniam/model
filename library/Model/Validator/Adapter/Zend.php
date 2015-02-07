@@ -4,7 +4,7 @@
 namespace Model\Validator\Adapter;
 
 use Model\Validator\Exception\ErrorException;
-use Zend\Validator\NotEmpty;
+use Model\Validator\ValidatorSet;
 
 /**
  * Валидация данных
@@ -60,5 +60,25 @@ class Zend extends AbstractAdapter
     public function getNotEmptyValidator()
     {
         return new \Zend\Validator\NotEmpty();
+    }
+
+    /**
+     * @param array $validatorList
+     * @return array
+     */
+    public function getValidatorMessages($validatorList)
+    {
+        $result = array();
+        foreach ($validatorList as $field => $validatorArray) {
+            /** @var \Zend\Validator\ValidatorInterface $validator */
+            foreach ($validatorArray as $validator) {
+                $messages = $validator->getMessages();
+                if (!empty($messages)) {
+                    $result[$field] = $result[$field] + $messages;
+                }
+            }
+        }
+
+        return $result;
     }
 }

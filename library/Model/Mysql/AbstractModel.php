@@ -677,7 +677,7 @@ class AbstractModel extends \Model\AbstractModel
             // Проверяем данные и если есть ошибки
             // то добавляем их в результат
             if (!$isValid = $validator->isValid()) {
-                $result->addErrorFromValidatorSet($validator);
+                $result->setValidator($validator);
             }
         }
 
@@ -804,8 +804,8 @@ class AbstractModel extends \Model\AbstractModel
 
             // Проверяем данные и если есть ошибки
             // то добавляем их в результат
-            if (!$isValid = $validator->isValid()) {
-                $result->addErrorFromValidatorSet($validator);
+            if (!$validator->isValid()) {
+                $result->setValidator($validator);
                 return $result;
             }
         }

@@ -6,7 +6,6 @@ use Model\Collection\AbstractCollection as Collection;
 use Model\Cond\AbstractCond as Cond;
 use Model\Entity\AbstractEntity as Entity;
 use Model\Exception\ErrorException;
-use Model\Result\Result;
 use Model\Validator\ValidatorSet;
 
 class AbstractModel extends Singleton
@@ -54,7 +53,7 @@ class AbstractModel extends Singleton
     /**
      * @var string
      */
-    private $collenction;
+    private $collection;
 
     /**
      * @var string
@@ -62,30 +61,38 @@ class AbstractModel extends Singleton
     private $cond;
 
     /**
-     * Имя модели
+     * Model name
+     *
      * @var string
      */
     private $_name;
 
     /**
+     * DB table name
+     *
      * @var string
      */
     private $rawName;
 
     /**
-     * Правила фильтрации
+     * Filter rules
      *
      * @var array
      */
     protected $filterRules;
 
     /**
-     * Правила валидации
+     * Validation rules
      *
      * @var array
      */
     protected $validatorList;
 
+    /**
+     * Required validation fields. Used when adding data
+     *
+     * @var array
+     */
     protected $validatorRequiredFields = array();
 
     /**
@@ -127,8 +134,8 @@ class AbstractModel extends Singleton
             $this->entity = $this->_name . 'Entity';
         }
 
-        if (empty($this->collenction)) {
-            $this->collenction = $this->_name . 'Collection';
+        if (empty($this->collection)) {
+            $this->collection = $this->_name . 'Collection';
         }
 
         if (empty($this->cond)) {
@@ -549,8 +556,7 @@ class AbstractModel extends Singleton
      */
     public function validateOnAdd(array $data, Cond $cond = null)
     {
-        $validator = $this->getValidator(true);
-        $validator->setData($data);
+        $validator = $this->getValidator($data, true);
         return $validator;
     }
 
@@ -561,25 +567,21 @@ class AbstractModel extends Singleton
      */
     public function validateOnUpdate(array $data, Cond $cond = null)
     {
-        $validator = $this->getValidator(false);
-        $validator->setData($data);
+        $validator = $this->getValidator($data, false);
 
         return $validator;
     }
 
     /**
+     * @param array $data
      * @param bool $withRequiredFields
      *
      * @return ValidatorSet
      */
-    private function getValidator($withRequiredFields)
+    private function getValidator(array $data, $withRequiredFields)
     {
-        $validator = new ValidatorSet();
-
-        $validator->setValidatorList($this->validatorList);
-        if ($withRequiredFields) {
-            $validator->addNotEmptyValidatorList($this->validatorRequiredFields);
-        }
+        $requiredFields = $withRequiredFields ? $this->validatorRequiredFields : array();
+        $validator = new ValidatorSet($this->validatorList, $data, $requiredFields);
 
         return $validator;
     }
@@ -734,6 +736,25 @@ class AbstractModel extends Singleton
         $this->initFilterRules();
 
         return $this->filterRules;
+    }
+
+    /**
+     * @param $field
+     * @param $filter
+     * @return $this
+     */
+    public function addFilterRule($field, $filter)
+    {
+        $this->filterRules[$field][] = $filter;
+        return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isFilterRules()
+    {
+        return isset($this->filterRules);
     }
 
     /**

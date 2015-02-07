@@ -112,9 +112,9 @@ class InitValidatorRules extends AbstractModel
                         }
 
                         if ($validatorParams && $validatorParams != 'NULL') {
-                            $template .= "\$this->addValidatorRule('{$name}', Validator::getValidatorInstance('{$validator['name']}', {$validatorParams}), " . ($requiredFlag ? 'true' : 'false') . ");\n";
+                            $template .= "\$this->addValidatorRule('{$name}', Model::getValidatorAdapter()->getValidatorInstance('{$validator['name']}', {$validatorParams}), " . ($requiredFlag ? 'true' : 'false') . ");\n";
                         } else {
-                            $template .= "\$this->addValidatorRule('{$name}', Validator::getValidatorInstance('{$validator['name']}'), " . ($requiredFlag ? 'true' : 'false') . ");\n";
+                            $template .= "\$this->addValidatorRule('{$name}', Model::getValidatorAdapter()->getValidatorInstance('{$validator['name']}'), " . ($requiredFlag ? 'true' : 'false') . ");\n";
                         }
                     }
                 }
@@ -126,10 +126,6 @@ class InitValidatorRules extends AbstractModel
 
         $tags = array(
             array(
-                'name'        => 'param',
-                'description' => 'bool $required учитывать поля NOT NULL',
-            ),
-            array(
                 'name'        => 'return',
                 'description' => 'array Model массив с фильтрами по полям',
             ),
@@ -138,21 +134,16 @@ class InitValidatorRules extends AbstractModel
         $docblock = new DocBlockGenerator('Получить правила для фильтрации ');
         $docblock->setTags($tags);
 
-        $p = new ParameterGenerator('required');
-        $p->setDefaultValue(false);
-
 
         $method = new MethodGenerator();
         $method->setName('initValidatorRules');
         $method->setVisibility(AbstractMemberGenerator::VISIBILITY_PUBLIC);
         $method->setStatic(false);
         $method->setDocBlock($docblock);
-        $method->setParameter($p);
 
         $method->setBody(<<<EOS
 {$template}
-\$this->setupValidatorRules(\$required);
-return \$required ? \$this->getValidatorOnAdd() : \$this->getValidatorOnUpdate();
+\$this->setupValidatorRules();
 EOS
         );
 

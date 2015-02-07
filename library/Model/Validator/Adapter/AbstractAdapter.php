@@ -30,4 +30,25 @@ abstract class AbstractAdapter
      * @return mixed
      */
     abstract public function getNotEmptyValidator();
+
+    /**
+     * Get decorated messages array
+     *
+     * array(
+        'field1' => array(
+            'error_code_1' => 'Message 1'
+            'error_code_2' => 'Message 2'
+            'error_code_3' => 'Message 3'
+        ),
+        'field2' => array(
+            'error_code_1' => 'Message 1'
+            'error_code_2' => 'Message 2'
+            'error_code_3' => 'Message 3'
+        ),
+     * )
+     *
+     * @param array $validatorList
+     * @return array
+     */
+    abstract public function getValidatorMessages($validatorList);
 }

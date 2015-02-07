@@ -5,7 +5,6 @@ namespace Model\Result;
 use Model\Exception\ErrorException;
 use Model\Result\Decorator\Error;
 use Model\Validator\ValidatorSet;
-use Symfony\Component\Form\FormError;
 
 /**
  * Result содержит
@@ -36,7 +35,12 @@ class Result
      *
      * @var Result[]
      */
-    protected $childs = array();
+    protected $childList = array();
+
+    /**
+     * @var ValidatorSet
+     */
+    protected $validator;
 
 
     /**
@@ -84,10 +88,8 @@ class Result
      */
     public function addChild($name, $child)
     {
-        if ($child instanceof ValidatorSet) {
-            $child = new Result(null, $child);
-        } elseif (!$child instanceof Result) {
-            throw new ErrorException('Child must be instance of \Model\Result\Result or InputFilter');
+        if (!$child instanceof Result) {
+            throw new ErrorException('Child must be instance of \Model\Result\Result');
         }
 
         if (!is_scalar($name)) {
@@ -95,11 +97,11 @@ class Result
         }
 
         $i = 0;
-        while (array_key_exists($name . '.' . $i, $this->childs)) {
+        while (array_key_exists($name . '.' . $i, $this->childList)) {
             $i++;
         }
 
-        $this->childs[$name . '.' . $i] = $child;
+        $this->childList[$name . '.' . $i] = $child;
 
         return $this;
     }
@@ -126,8 +128,8 @@ class Result
     {
         if ($name == null) {
             return $this->getChildList();
-        } elseif (isset($this->childs[$name])) {
-            return $this->childs[$name];
+        } elseif (isset($this->childList[$name])) {
+            return $this->childList[$name];
         }
 
         return false;
@@ -138,7 +140,7 @@ class Result
      */
     public function getChildList()
     {
-        return (array)$this->childs;
+        return (array)$this->childList;
     }
 
     /**
@@ -180,7 +182,7 @@ class Result
     {
         $errors = $this->getErrorList();
 
-        foreach ($this->childs as $name => &$childResult) {
+        foreach ($this->childList as $name => &$childResult) {
             $_errors = $childResult->getErrors();
             foreach ($_errors as $field => &$error) {
                 $errors[$name . '__' . $field] = $error;
@@ -211,15 +213,24 @@ class Result
      *
      * @return $this
      */
-    public function addErrorFromValidatorSet(ValidatorSet $validatorSet)
+    public function setValidator(ValidatorSet $validatorSet)
     {
-        if ($messageList = $validatorSet->getMessageList()) {
-            return $this->addErrorList($messageList);
+        $this->validator = $validatorSet;
+
+        if (!$validatorSet->isValid()) {
+            $this->addError('Input data is not valid. See validation result in this validator set');
         }
 
         return $this;
     }
 
+    /**
+     * @return ValidatorSet
+     */
+    public function getValidator()
+    {
+        return $this->validator;
+    }
 
     /**
      * Верны ли данные
@@ -231,7 +242,7 @@ class Result
         $result = !$this->isError();
 
         if ($result) {
-            foreach ($this->childs as &$childResult) {
+            foreach ($this->childList as &$childResult) {
                 if (!$result = $childResult->isValid()) {
                     break;
                 }
@@ -239,29 +250,6 @@ class Result
         }
 
         return $result;
-    }
-
-    public function handleFormErrors(\Symfony\Component\Form\Form $form)
-    {
-        if (!$this->isError()) {
-            return $form;
-        }
-
-        $errorList = $this->getErrorList();
-
-        foreach ($errorList as $field => $errors) {
-            if ($form->has($field)) {
-                foreach ($errors as $errorCode => $errorMessage) {
-                    $form->get($field)->addError(new FormError($field . ": [$errorCode] $errorMessage"));
-                }
-            } else {
-                foreach ($errors as $errorCode => $errorMessage) {
-                    $form->addError(new FormError($field . ": [$errorCode] $errorMessage"));
-                }
-            }
-        }
-
-        return $form;
     }
 
     /**

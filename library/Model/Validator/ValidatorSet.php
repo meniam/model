@@ -6,21 +6,42 @@ use Model\Model;
 
 class ValidatorSet
 {
+    /**
+     * @var array
+     */
     private $validatorList = array();
 
+    /**
+     * @var array
+     */
     private $data = array();
 
-    public function __construct()
-    { }
+    /**
+     * @var null|bool
+     */
+    private $validateResult = null;
 
+    public function __construct($validatorList, $data, $requiredFields)
+    {
+        $this->setValidatorList($validatorList);
+        $this->addNotEmptyValidatorList($requiredFields);
+        $this->setData($data);
+    }
+
+    /**
+     * @return bool
+     */
     public function isValid()
     {
-        $result = true;
+        if (!is_null($this->validateResult)) {
+            return $this->validateResult;
+        }
 
+        $result = true;
         foreach ($this->data as $field => $value) {
             if (isset($this->validatorList[$field]) && is_array($this->validatorList[$field])) {
                 foreach ($this->validatorList[$field] as $validator) {
-                    $result = Model::getValidatorAdapter()->isValid($validator, $value);
+                    $result = (bool)Model::getValidatorAdapter()->isValid($validator, $value);
                     if (!$result) {
                         break;
                     }
@@ -28,6 +49,7 @@ class ValidatorSet
             }
         }
 
+        $this->validateResult = $result;
         return $result;
     }
 
@@ -35,7 +57,7 @@ class ValidatorSet
      * @param array $validatorRequiredFields
      * @return $this
      */
-    public function addNotEmptyValidatorList(array $validatorRequiredFields)
+    protected function addNotEmptyValidatorList(array $validatorRequiredFields)
     {
         foreach ($validatorRequiredFields as $field) {
             array_unshift($this->validatorList[$field], Model::getValidatorAdapter()->getNotEmptyValidator());
@@ -48,7 +70,7 @@ class ValidatorSet
      * @param array $validatorList
      * @return $this
      */
-    public function setValidatorList(array $validatorList)
+    protected function setValidatorList(array $validatorList)
     {
         foreach ($validatorList as $field => $validators) {
             foreach ($validators as $validator) {
@@ -60,19 +82,30 @@ class ValidatorSet
     }
 
     /**
-     * @param $name
-     * @param $validator
-     * @return $this
+     * @return array
      */
-    public function addValidator($name, $validator)
+    public function getValidatorList()
     {
-        $this->validatorList[$name][] = clone $validator;
-        return $this;
+        return $this->validatorList;
     }
 
-    public function setData(array $data)
+    /**
+     * @param array $data
+     * @return $this
+     */
+    protected function setData(array $data)
     {
         $this->data = $data;
         return $this;
+    }
+
+    /**
+     * Get decorated message array
+     *
+     * @return array
+     */
+    public function getMessageArray()
+    {
+        return Model::getValidatorAdapter()->getValidatorMessages($this->validatorList);
     }
 }
