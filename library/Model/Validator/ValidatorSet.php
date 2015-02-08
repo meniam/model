@@ -21,7 +21,7 @@ class ValidatorSet
      */
     private $validateResult = null;
 
-    public function __construct($validatorList, $data, $requiredFields)
+    public function __construct($validatorList = array(), $data = array(), $requiredFields = array())
     {
         $this->setValidatorList($validatorList);
         $this->addNotEmptyValidatorList($requiredFields);
