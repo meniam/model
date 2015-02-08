@@ -219,7 +219,7 @@ class Result
         $this->validator = $validatorSet;
 
         if (!$validatorSet->isValid()) {
-            $this->addError('Input data is not valid. See validation result in this validator set');
+            $this->addError('Input data is not valid. See validation result in validator set');
         }
 
         return $this;
