@@ -6,9 +6,10 @@ use Model\Collection\AbstractCollection as Collection;
 use Model\Cond\AbstractCond as Cond;
 use Model\Entity\AbstractEntity as Entity;
 use Model\Exception\ErrorException;
+use Model\Filter\AbstractFilter;
 use Model\Validator\ValidatorSet;
 
-class AbstractModel extends Singleton
+abstract class AbstractModel extends Singleton
 {
     /**
      * Связь много ко многим
@@ -210,11 +211,37 @@ class AbstractModel extends Singleton
     }
 
     /**
+     * Initialize relations
+     */
+    protected function initRelation()
+    {
+        $this->relation = array();
+    }
+
+    /**
+     * User defined relations
+     */
+    protected function setupRelation()
+    { }
+
+    /**
      * @return array
      */
     public function getRelation()
     {
+        if (is_null($this->relation)) {
+            $this->initRelation();
+        }
         return $this->relation;
+    }
+
+    /**
+     * @return array
+     */
+    protected function setRelation(array $relation)
+    {
+        $this->relation = $relation;
+        return $this;
     }
 
     /**
@@ -581,7 +608,7 @@ class AbstractModel extends Singleton
     private function getValidator(array $data, $withRequiredFields)
     {
         $requiredFields = $withRequiredFields ? $this->validatorRequiredFields : array();
-        $validator = new ValidatorSet($this->validatorList, $data, $requiredFields);
+        $validator = new ValidatorSet($this->getValidatorList(), $data, $requiredFields);
 
         return $validator;
     }
@@ -637,8 +664,9 @@ class AbstractModel extends Singleton
         if ($cond->checkCond($condFilterValues, true) && !empty($filterRules)) {
             foreach ($filterRules as $field => $filterRulesArray) {
                 if (isset($data[$field])) {
+                    /** @var AbstractFilter $filterRule */
                     foreach ($filterRulesArray as $filterRule) {
-                        $data[$field] = $filterRule($data[$field]);
+                        $data[$field] = $filterRule->filter($data[$field]);
                     }
                 }
             }
@@ -677,7 +705,8 @@ class AbstractModel extends Singleton
 
             if (!empty($value) && isset($this->filterRules[$field]) && is_array($this->filterRules[$field])) {
                 foreach ($this->filterRules[$field] as $filter) {
-                    $value = $filter($value);
+                    /** @var AbstractFilter $filter */
+                    $value = $filter->filter($value);
                     if (empty($value)) {
                         break;
                     }
@@ -706,19 +735,34 @@ class AbstractModel extends Singleton
     /**
      * Инициализация правил валидации
      *
-     * @param bool $required
      * @return void
      */
-    public function initValidatorRules($required = false)
+    public function initValidatorRules()
     {
-        $this->setupValidatorRules($required);
+        $this->setupValidatorRules();
+    }
+
+    public function setupValidatorRules()
+    {
     }
 
     /**
-     * @param bool $required
+     * @param $field
+     * @param $value
+     * @return $this
      */
-    public function setupValidatorRules($required = false)
+    public function setDefaultRule($field, $value)
     {
+        $this->defaultsRules[$field] = $value;
+        return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isDefaultRules()
+    {
+        return isset($this->defaultsRules);
     }
 
     /**
@@ -728,7 +772,7 @@ class AbstractModel extends Singleton
      */
     public function getFilterRules()
     {
-        if ($this->filterRules) {
+        if ($this->isFilterRules()) {
             return $this->filterRules;
         }
 

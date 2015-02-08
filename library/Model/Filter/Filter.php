@@ -46,7 +46,7 @@ class Filter
      */
     public static function getFilterInstance($class, array $args = array(), array $namespaces = array())
     {
-        $namespaces = array_merge($namespaces, array('', '\\Model\\Filter', '\\Zend\\Filter'));
+        $namespaces = array_merge($namespaces, array('', '\\Model\\Filter'));
 
         $argsHash = empty($args) ? '' : md5(serialize($args));
 
@@ -60,7 +60,7 @@ class Filter
             if (class_exists($className)) {
                 $_class = new \ReflectionClass($className);
 
-                if ($_class->implementsInterface('\Zend\Filter\FilterInterface')) {
+                if ($_class->isSubclassOf('\Model\Filter\AbstractFilter')) {
                     if ($_class->hasMethod('__construct')) {
                         $object = $_class->newInstanceArgs(array($args));
                     } else {

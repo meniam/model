@@ -70,12 +70,13 @@ class Zend extends AbstractAdapter
     {
         $result = array();
         foreach ($validatorList as $field => $validatorArray) {
+            $messages = array();
             /** @var \Zend\Validator\ValidatorInterface $validator */
             foreach ($validatorArray as $validator) {
-                $messages = $validator->getMessages();
-                if (!empty($messages)) {
-                    $result[$field] = $result[$field] + $messages;
-                }
+                $messages += $validator->getMessages();
+            }
+            if (!empty($messages)) {
+                $result[$field] = $messages;
             }
         }
 

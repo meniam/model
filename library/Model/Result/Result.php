@@ -63,6 +63,7 @@ class Result
 
             $this->addErrorList($result->getErrorList());
             $this->addChildList($result->getChildList());
+            $this->setValidator($result->getValidator());
         } else {
             $this->result = $result;
         }

@@ -2,7 +2,12 @@
 
 namespace Model\Filter;
 
-use Zend\Filter\AbstractFilter as ParentFilter;
+abstract class AbstractFilter
+{
 
-abstract class AbstractFilter extends ParentFilter
-{ }
+    /**
+     * @param $value
+     * @return bool
+     */
+    abstract function filter($value);
+}

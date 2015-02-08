@@ -121,7 +121,8 @@ class Relationdefine extends AbstractModel
         //$property->setDocBlock($docblock);
 
         $method = new MethodGenerator();
-        $method->setName('setupRelation');
+        $method->setName('initRelation');
+        $method->setFinal(true);
         $method->setVisibility(AbstractMemberGenerator::VISIBILITY_PROTECTED);
 
         $body = preg_replace("#^(\\s*)protected #", "\\1", $property->generate()) . "\n";

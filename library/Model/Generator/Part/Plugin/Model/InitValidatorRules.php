@@ -139,6 +139,7 @@ class InitValidatorRules extends AbstractModel
         $method->setName('initValidatorRules');
         $method->setVisibility(AbstractMemberGenerator::VISIBILITY_PUBLIC);
         $method->setStatic(false);
+        $method->setFinal(true);
         $method->setDocBlock($docblock);
 
         $method->setBody(<<<EOS

@@ -70,6 +70,7 @@ class AbstractModel extends \Model\AbstractModel
         $data      = $this->prepareData($data);
         $relatedData     = array();
 
+
         if (empty($data)) {
             return $result->addError("Import {$tableName} failed; Import data is empty", "import_{$tableName}_failed");
         }
@@ -79,6 +80,7 @@ class AbstractModel extends \Model\AbstractModel
 
         // Ищем данные в базе по уникальным полям
         $existsCond = clone $cond;
+
         $id = $this->getExistedIdByUniqueIndex($data, $existsCond);
 
         // Идем по всем связям и ищем обязательные связи

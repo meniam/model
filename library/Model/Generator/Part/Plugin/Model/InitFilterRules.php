@@ -87,13 +87,10 @@ class InitFilterRules extends AbstractModel
         $method->setName('initFilterRules');
         $method->setVisibility(AbstractMemberGenerator::VISIBILITY_PUBLIC);
         $method->setStatic(false);
+        $method->setFinal(true);
         $method->setDocBlock($docblock);
 
         $method->setBody(<<<EOS
-if (\$this->isFilterRules()) {
-    return \$this->getFilterRules();
-}
-
 {$template}
 \$this->setupFilterRules();
 return \$this->getFilterRules();
