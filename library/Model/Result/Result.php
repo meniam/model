@@ -230,6 +230,9 @@ class Result
      */
     public function getValidator()
     {
+        if (is_null($this->validator)) {
+            $this->validator = new ValidatorSet(array(), array(), array());
+        }
         return $this->validator;
     }
 

@@ -4,7 +4,6 @@
 namespace Model\Validator\Adapter;
 
 use Model\Validator\Exception\ErrorException;
-use Model\Validator\ValidatorSet;
 
 /**
  * Валидация данных

@@ -845,6 +845,20 @@ abstract class AbstractModel extends Singleton
     }
 
     /**
+     * Получить правила каскада при добавлении
+     *
+     * @return array
+     */
+    public function getFilterCascadeRulesOnUpdate()
+    {
+        if (!$this->filterCascadeRulesOnUpdate) {
+            $this->setupFilterCascadeRules();
+        }
+
+        return $this->filterCascadeRulesOnUpdate;
+    }
+
+    /**
      * Инициализация значений по-умолчанию
      */
     protected function initDefaultsRules()
