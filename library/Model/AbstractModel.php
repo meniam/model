@@ -12,51 +12,57 @@ use Model\Validator\ValidatorSet;
 abstract class AbstractModel extends Singleton
 {
     /**
-     * Связь много ко многим
+     * Link many to many
      */
     const MANY_TO_MANY = 'ManyToMany';
 
     /**
-     * Связь один ко многим
+     * СLink one to many
      */
     const ONE_TO_MANY = 'OneToMany';
 
     /**
-     * Связь много к одному
+     * Link many to one
      */
     const MANY_TO_ONE = 'ManyToOne';
 
     /**
-     * Связь один к одному
+     * Link one to one
      */
     const ONE_TO_ONE = 'OneToOne';
 
     /**
-     * Основной ключ
+     * Primary key
      */
     const INDEX_PRIMARY = 'PRIMARY';
 
     /**
-     * Просто индекс
+     * Index
      */
     const INDEX_KEY = 'KEY';
 
     /**
-     * Уникальный ключ
+     * Unique key
      */
     const INDEX_UNIQUE = 'UNIQUE';
 
     /**
+     * Entity name
+     *
      * @var string
      */
     private $entity;
 
     /**
+     * Collection name
+     *
      * @var string
      */
     private $collection;
 
     /**
+     * Condition name
+     *
      * @var string
      */
     private $cond;
@@ -97,32 +103,38 @@ abstract class AbstractModel extends Singleton
     protected $validatorRequiredFields = array();
 
     /**
+     * Relation with other model
+     *
      * @var array
      */
     protected $relation;
 
     /**
-     * Значения по-умолчанию для полей Entity
+     * Default values for fields
      *
-     * @see https://github.com/esteit/model/wiki/%D0%94%D0%BE%D0%B1%D0%B0%D0%B2%D0%BB%D0%B5%D0%BD%D0%B8%D0%B5-%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85
      * @var array
      */
     protected $defaultsRules = array();
 
     /**
-     * Каскад значений для фильтра при добавлении
-     * @see https://github.com/esteit/model/wiki/%D0%94%D0%BE%D0%B1%D0%B0%D0%B2%D0%BB%D0%B5%D0%BD%D0%B8%D0%B5-%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85
+     * Cascade filter rules on add
+     *
      * @var array
      */
     protected $filterCascadeRulesOnAdd = array();
 
     /**
-     * Каскад значений для фильтра при обновлении
-     * @see https://github.com/esteit/model/wiki/%D0%94%D0%BE%D0%B1%D0%B0%D0%B2%D0%BB%D0%B5%D0%BD%D0%B8%D0%B5-%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85
+     * Cascade filter rules on update
+     *
      * @var array
      */
     protected $filterCascadeRulesOnUpdate = array();
 
+    /**
+     * Constructor model
+     *
+     * @throws ErrorException
+     */
     public function __construct()
     {
         $this->init();
@@ -144,6 +156,14 @@ abstract class AbstractModel extends Singleton
         }
     }
 
+    /**
+     * Universal call method
+     *
+     * @param $method
+     * @param $params
+     * @return mixed
+     * @throws ErrorException
+     */
     public function __call($method, $params)
     {
         if (count($segments = explode('By', $method, 2)) == 2) {
@@ -204,11 +224,10 @@ abstract class AbstractModel extends Singleton
 
 
     /**
-     * Инициализация модели
+     * Model initialize
      */
     public function init()
-    {
-    }
+    { }
 
     /**
      * Initialize relations
@@ -225,6 +244,8 @@ abstract class AbstractModel extends Singleton
     { }
 
     /**
+     * Get relations
+     *
      * @return array
      */
     public function getRelation()
@@ -236,6 +257,8 @@ abstract class AbstractModel extends Singleton
     }
 
     /**
+     * Set relations
+     *
      * @return array
      */
     protected function setRelation(array $relation)
@@ -245,6 +268,8 @@ abstract class AbstractModel extends Singleton
     }
 
     /**
+     * Before prepare hook. Override this method in some models, if necessary
+     *
      * @param        $itemArray
      * @param Cond   $cond
      * @return mixed
@@ -255,6 +280,8 @@ abstract class AbstractModel extends Singleton
     }
 
     /**
+     * After prepare hook. Override this method in some models, if necessary
+     *
      * @param                   $itemArray
      * @param Cond              $cond
      * @return mixed
@@ -265,6 +292,8 @@ abstract class AbstractModel extends Singleton
     }
 
     /**
+     * Prepare data
+     *
      * @param      $itemArray
      * @param Cond $cond
      * @return mixed
@@ -431,6 +460,8 @@ abstract class AbstractModel extends Singleton
     }
 
     /**
+     * Prepare collections
+     *
      * @param           $collectionArray
      * @param null|Cond $cond
      * @param null      $pager
@@ -451,7 +482,8 @@ abstract class AbstractModel extends Singleton
     }
 
     /**
-     * Установить имя модели
+     * Set model name
+     *
      * @param string $name
      */
     public function setName($name)
@@ -461,7 +493,8 @@ abstract class AbstractModel extends Singleton
     }
 
     /**
-     * Получить имя модели
+     * Get model name
+     *
      * @return string
      */
     public function getName()
@@ -470,7 +503,7 @@ abstract class AbstractModel extends Singleton
     }
 
     /**
-     * Get raw model name
+     * Get raw model name (table name)
      *
      * @return string
      */
@@ -480,7 +513,7 @@ abstract class AbstractModel extends Singleton
     }
 
     /**
-     * Получить объект условий
+     * Get Cond object
      *
      * @param null $entityName
      * @param null $type
@@ -545,13 +578,14 @@ abstract class AbstractModel extends Singleton
     }
 
     /**
-     *
+     * Execute query
      */
     public function execute()
-    {
-    }
+    { }
 
     /**
+     * Change underscore string to CamelCase
+     *
      * @param $str
      * @return string
      */
@@ -577,6 +611,8 @@ abstract class AbstractModel extends Singleton
     }
 
     /**
+     * Validate input data for add. Validation with required values
+     *
      * @param array $data
      * @param Cond $cond
      * @return ValidatorSet
@@ -588,6 +624,8 @@ abstract class AbstractModel extends Singleton
     }
 
     /**
+     * Validate input data for update
+     *
      * @param array $data
      * @param Cond $cond
      * @return ValidatorSet
@@ -600,6 +638,8 @@ abstract class AbstractModel extends Singleton
     }
 
     /**
+     * Get ValidatorSet object for add or update
+     *
      * @param array $data
      * @param bool $withRequiredFields
      *
@@ -614,7 +654,7 @@ abstract class AbstractModel extends Singleton
     }
 
     /**
-     * Фильтрация данных при добавлении в базу данных
+     * Filter input data on add
      *
      * @param                   $data
      * @param Cond              $cond
@@ -626,7 +666,7 @@ abstract class AbstractModel extends Singleton
     }
 
     /**
-     * Фильтрация данных при изменении полей в базе данных
+     * Filter input data on update
      *
      * @param                   $data
      * @param Cond              $cond
@@ -638,7 +678,7 @@ abstract class AbstractModel extends Singleton
     }
 
     /**
-     * Фильтрация данных
+     * Filter input data
      *
      * @param                   $type
      * @param array             $data
@@ -651,14 +691,12 @@ abstract class AbstractModel extends Singleton
         $condFilterValues = $isAdd ? Cond::FILTER_ON_ADD : Cond::FILTER_ON_UPDATE;
         $condFilterRemoveUnknownValues = $isAdd ? Cond::FILTER_ON_ADD_REMOVE_UNKNOWN_KEYS : Cond::FILTER_ON_UPDATE_REMOVE_UNKNOWN_KEYS;
 
-        // Подготавляиваем объект условий
         $cond = $this->prepareCond($cond);
 
         if (empty($data)) {
             return $data;
         }
 
-        // Получаем правила фильтрации
         $filterRules = $this->getFilterRules();
 
         if ($cond->checkCond($condFilterValues, true) && !empty($filterRules)) {
@@ -684,7 +722,7 @@ abstract class AbstractModel extends Singleton
     }
 
     /**
-     * Отфильтровать значение поля
+     * Filter some value for field
      *
      * @param mixed $value
      * @param mixed $field
@@ -718,6 +756,8 @@ abstract class AbstractModel extends Singleton
     }
 
     /**
+     * Get empty validator list
+     *
      * @return array
      */
     public function getValidatorList()
@@ -733,7 +773,7 @@ abstract class AbstractModel extends Singleton
     }
 
     /**
-     * Инициализация правил валидации
+     * Init validation rules
      *
      * @return void
      */
@@ -742,11 +782,15 @@ abstract class AbstractModel extends Singleton
         $this->setupValidatorRules();
     }
 
+    /**
+     * Setup validation rules hook. User defined rules override in this method
+     */
     public function setupValidatorRules()
-    {
-    }
+    { }
 
     /**
+     * Set default rule for some field
+     *
      * @param $field
      * @param $value
      * @return $this
@@ -758,6 +802,8 @@ abstract class AbstractModel extends Singleton
     }
 
     /**
+     * Check initialize default rules
+     *
      * @return bool
      */
     public function isDefaultRules()
@@ -766,7 +812,7 @@ abstract class AbstractModel extends Singleton
     }
 
     /**
-     * Получить правила фильтрации
+     * Get filter rules
      *
      * @return array
      */
@@ -783,6 +829,8 @@ abstract class AbstractModel extends Singleton
     }
 
     /**
+     * Add filter rule for some field
+     *
      * @param $field
      * @param $filter
      * @return $this
@@ -794,6 +842,8 @@ abstract class AbstractModel extends Singleton
     }
 
     /**
+     * Check initialize filter rules
+     *
      * @return bool
      */
     public function isFilterRules()
@@ -802,7 +852,7 @@ abstract class AbstractModel extends Singleton
     }
 
     /**
-     * Инициализация правил фильтрации
+     * Initialize filter rules
      */
     public function initFilterRules()
     {
@@ -810,14 +860,13 @@ abstract class AbstractModel extends Singleton
     }
 
     /**
-     * Настройка правил фильтрации пользователем
+     * Setup filter rules hook. User defined rules override in this method
      */
     public function setupFilterRules()
-    {
-    }
+    { }
 
     /**
-     * Получить значения полей по-умолчению
+     * Get default rules
      *
      * @return array
      */
@@ -830,51 +879,9 @@ abstract class AbstractModel extends Singleton
         return $this->defaultsRules;
     }
 
-    /**
-     * Получить правила каскада при добавлении
-     *
-     * @return array
-     */
-    public function getFilterCascadeRulesOnAdd()
-    {
-        if (!$this->filterCascadeRulesOnAdd) {
-            $this->setupFilterCascadeRules();
-        }
-
-        return $this->filterCascadeRulesOnAdd;
-    }
 
     /**
-     * Получить правила каскада при добавлении
-     *
-     * @return array
-     */
-    public function getFilterCascadeRulesOnUpdate()
-    {
-        if (!$this->filterCascadeRulesOnUpdate) {
-            $this->setupFilterCascadeRules();
-        }
-
-        return $this->filterCascadeRulesOnUpdate;
-    }
-
-    /**
-     * Инициализация значений по-умолчанию
-     */
-    protected function initDefaultsRules()
-    {
-        $this->setupDefaultsRules();
-    }
-
-    /**
-     * Настройка значений по-умолчанию пользователем
-     */
-    protected function setupDefaultsRules()
-    {
-    }
-
-    /**
-     * Выбираем нужные поля из $inputData
+     * Apply default values for some data set
      *
      * @param array $inputData   Входные данные
      * @param array $defaultData Нужные поля
@@ -917,9 +924,50 @@ abstract class AbstractModel extends Singleton
     }
 
     /**
-     * Получить отсутствующие значения из других полей на основе каскада
+     * Get cascade filter rules on add
      *
-     * Каскад прописывается следующим образом:
+     * @return array
+     */
+    public function getFilterCascadeRulesOnAdd()
+    {
+        if (!$this->filterCascadeRulesOnAdd) {
+            $this->setupFilterCascadeRules();
+        }
+
+        return $this->filterCascadeRulesOnAdd;
+    }
+
+    /**
+     * Get cascade filter rules on update
+     *
+     * @return array
+     */
+    public function getFilterCascadeRulesOnUpdate()
+    {
+        if (!$this->filterCascadeRulesOnUpdate) {
+            $this->setupFilterCascadeRules();
+        }
+
+        return $this->filterCascadeRulesOnUpdate;
+    }
+
+    /**
+     * Initialize default rules
+     */
+    protected function initDefaultsRules()
+    {
+        $this->setupDefaultsRules();
+    }
+
+    /**
+     * Setup default rules hook. User defined rules override in this method
+     */
+    protected function setupDefaultsRules()
+    { }
+
+    /**
+     *
+     * Cascade :
      * array(
      *     'name' => array('title', 'param'),
      * )
@@ -991,9 +1039,7 @@ abstract class AbstractModel extends Singleton
             $ids[] = $data->getId();
         } elseif ($data instanceof Collection) {
             $ids = $data->getIdsAsArray();
-        } /* elseif ($data instanceof Result) {
-            $ids = array_map($callbackPrepare, $data->toArray());
-        } */ elseif (is_array($data)) {
+        } elseif (is_array($data)) {
             if (reset($data) instanceof Entity) {
                 /** @var array|Entity[] $data */
                 foreach ($data as $entity) {
@@ -1015,7 +1061,6 @@ abstract class AbstractModel extends Singleton
             throw new ErrorException("Entity must be instance of Model_Entity_Interface or Model_Collection_Interface");
         }
 
-        // Вынесено из filterEmpty сюда ради оптимизации
         foreach ($ids as $k => &$v) {
             if (empty($v) && !is_null($v)) {
                 unset($ids[$k]);
