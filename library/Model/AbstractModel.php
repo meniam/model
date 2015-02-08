@@ -1016,8 +1016,7 @@ abstract class AbstractModel extends Singleton
      * и $this->updateFilterCascadeRules
      */
     public function setupFilterCascadeRules()
-    {
-    }
+    { }
 
     /**
      * Return array of ids from mixed data
