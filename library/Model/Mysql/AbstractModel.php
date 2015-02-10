@@ -12,7 +12,7 @@ use Model\Entity\AbstractEntity;
 use Model\Entity\EntityInterface as Entity;
 use Model\Collection\AbstractCollection as Collection;
 use Model\Model;
-use Model\Paginator\Adapter\Mysql;
+use Model\Paginator\Adapter\ArraySet;
 use Model\Paginator\Paginator;
 use Model\Result\Result;
 
@@ -1065,18 +1065,17 @@ class AbstractModel extends \Model\AbstractModel
             if ($cond->checkCond(Cond::SHOW_QUERY) || $cond->checkCond(Cond::SHOW_QUERY_EXTENDED)) {
                 echo '<!--' . $select . "-->\n";
             }
-            if ($cond->checkCond('page')) {
-                $pager = new Paginator(new Mysql($select));
-                $pager->setCurrentPageNumber($cond->getCond('page', 1));
-                $pager->setItemCountPerPage($cond->getCond('items_per_page', 25));
 
-                $items = (array)$pager->getCurrentItems();
+            if ($cond->getCond('return_query')) {
+                return (string)$select;
             } else {
-                if ($cond->getCond('return_query')) {
-                    return (string)$select;
-                } else {
-                    $items = $select->query()->fetchAll();
-                }
+                $items = $select->query()->fetchAll();
+            }
+
+            if ($cond->checkCond(Cond::PAGE)) {
+                $pager = new Paginator(new ArraySet($items));
+                $pager->setCurrentPageNumber($cond->getCond('page'));
+                $pager->setItemCountPerPage($cond->getCond('items_per_page'));
             }
         } catch (\Exception $e) {
             $items = array();
@@ -1235,7 +1234,7 @@ class AbstractModel extends \Model\AbstractModel
 
         /**********************************************************************
          *
-         *********************************************************************/
+        /*********************************************************************/
         if (!$cond->checkCond(Cond::PAGE)) {
             if ($cond->checkCond(Cond::LIMIT)) {
                 if ($cond->checkCond(Cond::OFFSET)) {
