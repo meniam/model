@@ -31,6 +31,7 @@
     "require": {
         "php": ">=5.4.0",
         "doctrine/annotations": ">=1.0",
+        "cocur/slugify": "dev-master",
         "zendframework/zend-console": "2.3.*",
         "zendframework/zend-code": "2.3.*",
         "zendframework/zend-uri": "2.3.*",
@@ -44,6 +45,12 @@
         "phpunit/php-token-stream": "1.2.*@dev",
         "phpunit/php-timer": "1.0.5"
     },
+    "repositories": [
+        {
+            "type": "composer",
+            "url": "https://packages.zendframework.com/"
+        }
+    ],
     "autoload": {
         "classmap": [
             "library/"
