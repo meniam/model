@@ -45,18 +45,6 @@
         "phpunit/php-token-stream": "1.2.*@dev",
         "phpunit/php-timer": "1.0.5"
     },
-    "extra": {
-        "branch-alias": {
-            "dev-master": "v0.0.2-dev",
-            "dev-develop": "v0.0.2-dev"
-        }
-    },
-    "repositories": [
-        {
-            "type": "composer",
-            "url": "https://packages.zendframework.com/"
-        }
-    ],
     "autoload": {
         "classmap": [
             "library/"
