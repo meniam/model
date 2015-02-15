@@ -7,7 +7,6 @@ use Model\Code\Generator\DocBlockGenerator;
 use Zend\Code\Generator\MethodGenerator;
 use Zend\Code\Generator\AbstractMemberGenerator;
 use Model\Cluster\Schema\Table\Column;
-use Zend\Code\Generator\ParameterGenerator;
 use Zend\Code\Generator\ValueGenerator;
 
 class InitValidatorRules extends AbstractModel

@@ -19,12 +19,17 @@ abstract class AbstractAdapter
     abstract public function getValidatorInstance($class, array $args = array(), array $namespaces = array());
 
     /**
-     * @param $validator
-     * @param $value
-     *
+     * @param array $validatorList
+     * @param array $data
+     * @return mixed
+     */
+    abstract public function validate($validatorList, array $data);
+
+    /**
+     * @param $validatorResult
      * @return bool
      */
-    abstract public function isValid($validator, $value);
+    abstract public function isValid($validatorResult);
 
     /**
      * @return mixed
@@ -34,21 +39,8 @@ abstract class AbstractAdapter
     /**
      * Get decorated messages array
      *
-     * array(
-        'field1' => array(
-            'error_code_1' => 'Message 1'
-            'error_code_2' => 'Message 2'
-            'error_code_3' => 'Message 3'
-        ),
-        'field2' => array(
-            'error_code_1' => 'Message 1'
-            'error_code_2' => 'Message 2'
-            'error_code_3' => 'Message 3'
-        ),
-     * )
-     *
-     * @param array $validatorList
+     * @param array $validationResult
      * @return array
      */
-    abstract public function getValidatorMessages($validatorList);
+    abstract public function getValidatorMessages($validationResult);
 }

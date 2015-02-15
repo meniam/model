@@ -4,15 +4,15 @@
 namespace Model\Validator\Adapter;
 
 use Model\Validator\Exception\ErrorException;
+use Zend\Validator\NotEmpty;
+use Zend\Validator\ValidatorInterface;
 
 /**
- * Валидация данных
+ * Validator Zend Adapter
  *
  * @category   Model
  * @package    Validator
- * @author     Eugene Myazin <meniam@gmail.com>
- * @copyright  2008-2012 ООО "Америка"
- * @version    SVN: $Id$
+ * @author     Mikhail Rybalka <ruspanzer@gmail.com>
  */
 class Zend extends AbstractAdapter
 {
@@ -43,14 +43,44 @@ class Zend extends AbstractAdapter
     }
 
     /**
-     * @param \Zend\Validator\ValidatorInterface $validator
-     * @param $value
+     * @param array $validatorList
+     * @param array $data
+     * @return mixed
+     */
+    public function validate($validatorList, array $data)
+    {
+        $result = array();
+        foreach ($data as $field => $value) {
+            $result[$field] = array();
+            if (isset($validatorList[$field]) && is_array($validatorList[$field])) {
+                /** @var ValidatorInterface $validator */
+                foreach ($validatorList[$field] as $validator) {
+                    $validator->isValid($value);
+                    $result[$field][] = $validator;
+                }
+            }
+        }
+
+        return $result;
+    }
+
+    /**
+     * @param $validatorResult
      *
      * @return bool
      */
-    public function isValid($validator, $value)
+    public function isValid($validatorResult)
     {
-        return $validator->isValid($value);
+        foreach ($validatorResult as $validatorList) {
+            /** @var ValidatorInterface $validator */
+            foreach ($validatorList as $validator) {
+                if (count($validator->getMessages())) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
     }
 
     /**
@@ -58,17 +88,17 @@ class Zend extends AbstractAdapter
      */
     public function getNotEmptyValidator()
     {
-        return new \Zend\Validator\NotEmpty();
+        return new NotEmpty();
     }
 
     /**
      * @param array $validatorList
      * @return array
      */
-    public function getValidatorMessages($validatorList)
+    public function getValidatorMessages($validationResult)
     {
         $result = array();
-        foreach ($validatorList as $field => $validatorArray) {
+        foreach ($validationResult as $field => $validatorArray) {
             $messages = array();
             /** @var \Zend\Validator\ValidatorInterface $validator */
             foreach ($validatorArray as $validator) {

@@ -8,7 +8,6 @@ use Model\Cond\TreeCond;
 use Model\Db\Expr;
 use Model\Entity\AbstractEntity;
 use Model\Result\Result;
-use Model\RubricModel;
 
 /**
  *
@@ -208,8 +207,7 @@ class TreeModel extends AbstractModel
 
     public function repairBranchByParent($parent = null)
     {
-        $parentCollectionCond = RubricModel::getInstance()
-                                    ->getCond()
+        $parentCollectionCond = $this->getCond()
                                     ->order($this->qi('level') . ' ASC')
                                     ->order($this->qi('pos') . ' ASC');
 

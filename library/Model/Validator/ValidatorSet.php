@@ -19,8 +19,18 @@ class ValidatorSet
     /**
      * @var null|bool
      */
-    private $validateResult = null;
+    private $isValid = null;
 
+    /**
+     * @var mixed
+     */
+    private $result = null;
+
+    /**
+     * @param array $validatorList
+     * @param array $data
+     * @param array $requiredFields
+     */
     public function __construct($validatorList = array(), $data = array(), $requiredFields = array())
     {
         $this->setValidatorList($validatorList);
@@ -33,24 +43,14 @@ class ValidatorSet
      */
     public function isValid()
     {
-        if (!is_null($this->validateResult)) {
-            return $this->validateResult;
+        if (!is_null($this->isValid)) {
+            return $this->isValid;
         }
 
-        $result = true;
-        foreach ($this->data as $field => $value) {
-            if (isset($this->validatorList[$field]) && is_array($this->validatorList[$field])) {
-                foreach ($this->validatorList[$field] as $validator) {
-                    $result = (bool)Model::getValidatorAdapter()->isValid($validator, $value);
-                    if (!$result) {
-                        break;
-                    }
-                }
-            }
-        }
+        $this->result = Model::getValidatorAdapter()->validate($this->getValidatorList(), $this->data);
+        $this->isValid = Model::getValidatorAdapter()->isValid($this->result);
 
-        $this->validateResult = $result;
-        return $result;
+        return $this->isValid;
     }
 
     /**
@@ -106,6 +106,6 @@ class ValidatorSet
      */
     public function getMessageArray()
     {
-        return Model::getValidatorAdapter()->getValidatorMessages($this->validatorList);
+        return Model::getValidatorAdapter()->getValidatorMessages($this->result);
     }
 }

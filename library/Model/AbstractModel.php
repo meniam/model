@@ -605,7 +605,7 @@ abstract class AbstractModel extends Singleton
     {
         $this->validatorList[$field][] = $validator;
 
-        if ((bool)$required && !isset($this->validatorRequiredFields[$field])) {
+        if ((bool)$required && !in_array($field, $this->validatorRequiredFields)) {
             $this->validatorRequiredFields[] = $field;
         }
     }
@@ -647,10 +647,11 @@ abstract class AbstractModel extends Singleton
      */
     private function getValidator(array $data, $withRequiredFields)
     {
+        // important! getValidatorList must be initialized BEFORE getting required fields
+        $validatorList = $this->getValidatorList();
         $requiredFields = $withRequiredFields ? $this->validatorRequiredFields : array();
-        $validator = new ValidatorSet($this->getValidatorList(), $data, $requiredFields);
-
-        return $validator;
+        
+        return new ValidatorSet($validatorList, $data, $requiredFields);
     }
 
     /**

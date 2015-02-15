@@ -8,6 +8,9 @@
             "decorators" : [
                 {"name" : "String"}
             ],
+            "validators" : [
+                {"name" : "\\Symfony\\Component\\Validator\\Constraints\\Length", "params" : {"min" : 0, "max" : "COLUMN_CHAR_LENGTH", "charset" : "UTF-8"}}
+            ],
             "filters"   : [
                 {"name" : "\\Model\\Filter\\StringTrim"}
             ]
@@ -40,6 +43,10 @@
             ],
             "filters"   : [
                 {"name" : "\\Model\\Filter\\Hash"}
+            ],
+            "validators" : [
+                {"name" : "\\Symfony\\Component\\Validator\\Constraints\\Length", "params" : {"min" : "COLUMN_CHAR_LENGTH", "max" : "COLUMN_CHAR_LENGTH",  "charset" : "UTF-8"}},
+                {"name" : "\\Symfony\\Component\\Validator\\Constraints\\Uuid"}
             ]
         },
 
@@ -70,6 +77,9 @@
             ],
             "filters"   : [
                 {"name" : "\\Model\\Filter\\Email"}
+            ],
+            "validators" : [
+                {"name" : "\\Symfony\\Component\\Validator\\Constraints\\Email"}
             ]
         },
 
@@ -117,6 +127,10 @@
             "decorators" : [
                 { "name" : "Int" }
             ],
+            "validators" : [
+                {"name" : "\\Symfony\\Component\\Validator\\Constraints\\Regex", "params" : {"pattern" : "/^\\d*$/"}},
+                {"name" : "\\Symfony\\Component\\Validator\\Constraints\\Range", "params" : {"min" : "MIN_VALUE", "max" : "MAX_VALUE"}}
+            ],
             "filters"   : [
                 {"name" : "\\Model\\Filter\\Int"}
             ]
@@ -128,6 +142,9 @@
             ],
             "decorators" : [
                 { "name" : "Int" }
+            ],
+            "validators" : [
+                {"name" : "\\Symfony\\Component\\Validator\\Constraints\\Regex", "params" : {"pattern" : "/^\\d*$/"}}
             ],
             "filters"   : [
                 {"name" : "\\Model\\Filter\\Int"}
@@ -152,6 +169,10 @@
             "decorators" : [
                 { "name" : "Float" }
             ],
+            "validators" : [
+                {"name" : "\\Symfony\\Component\\Validator\\Constraints\\Regex", "params" : {"pattern" : "/^[\\d\\,\\.]*$/"}}
+            ],
+
             "filters"   : [
                 {"name" : "\\Model\\Filter\\Float"}
             ]
@@ -181,6 +202,9 @@
             "match" : [
                 { "type"  : [ "enum"] }
             ],
+            "validators" : [
+                {"name" : "\\Symfony\\Component\\Validator\\Constraints\\Choice", "params" : {"choices" : "COLUMN_ENUM_VALUES"}}
+            ],
             "filters" : [
                 { "name" : "\\Model\\Filter\\EnumField" }
             ]
@@ -193,15 +217,18 @@
             ],
             "decorators" : [
                 {"name" : "DateTime"}
+            ],
+            "validators" : [
+                {"name" : "\\Symfony\\Component\\Validator\\Constraints\\DateTime"}
             ]
         },
 
         {
             "comment" : "ID fields",
             "match" : [{ "regexp": "#\\.id$#",
-                "type"  : [ "tinyint", "smallint", "mediumint", "int", "bigint"],
-                "length" : { ">" : 1 }
-            }
+                    "type"  : [ "tinyint", "smallint", "mediumint", "int", "bigint"],
+                    "length" : { ">" : 1 }
+                }
             ],
             "decorators" : [
                 {

@@ -8,6 +8,9 @@
             "decorators" : [
                 {"name" : "String"}
             ],
+            "validators" : [
+                {"name" : "\\Zend\\Validator\\StringLength", "params" : {"min" : 0, "max" : "COLUMN_CHAR_LENGTH", "encoding" : "UTF-8"}}
+            ],
             "filters"   : [
                 {"name" : "\\Model\\Filter\\StringTrim"}
             ]
@@ -40,6 +43,10 @@
             ],
             "filters"   : [
                 {"name" : "\\Model\\Filter\\Hash"}
+            ],
+            "validators" : [
+                {"name" : "\\Zend\\Validator\\StringLength", "params" : {"min" : "COLUMN_CHAR_LENGTH", "max" : "COLUMN_CHAR_LENGTH",  "encoding" : "UTF-8"}},
+                {"name" : "\\Zend\\Validator\\Hex"}
             ]
         },
 
@@ -70,6 +77,9 @@
             ],
             "filters"   : [
                 {"name" : "\\Model\\Filter\\Email"}
+            ],
+            "validators" : [
+                {"name" : "\\Zend\\Validator\\EmailAddress"}
             ]
         },
 
@@ -117,6 +127,10 @@
             "decorators" : [
                 { "name" : "Int" }
             ],
+            "validators" : [
+                {"name" : "\\Zend\\Validator\\Regex", "params" : {"pattern" : "/^\\d*$/"}},
+                {"name" : "\\Zend\\Validator\\Between", "params" : {"min" : "MIN_VALUE", "max" : "MAX_VALUE", "inclusive" : "true"}}
+            ],
             "filters"   : [
                 {"name" : "\\Model\\Filter\\Int"}
             ]
@@ -128,6 +142,9 @@
             ],
             "decorators" : [
                 { "name" : "Int" }
+            ],
+            "validators" : [
+                {"name" : "\\Zend\\Validator\\Regex", "params" : {"pattern" : "/^\\d*$/"}}
             ],
             "filters"   : [
                 {"name" : "\\Model\\Filter\\Int"}
@@ -151,6 +168,9 @@
             ],
             "decorators" : [
                 { "name" : "Float" }
+            ],
+            "validators" : [
+                {"name" : "\\Zend\\Validator\\Regex", "params" : {"pattern" : "/^[\\d\\,\\.]*$/"}}
             ],
             "filters"   : [
                 {"name" : "\\Model\\Filter\\Float"}
@@ -181,6 +201,9 @@
             "match" : [
                 { "type"  : [ "enum"] }
             ],
+            "validators" : [
+                {"name" : "\\Zend\\Validator\\InArray", "params" : {"haystack" : "COLUMN_ENUM_VALUES"}}
+            ],
             "filters" : [
                 { "name" : "\\Model\\Filter\\EnumField" }
             ]
@@ -193,15 +216,18 @@
             ],
             "decorators" : [
                 {"name" : "DateTime"}
+            ],
+            "validators" : [
+                {"name" : "\\Zend\\Validator\\Date", "params" : {"format" : "Y-m-d H:i:s"}}
             ]
         },
 
         {
             "comment" : "ID fields",
             "match" : [{ "regexp": "#\\.id$#",
-                "type"  : [ "tinyint", "smallint", "mediumint", "int", "bigint"],
-                "length" : { ">" : 1 }
-            }
+                    "type"  : [ "tinyint", "smallint", "mediumint", "int", "bigint"],
+                    "length" : { ">" : 1 }
+                }
             ],
             "decorators" : [
                 {

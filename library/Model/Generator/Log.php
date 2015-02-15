@@ -112,6 +112,9 @@ class Log
 	{
 		if (empty(self::$_logAdapter)) {
 			$writer = new Stream('php://output');
+            $format = '%timestamp% %priorityName% (%priority%): %message%';
+            $formatter = new \Zend\Log\Formatter\Simple($format, 'Y-m-d H:i:s');
+            $writer->setFormatter($formatter);
 			self::$_logAdapter = new Logger();
             self::$_logAdapter->addWriter($writer);
 		}

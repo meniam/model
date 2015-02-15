@@ -6,7 +6,7 @@ use Model\Config\Config;
 use Model\Db\Mysql;
 use Model\Exception\ErrorException;
 use Model\Validator\Adapter\AbstractAdapter;
-use Model\Validator\Adapter\Zend;
+use Model\Validator\Adapter\WithoutValidation;
 
 /**
  * Base model class
@@ -75,7 +75,7 @@ abstract class Model
     public static function getValidatorAdapter()
     {
         if (!self::$validatorAdapter) {
-            self::setValidatorAdapter(new Zend());
+            self::setValidatorAdapter(new WithoutValidation());
         }
 
         return self::$validatorAdapter;
