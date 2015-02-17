@@ -92,9 +92,9 @@ class Mysql
             return $this;
         }
 
-        $timezone = date_default_timezone_get();
+        $timezone = date('P');
         $defaultParams = array(
-            PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES UTF8, @@session.time_zone = '$timezone''",
+            PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES UTF8; SET time_zone  = '{$timezone}'",
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
         );
