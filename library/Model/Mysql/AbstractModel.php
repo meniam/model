@@ -1245,6 +1245,8 @@ class AbstractModel extends \Model\AbstractModel
             } else if ($cond->checkCond(Cond::OFFSET)) {
                 $select->limit(0, $cond->getCond(Cond::OFFSET));
             }
+        } else {
+            $select->limitPage($cond->getCond(Cond::PAGE), $cond->getCond(Cond::ITEMS_PER_PAGE));
         }
 
         return $select;

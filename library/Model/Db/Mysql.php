@@ -21,13 +21,12 @@ use Model\Db\Exception\ErrorException;
 use \PDO;
 
 /**
- * Работа с базой данных
+ * Mysql database adapter
  *
  * @category   Db
  * @package    Model
  * @author     Eugene Myazin <meniam@gmail.com>
  * @since      25.11.12 15:34
- * @copyright  2008-2012 ООО "Америка"
  * @version    SVN: $Id$
  */
 class Mysql
@@ -41,7 +40,7 @@ class Mysql
 
     private $isConnected = false;
 
-    private $dsn = 'dblib:host=your_hostname;dbname=your_db;charset=UTF8';
+    private $dsn = 'mysql:host=your_hostname;dbname=your_db;charset=UTF8';
 
     private $user;
 
@@ -356,7 +355,7 @@ class Mysql
     /**
      * @param       $table
      * @param array $bind
-     * @internal param bool $returnLastInsertId
+     *
      * @return bool
      */
     public function insert($table, array $bind = array())

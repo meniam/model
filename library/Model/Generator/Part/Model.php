@@ -32,7 +32,6 @@ class Model extends AbstractPart
         $file->addUse('Model\\Entity\\' . $table->getNameAsCamelCase() . 'Entity');
         $file->addUse('Model\\Cond\\' . $table->getNameAsCamelCase() . 'Cond', 'Cond');
         $file->addUse('Model\\Cond\\AbstractCond');
-        $file->addUse('Model\\Cond\\' . $table->getNameAsCamelCase() . 'Cond');
         $file->addUse('Model\\Collection\\' . $table->getNameAsCamelCase() . 'Collection');
 
 		$this->_runPlugins(self::PART_MODEL, self::RUNTIME_PRE);

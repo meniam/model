@@ -106,7 +106,7 @@ class Getter extends AbstractModel
                     $methodReturnTypePrefix = $table->getNameAsCamelCase();
                     $file->getClass()->getDocBlock()->setTag(array(
                         'name' => 'method',
-                        'description' => "{$methodReturnTypePrefix}Entity|mixed {$methodDocBlockName}() {$methodDocBlockName}(Cond \$cond = null) get"
+                        'description' => "{$methodReturnTypePrefix}Entity|mixed {$methodDocBlockName}(Cond \$cond = null) get"
                     ));
                     $dbRegistry[$methodDocBlockName]=1;
                 }
@@ -116,7 +116,7 @@ class Getter extends AbstractModel
                     $methodReturnTypePrefix = $table->getNameAsCamelCase();
                     $file->getClass()->getDocBlock()->setTag(array(
                         'name' => 'method',
-                        'description' => "{$methodReturnTypePrefix}Collection|{$methodReturnTypePrefix}Entity[] {$methodDocBlockName}() {$methodDocBlockName}(\$id, Cond \$cond = null) get collection"
+                        'description' => "{$methodReturnTypePrefix}Collection|{$methodReturnTypePrefix}Entity[] {$methodDocBlockName}(Cond \$cond = null) get collection"
                     ));
                     $dbRegistry[$methodDocBlockName]=1;
                 }
@@ -125,7 +125,7 @@ class Getter extends AbstractModel
                 if (!isset($dbRegistry[$methodDocBlockName]) && !$file->getClass()->hasMethod($methodDocBlockName)) {
                     $file->getClass()->getDocBlock()->setTag(array(
                         'name' => 'method',
-                        'description' => $table->getNameAsCamelCase() ."Entity {$methodDocBlockName}() {$methodDocBlockName}(\$id, Cond \$cond = null) get entity by id"
+                        'description' => $table->getNameAsCamelCase() ."Entity {$methodDocBlockName}(\$id, Cond \$cond = null) get entity by id"
                     ));
                     $dbRegistry[$methodDocBlockName]=1;
                 }
@@ -135,7 +135,7 @@ class Getter extends AbstractModel
                     $methodReturnTypePrefix = $table->getNameAsCamelCase();
                     $file->getClass()->getDocBlock()->setTag(array(
                         'name' => 'method',
-                        'description' => "{$methodReturnTypePrefix}Collection|{$methodReturnTypePrefix}Entity[] {$methodDocBlockName}() {$methodDocBlockName}(\$id, Cond \$cond = null) get collection by id"
+                        'description' => "{$methodReturnTypePrefix}Collection|{$methodReturnTypePrefix}Entity[] {$methodDocBlockName}(\$id, Cond \$cond = null) get collection by id"
                     ));
                     $dbRegistry[$methodDocBlockName]=1;
                 }
@@ -144,7 +144,7 @@ class Getter extends AbstractModel
                 if (!isset($dbRegistry[$methodDocBlockName]) && !$file->getClass()->hasMethod($methodDocBlockName)) {
                     $file->getClass()->getDocBlock()->setTag(array(
                         'name' => 'method',
-                        'description' => $table->getNameAsCamelCase() . "Entity {$methodDocBlockName}() {$methodDocBlockName}({$paramNamesStr}, Cond \$cond = null) get item"
+                        'description' => $table->getNameAsCamelCase() . "Entity {$methodDocBlockName}({$paramNamesStr}, Cond \$cond = null) get item"
                     ));
                     $dbRegistry[$methodDocBlockName]=1;
                 }
@@ -154,7 +154,7 @@ class Getter extends AbstractModel
                     $methodReturnTypePrefix = $table->getNameAsCamelCase();
                     $file->getClass()->getDocBlock()->setTag(array(
                         'name' => 'method',
-                        'description' => "{$methodReturnTypePrefix}Collection|{$methodReturnTypePrefix}Entity[] {$methodDocBlockName}() {$methodDocBlockName}({$paramNamesStr}, Cond \$cond = null) get collection"
+                        'description' => "{$methodReturnTypePrefix}Collection|{$methodReturnTypePrefix}Entity[] {$methodDocBlockName}({$paramNamesStr}, Cond \$cond = null) get collection"
                     ));
                     $dbRegistry[$methodDocBlockName]=1;
                 }
@@ -163,7 +163,7 @@ class Getter extends AbstractModel
                 if (!isset($dbRegistry[$methodDocBlockName]) && !$file->getClass()->hasMethod($methodDocBlockName)) {
                     $file->getClass()->getDocBlock()->setTag(array(
                         'name' => 'method',
-                        'description' => "array {$methodDocBlockName}() {$methodDocBlockName}({$paramNamesStr}, Cond \$cond = null) get pairs"
+                        'description' => "array {$methodDocBlockName}({$paramNamesStr}, Cond \$cond = null) get pairs"
                     ));
                     $dbRegistry[$methodDocBlockName]=1;
                 }
@@ -172,7 +172,7 @@ class Getter extends AbstractModel
                 if (!isset($dbRegistry[$methodDocBlockName]) && !$file->getClass()->hasMethod($methodDocBlockName)) {
                     $file->getClass()->getDocBlock()->setTag(array(
                         'name' => 'method',
-                        'description' => "int {$methodDocBlockName}() {$methodDocBlockName}({$paramNamesStr}, Cond \$cond = null) get count"
+                        'description' => "int {$methodDocBlockName}({$paramNamesStr}, Cond \$cond = null) get count"
                     ));
                     $dbRegistry[$methodDocBlockName]=1;
                 }
@@ -181,7 +181,7 @@ class Getter extends AbstractModel
                 if (!isset($dbRegistry[$methodDocBlockName]) && !$file->getClass()->hasMethod($methodDocBlockName)) {
                     $file->getClass()->getDocBlock()->setTag(array(
                         'name' => 'method',
-                        'description' => "int|array {$methodDocBlockName}() {$methodDocBlockName}({$paramNamesStr}, Cond \$cond = null) check for exists"
+                        'description' => "int|array {$methodDocBlockName}({$paramNamesStr}, Cond \$cond = null) check for exists"
                     ));
                     $dbRegistry[$methodDocBlockName]=1;
                 }

@@ -90,8 +90,6 @@ class InitValidatorRules extends AbstractModel
          */
         $file = $part->getFile();
 
-        $file->addUse('Model\\Validator\\Validator');
-
         $columnCollection = $part->getTable()->getColumn();
 
         $template = '';
