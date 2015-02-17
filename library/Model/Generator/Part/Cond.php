@@ -35,7 +35,7 @@ class Cond extends AbstractPart
         } else {
             $className = 'Abstract' . $table->getNameAsCamelCase() . 'Cond';
 
-            if ($table->getColumn('parent_id')) {
+            if ($table->isTree() && $this->hasPlugin('Tree', AbstractPart::PART_COND)) {
                 $extendedClassName = 'TreeCond';
             } else {
                 $extendedClassName = 'AbstractCond';

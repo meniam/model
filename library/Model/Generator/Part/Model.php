@@ -38,7 +38,7 @@ class Model extends AbstractPart
 
         $class->setName('Abstract' . $table->getNameAsCamelCase() . 'Model');
 
-        if ($table->getColumn('parent_id')) {
+        if ($table->isTree() && $this->hasPlugin('Tree', AbstractPart::PART_MODEL)) {
             $class->setExtendedClass('\Model\Mysql\TreeModel');
         } else {
             $class->setExtendedClass('\Model\Mysql\AbstractModel');

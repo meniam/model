@@ -31,7 +31,7 @@ class Tree extends AbstractCond
         /** @var $linkList|Link[] \Model\Cluster\Schema\Table\Column */
         $linkList = $table->getLink();
 
-        if ($table->getColumn('parent_id')) {
+        if ($table->isTree()) {
             $names = array(
                 'WITH_CHILD','WITH_CHILD_COLLECTION', 'WITH_ALL_CHILD','WITH_ALL_CHILD_COLLECTION'
             );
