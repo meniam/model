@@ -210,7 +210,7 @@ class Table extends \ArrayIterator
      */
     public function isTree()
     {
-        return $this->getColumn('getColumn') && $this->getColumn('tree_path') && $this->getColumn('level') && $this->getColumn('pos');
+        return $this->getColumn('parent_id') && $this->getColumn('tree_path') && $this->getColumn('level') && $this->getColumn('pos');
     }
 
     /**
