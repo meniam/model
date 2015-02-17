@@ -1069,4 +1069,15 @@ abstract class AbstractModel extends Singleton
 
         return $ids;
     }
+
+    /**
+     * @param $data
+     * @return int
+     * @throws ErrorException
+     */
+    public function getFirstIdFromMixed($data)
+    {
+        $ids = $this->getIdsFromMixed($data);
+        return !empty($ids) ? reset($ids) : null;
+    }
 }

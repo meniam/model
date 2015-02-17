@@ -16,7 +16,6 @@ use Model\Result\Result;
  * @package    Mysql
  * @author     Eugene Myazin <meniam@gmail.com>
  * @since      14.12.12 13:21
- * @copyright  2008-2012 ООО "Америка"
  * @version    SVN: $Id$
  */
 class TreeModel extends AbstractModel
@@ -148,6 +147,9 @@ class TreeModel extends AbstractModel
      * Подобным образом работают следующие методы:
      *  - afterPrepareOnAdd - выполняется после обработки данных только при добавлении
      *  - afterPrepareOnUpdate - выполняется после обработки данных только при обновлении
+     *
+     * @param array $data
+     * @param AbstractCond $cond
      */
     protected function afterPrepareOnAddOrUpdate(array $data = null, AbstractCond $cond = null)
     {

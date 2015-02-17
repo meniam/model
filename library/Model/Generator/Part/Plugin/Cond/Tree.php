@@ -3,7 +3,8 @@
 namespace Model\Generator\Part\Plugin\Cond;
 use Model\Cluster\Schema\Table;
 use Model\Generator\Part\PartInterface;
-use Model\Cluster\Schema\Table\Link\AbstractLink;
+use Zend\Code\Generator\DocBlockGenerator;
+use Zend\Code\Generator\PropertyGenerator;
 
 class Tree extends AbstractCond
 {
@@ -26,18 +27,18 @@ class Tree extends AbstractCond
         $table = $part->getTable();
 
         /** @var string $tableName */
-        $tableName = $table->getName();
+        //$tableName = $table->getName();
 
         /** @var $linkList|Link[] \Model\Cluster\Schema\Table\Column */
-        $linkList = $table->getLink();
+        //$linkList = $table->getLink();
 
         if ($table->isTree()) {
             $names = array(
-                'WITH_CHILD','WITH_CHILD_COLLECTION', 'WITH_ALL_CHILD','WITH_ALL_CHILD_COLLECTION'
+                'WITH_CHILD', 'WITH_CHILD_COLLECTION', 'WITH_ALL_CHILD', 'WITH_ALL_CHILD_COLLECTION'
             );
 
             foreach ($names as $name) {
-                $property = new \Zend\Code\Generator\PropertyGenerator($name, strtolower($name), \Zend\Code\Generator\PropertyGenerator::FLAG_CONSTANT);
+                $property = new PropertyGenerator($name, strtolower($name), PropertyGenerator::FLAG_CONSTANT);
 
                 $tags = array(
                     array(
@@ -49,7 +50,7 @@ class Tree extends AbstractCond
                     ),
                 );
 
-                $docblock = new \Zend\Code\Generator\DocBlockGenerator('WITH сущность для детей');
+                $docblock = new DocBlockGenerator('WITH entity for child list');
                 $docblock->setTags($tags);
 
                 $property->setDocBlock($docblock);
