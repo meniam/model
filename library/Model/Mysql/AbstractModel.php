@@ -1076,6 +1076,7 @@ class AbstractModel extends \Model\AbstractModel
                 $pager = new Paginator(new ArraySet($items));
                 $pager->setCurrentPageNumber($cond->getCond('page'));
                 $pager->setItemCountPerPage($cond->getCond('items_per_page'));
+                $pager->setTotalItemCount($this->fetchCount($cond));
             }
         } catch (\Exception $e) {
             $items = array();
