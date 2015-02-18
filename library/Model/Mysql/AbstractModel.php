@@ -26,14 +26,14 @@ use Model\Result\Result;
  * @copyright  2008-2012 ООО "Америка"
  * @version    SVN: $Id$
  */
-class AbstractModel extends \Model\AbstractModel
+abstract class AbstractModel extends \Model\AbstractModel
 {
     /**
      * Индексы
      *
      * @var array
      */
-    protected $indexList = array();
+    protected $indexList = null;
 
     /**
      * Current DB adapter name
@@ -46,6 +46,40 @@ class AbstractModel extends \Model\AbstractModel
      * @var DbAdapter
      */
     protected $db;
+
+    /**
+     * @return array
+     */
+    public function getIndexList()
+    {
+        if (!$this->isInitIndexList()) {
+            $this->initIndexList();
+        }
+
+        return $this->indexList;
+    }
+
+    /**
+     * @return bool
+     */
+    protected function isInitIndexList()
+    {
+        return !is_null($this->indexList);
+    }
+
+    /**
+     * @return array
+     */
+    protected function initIndexList()
+    {
+        $this->indexList = array();
+    }
+
+    /**
+     * User defined indexList
+     */
+    protected function setupIndexList()
+    { }
 
     /**
      * @param      $data
@@ -354,7 +388,8 @@ class AbstractModel extends \Model\AbstractModel
 
         $uniqueKeyList = array(AbstractModel::INDEX_UNIQUE, AbstractModel::INDEX_PRIMARY);
         $availableIndexList = array();
-        foreach ($this->indexList as $index) {
+        $indexList = $this->getIndexList();
+        foreach ($indexList as $index) {
             if (!in_array($index['type'], $uniqueKeyList)) {
                 continue;
             }
@@ -362,7 +397,7 @@ class AbstractModel extends \Model\AbstractModel
             $indexColumnList = $index['column_list'];
 
             foreach ($indexColumnList as $column) {
-                if (!isset($data[$column])) {
+                if (!array_key_exists($column, $data)) {
                     continue(2);
                 }
             }
@@ -372,7 +407,7 @@ class AbstractModel extends \Model\AbstractModel
 
         if (!empty($availableIndexList)) {
             foreach ($availableIndexList as $availableIndex) {
-                $currentIndex = $this->indexList[$availableIndex];
+                $currentIndex = $indexList[$availableIndex];
 
                 $checkArray = array();
                 foreach ($currentIndex['column_list'] as $column) {
@@ -474,12 +509,11 @@ class AbstractModel extends \Model\AbstractModel
         }
         $values[] = $cond;
 
-        $columnAsComelCase = 'getBy' . implode('And', $entityList);
+        $columnAsCamelCase = 'getBy' . implode('And', $entityList);
 
-        if (method_exists($this, $columnAsComelCase)) {
-            return call_user_func_array(array($this, $columnAsComelCase), $values);
+        if (method_exists($this, $columnAsCamelCase)) {
+            return call_user_func_array(array($this, $columnAsCamelCase), $values);
         }
-
 
         foreach ($data as $k => $v) {
             $cond->where(array('`' . $this->getRawName() . '`.`' . $k . '`' => $v));
