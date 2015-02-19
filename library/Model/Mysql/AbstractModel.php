@@ -710,11 +710,8 @@ abstract class AbstractModel extends \Model\AbstractModel
             // Получаем валидатор добавления
             $validator = $this->validateOnAdd($data);
 
-            // Проверяем данные и если есть ошибки
-            // то добавляем их в результат
-            if (!$isValid = $validator->isValid()) {
-                $result->setValidator($validator);
-            }
+            $result->setValidator($validator);
+            $isValid = $validator->isValid();
         }
 
         // Если валидация отключена (входим),
@@ -838,10 +835,10 @@ abstract class AbstractModel extends \Model\AbstractModel
         if ($cond->checkCond(Cond::VALIDATE_ON_UPDATE, true)) {
             $validator = $this->validateOnUpdate($data);
 
+            $result->setValidator($validator);
             // Проверяем данные и если есть ошибки
             // то добавляем их в результат
             if (!$validator->isValid()) {
-                $result->setValidator($validator);
                 return $result;
             }
         }

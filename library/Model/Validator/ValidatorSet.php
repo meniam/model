@@ -50,10 +50,20 @@ class ValidatorSet
             return $this->isValid;
         }
 
+        $this->validate();
+
+        return $this->isValid;
+    }
+
+    /**
+     * Validate this
+     */
+    public function validate()
+    {
         $this->result = Model::getValidatorAdapter()->validate($this->getValidatorList(), $this->data);
         $this->isValid = Model::getValidatorAdapter()->isValid($this->result);
 
-        return $this->isValid;
+        return $this;
     }
 
     /**

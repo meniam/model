@@ -620,7 +620,8 @@ abstract class AbstractModel extends Singleton
     public function validateOnAdd(array $data, Cond $cond = null)
     {
         $validator = $this->getValidator($data, true);
-        return $validator;
+
+        return $validator->validate();
     }
 
     /**
@@ -634,7 +635,7 @@ abstract class AbstractModel extends Singleton
     {
         $validator = $this->getValidator($data, false);
 
-        return $validator;
+        return $validator->validate();
     }
 
     /**
