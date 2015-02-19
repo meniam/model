@@ -26,6 +26,8 @@ class ValidatorSet
      */
     private $result = null;
 
+    private $requiredFields = array();
+
     /**
      * @param array $validatorList
      * @param array $data
@@ -33,8 +35,9 @@ class ValidatorSet
      */
     public function __construct($validatorList = array(), $data = array(), $requiredFields = array())
     {
+        $this->requiredFields = $requiredFields;
+
         $this->setValidatorList($validatorList);
-        $this->addNotEmptyValidatorList($requiredFields);
         $this->setData($data);
     }
 
@@ -78,6 +81,8 @@ class ValidatorSet
             }
         }
 
+        $this->addNotEmptyValidatorList($this->requiredFields);
+
         return $this;
     }
 
@@ -95,6 +100,14 @@ class ValidatorSet
      */
     protected function setData(array $data)
     {
+        $requiredFields = $this->requiredFields;
+
+        foreach ($data as $field => $value) {
+            if (is_null($value) && !in_array($field, $requiredFields)) {
+                unset($data[$field]);
+            }
+        }
+
         $this->data = $data;
         return $this;
     }

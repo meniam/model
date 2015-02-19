@@ -54,11 +54,31 @@ abstract class Model
 
         $connectionCount = count($connections);
         foreach ($connections as $name => $connection) {
+            $params = isset($connection['params']) ? $connection['params'] : array();
             $isDefault = $connectionCount == 1 ? true : $connection['default'];
-            self::addDb(new Mysql($connection['dsn'], $connection['user'], $connection['password']), $name, $isDefault);
+            self::addDb(new Mysql($connection['dsn'], $connection['user'], $connection['password'], $params), $name, $isDefault);
         }
 
+        self::initializeValidatorAdapter(self::$config['validation_adapter']);
+
         return self::$config;
+    }
+
+    /**
+     * @param string $adapterClass
+     *
+     * @return object
+     * @throws ErrorException
+     */
+    protected static function initializeValidatorAdapter($adapterClass = '\\Model\Validator\Adapter\\WithoutValidation')
+    {
+        $_validatorAdapter = new \ReflectionClass($adapterClass);
+
+        if (!$_validatorAdapter->isSubclassOf('\Model\Validator\Adapter\AbstractAdapter')) {
+            throw new ErrorException('Validator adapter must be instance of Model\Validator\Adapter\AbstractAdapter');
+        }
+
+        return $_validatorAdapter->newInstance();
     }
 
     /**
