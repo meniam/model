@@ -59,7 +59,7 @@ abstract class Model
             self::addDb(new Mysql($connection['dsn'], $connection['user'], $connection['password'], $params), $name, $isDefault);
         }
 
-        self::initializeValidatorAdapter(self::$config['validation_adapter']);
+        self::initializeValidatorAdapter(self::$config['validator_adapter']);
 
         return self::$config;
     }
@@ -78,7 +78,7 @@ abstract class Model
             throw new ErrorException('Validator adapter must be instance of Model\Validator\Adapter\AbstractAdapter');
         }
 
-        return $_validatorAdapter->newInstance();
+        self::setValidatorAdapter($_validatorAdapter->newInstance());
     }
 
     /**
