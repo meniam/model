@@ -106,6 +106,7 @@ abstract class Model
         if (!self::isInit()) {
             throw new ErrorException("Models cannot be initialized without a valid configuration");
         }
+        return true;
     }
 
     /**

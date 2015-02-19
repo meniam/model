@@ -105,6 +105,9 @@ class ValidatorSet
     }
 
     /**
+     * Prepare data for validation
+     * Remove not required empty values and add required empty values
+     *
      * @param array $data
      * @return $this
      */
@@ -112,9 +115,17 @@ class ValidatorSet
     {
         $requiredFields = $this->requiredFields;
 
+        // remove not required empty values
         foreach ($data as $field => $value) {
             if (is_null($value) && !in_array($field, $requiredFields)) {
                 unset($data[$field]);
+            }
+        }
+
+        // add required empty values
+        foreach ($requiredFields as $field) {
+            if (!array_key_exists($field, $data)) {
+                $data[$field] = null;
             }
         }
 

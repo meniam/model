@@ -50,7 +50,6 @@ class Zend extends AbstractAdapter
     public function validate($validatorList, array $data)
     {
         $result = array();
-        // todo переписать на логику прохода по валидаторам
         foreach ($data as $field => $value) {
             $result[$field] = array();
             if (isset($validatorList[$field]) && is_array($validatorList[$field])) {
