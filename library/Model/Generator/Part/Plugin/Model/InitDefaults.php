@@ -93,9 +93,8 @@ class InitDefaults extends AbstractModel
         $method->setDocBlock($docblock);
 
         $method->setBody(<<<EOS
-if (!\$this->isDefaultRules()) {
-    {$defaults}
-    \$this->setupDefaultsRules();
+{$defaults}
+\$this->setupDefaultsRules();
 }
 EOS
         );
