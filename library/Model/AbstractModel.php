@@ -7,8 +7,13 @@ use Model\Cond\AbstractCond as Cond;
 use Model\Entity\AbstractEntity as Entity;
 use Model\Exception\ErrorException;
 use Model\Filter\AbstractFilter;
+use Model\Stdlib\ArrayUtils;
 use Model\Validator\ValidatorSet;
 
+/**
+ * Class AbstractModel
+ * @package Model
+ */
 abstract class AbstractModel extends Singleton
 {
     /**
@@ -114,7 +119,7 @@ abstract class AbstractModel extends Singleton
      *
      * @var array
      */
-    protected $defaultsRules = array();
+    protected $defaultsRules = null;
 
     /**
      * Cascade filter rules on add
@@ -620,7 +625,8 @@ abstract class AbstractModel extends Singleton
     public function validateOnAdd(array $data, Cond $cond = null)
     {
         $validator = $this->getValidator($data, true);
-        return $validator;
+
+        return $validator->validate();
     }
 
     /**
@@ -634,7 +640,7 @@ abstract class AbstractModel extends Singleton
     {
         $validator = $this->getValidator($data, false);
 
-        return $validator;
+        return $validator->validate();
     }
 
     /**
@@ -873,24 +879,35 @@ abstract class AbstractModel extends Singleton
      */
     public function getDefaultsRules()
     {
-        if (!$this->defaultsRules) {
+        if (!$this->isDefaultRules()) {
             $this->initDefaultsRules();
         }
 
         return $this->defaultsRules;
     }
 
+    /**
+     * Initialize default rules
+     */
+    protected function initDefaultsRules()
+    {
+        $this->defaultsRules = array();
+    }
+
+    /**
+     * Setup default rules hook. User defined rules override in this method
+     */
+    protected function setupDefaultsRules()
+    { }
 
     /**
      * Apply default values for some data set
      *
      * @param array $inputData   Входные данные
      * @param array $defaultData Нужные поля
-     * @param array $result      Результат
-     * @param bool  $replace     Если в result данные присутствуют то их заменяем или нет
      * @return array
      */
-    public function applyDefaultValues($inputData, array $defaultData = null, array &$result = array(), $replace = false)
+    public function applyDefaultValues($inputData, array $defaultData = null)
     {
         if (!$defaultData) {
             $defaultData = $this->getDefaultsRules();
@@ -900,26 +917,7 @@ abstract class AbstractModel extends Singleton
             return $inputData;
         }
 
-
-        $field = null;
-        $default = null;
-        foreach ($defaultData as $k => &$v) {
-            if (is_int($k)) {
-                $field = $v;
-                unset($default);
-            } else {
-                $field = $k;
-                $default = $v;
-            }
-
-            if (array_key_exists($field, $inputData)) {
-                if ($replace || (!$replace && !array_key_exists($field, $result))) {
-                    $result[$field] = $inputData[$field];
-                }
-            } else if (isset($default)) {
-                $result[$field] = $default;
-            }
-        }
+        $result = ArrayUtils::merge($defaultData, $inputData);
 
         return $result;
     }
@@ -951,20 +949,6 @@ abstract class AbstractModel extends Singleton
 
         return $this->filterCascadeRulesOnUpdate;
     }
-
-    /**
-     * Initialize default rules
-     */
-    protected function initDefaultsRules()
-    {
-        $this->setupDefaultsRules();
-    }
-
-    /**
-     * Setup default rules hook. User defined rules override in this method
-     */
-    protected function setupDefaultsRules()
-    { }
 
     /**
      *
@@ -1018,6 +1002,91 @@ abstract class AbstractModel extends Singleton
      */
     public function setupFilterCascadeRules()
     { }
+
+    /**
+     * @param $data
+     * @return array
+     */
+    protected function prepareData($data)
+    {
+        if (is_array($data)) {
+            return $data;
+        } elseif ($data instanceof Entity) {
+            $data = $data->toArray();
+        } elseif ($data instanceof Collection) {
+            $data = $data->current()->toArray();
+        } elseif (is_object($data) && method_exists($data, 'toArray')) {
+            $data = $data->toArray();
+        }
+
+        return (array)$data;
+    }
+
+    protected function beforePrepareOnAdd(array $data, Cond $cond = null)
+    {
+        return $data;
+    }
+
+    protected function beforePrepareOnAddOrUpdate(array $data, Cond $cond = null)
+    {
+        return $data;
+    }
+
+    protected function afterPrepareOnAdd(array $data, Cond $cond = null)
+    { }
+
+    protected function afterPrepareOnAddOrUpdate(array $data, Cond $cond = null)
+    { }
+
+    /**
+     * Prepare data before add
+     *
+     * @param      $data
+     * @param Cond $cond
+     *
+     * @throws \Model\Exception\ErrorException
+     * @return array
+     */
+    protected function prepareDataOnAdd($data, Cond $cond = null)
+    {
+        $data = $this->prepareData($data);
+        $cond = $this->prepareCond($cond);
+
+        if (method_exists($this, 'beforePrepareOnAdd')) {
+            $data = $this->beforePrepareOnAdd($data, $cond);
+        }
+
+        if (method_exists($this, 'beforePrepareOnAddOrUpdate')) {
+            $data = $this->beforePrepareOnAddOrUpdate($data, $cond);
+        }
+
+        // Применяем умолчания
+        if ($cond->checkCond(Cond::APPLY_DEFAULT_VALUES, true)) {
+            $data = $this->applyDefaultValues($data);
+        }
+
+        // Если каскад разрешен, то применяем его
+        if ($cond->checkCond(Cond::FILTER_CASCADE_ON_ADD, true)) {
+            $data = $this->applyFilterCascadeRules($data, $this->getFilterCascadeRulesOnAdd());
+        }
+
+        // Фильтруем входные данные
+        if ($cond->checkCond(Cond::FILTER_ON_ADD, true)) {
+            $data = $this->filterOnAdd($data);
+        }
+
+        if (method_exists($this, 'afterPrepareOnAdd')) {
+            // Вносить изменения в данные нельзя
+            $this->afterPrepareOnAdd($data, $cond);
+        }
+
+        if (method_exists($this, 'afterPrepareOnAddOrUpdate')) {
+            // Вносить изменения в данные нельзя
+            $this->afterPrepareOnAddOrUpdate($data, $cond);
+        }
+
+        return $data;
+    }
 
     /**
      * Return array of ids from mixed data
