@@ -677,7 +677,7 @@ abstract class AbstractModel extends \Model\AbstractModel
         return $result;
     }
 
-    protected function afterAdd(Result $result, $data, Cond $cond = null)
+    protected function afterAdd(Result $result, array $data, Cond $cond = null)
     {
         return $result;
     }

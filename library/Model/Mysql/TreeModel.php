@@ -165,7 +165,7 @@ class TreeModel extends AbstractModel
         return $data;
     }
 
-    protected function afterAdd(Result $result, $data)
+    protected function afterAdd(Result $result, array $data, Cond $cond = null)
     {
         if (!$result->isError() && $result->getResult()) {
             $parentId = isset($data['parent_id']) ? $data['parent_id'] : null;
