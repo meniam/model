@@ -32,14 +32,13 @@ class Model extends AbstractPart
         $file->addUse('Model\\Entity\\' . $table->getNameAsCamelCase() . 'Entity');
         $file->addUse('Model\\Cond\\' . $table->getNameAsCamelCase() . 'Cond', 'Cond');
         $file->addUse('Model\\Cond\\AbstractCond');
-        $file->addUse('Model\\Cond\\' . $table->getNameAsCamelCase() . 'Cond');
         $file->addUse('Model\\Collection\\' . $table->getNameAsCamelCase() . 'Collection');
 
 		$this->_runPlugins(self::PART_MODEL, self::RUNTIME_PRE);
 
         $class->setName('Abstract' . $table->getNameAsCamelCase() . 'Model');
 
-        if ($table->getColumn('parent_id')) {
+        if ($table->isTree() && $this->hasPlugin('Tree', AbstractPart::PART_MODEL)) {
             $class->setExtendedClass('\Model\Mysql\TreeModel');
         } else {
             $class->setExtendedClass('\Model\Mysql\AbstractModel');

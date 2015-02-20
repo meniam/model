@@ -73,6 +73,8 @@ class InitDefaults extends AbstractModel
                 $defaults .= "\$this->setDefaultRule('" . $columnName ."', date('Y-m-d H:i:s'));\n    ";
             } elseif (!empty($defaultValue)) {
                 $defaults .= '$this->setDefaultRule(\'' . $columnName . '\', \'' . (string)$defaultValue . '\');' . "\n    ";
+            } elseif (is_null($defaultValue) && $column->isNullable()) {
+                $defaults .= '$this->setDefaultRule(\'' . $columnName . '\', null);' . "\n    ";
             }
         }
 
@@ -93,10 +95,8 @@ class InitDefaults extends AbstractModel
         $method->setDocBlock($docblock);
 
         $method->setBody(<<<EOS
-if (!\$this->isDefaultRules()) {
     {$defaults}
-    \$this->setupDefaultsRules();
-}
+\$this->setupDefaultsRules();
 EOS
         );
 

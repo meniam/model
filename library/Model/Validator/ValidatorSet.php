@@ -26,6 +26,8 @@ class ValidatorSet
      */
     private $result = null;
 
+    private $requiredFields = array();
+
     /**
      * @param array $validatorList
      * @param array $data
@@ -33,8 +35,9 @@ class ValidatorSet
      */
     public function __construct($validatorList = array(), $data = array(), $requiredFields = array())
     {
+        $this->requiredFields = $requiredFields;
+
         $this->setValidatorList($validatorList);
-        $this->addNotEmptyValidatorList($requiredFields);
         $this->setData($data);
     }
 
@@ -47,10 +50,20 @@ class ValidatorSet
             return $this->isValid;
         }
 
+        $this->validate();
+
+        return $this->isValid;
+    }
+
+    /**
+     * Validate this
+     */
+    public function validate()
+    {
         $this->result = Model::getValidatorAdapter()->validate($this->getValidatorList(), $this->data);
         $this->isValid = Model::getValidatorAdapter()->isValid($this->result);
 
-        return $this->isValid;
+        return $this;
     }
 
     /**
@@ -78,6 +91,8 @@ class ValidatorSet
             }
         }
 
+        $this->addNotEmptyValidatorList($this->requiredFields);
+
         return $this;
     }
 
@@ -90,11 +105,30 @@ class ValidatorSet
     }
 
     /**
+     * Prepare data for validation
+     * Remove not required empty values and add required empty values
+     *
      * @param array $data
      * @return $this
      */
     protected function setData(array $data)
     {
+        $requiredFields = $this->requiredFields;
+
+        // remove not required empty values
+        foreach ($data as $field => $value) {
+            if (is_null($value) && !in_array($field, $requiredFields)) {
+                unset($data[$field]);
+            }
+        }
+
+        // add required empty values
+        foreach ($requiredFields as $field) {
+            if (!array_key_exists($field, $data)) {
+                $data[$field] = null;
+            }
+        }
+
         $this->data = $data;
         return $this;
     }

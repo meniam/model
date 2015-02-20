@@ -29,7 +29,6 @@ class Dockblock extends AbstractEntity
 
 
         $tableNameAsCamelCase = $part->getTable()->getNameAsCamelCase();
-        //$tableComment = $part->getTable()->getComment();
 
         $tags = array(
                              array(
@@ -38,7 +37,7 @@ class Dockblock extends AbstractEntity
                              ),
                              array(
                                  'name'        => 'license',
-                                 'description' => 'New BSD',
+                                 'description' => 'MIT',
                              ),
                              array(
                                  'name'        => 'author',
@@ -47,6 +46,10 @@ class Dockblock extends AbstractEntity
                              array(
                                  'name'        => 'author',
                                  'description' => 'Eugene Myazin <meniam@gmail.com>',
+                             ),
+                             array(
+                                 'name'        => 'author',
+                                 'description' => 'Mikhail Rybalka <ruspanzer@gmail.ru>',
                              ),
                              array(
                                  'name'        => 'author',
@@ -61,7 +64,7 @@ class Dockblock extends AbstractEntity
         if ($file->getClass()->getDocblock()) {
             $file->getClass()->getDocblock()->setTags($tags);
         } else {
-            $docblock = new DocBlockGenerator('Сущность ' .  $tableNameAsCamelCase);
+            $docblock = new DocBlockGenerator('Entity ' .  $tableNameAsCamelCase);
             $docblock->setTags($tags);
             $file->getClass()->setDocblock($docblock);
         }

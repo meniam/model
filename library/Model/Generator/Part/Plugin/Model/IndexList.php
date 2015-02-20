@@ -5,6 +5,8 @@ namespace Model\Generator\Part\Plugin\Model;
 use Model\Code\Generator\DocBlockGenerator;
 use Model\Generator\Part\PartInterface;
 use Model\Cluster\Schema\Table\Index\AbstractIndex;
+use Zend\Code\Generator\AbstractMemberGenerator;
+use Zend\Code\Generator\MethodGenerator;
 use \Zend\Code\Generator\PropertyGenerator;
 use \Zend\Code\Generator\ValueGenerator;
 
@@ -42,12 +44,12 @@ class IndexList extends AbstractModel
 
         $tags = array(
             array(
-                'name'        => 'var',
-                'description'        => ' array перечень ключей',
+                'name'        => 'return',
+                'description' => 'array',
             ),
         );
 
-        $docblock = new DocBlockGenerator('Ключи');
+        $docblock = new DocBlockGenerator('Initialize indexes');
         $docblock->setTags($tags);
 
         $resultIndexList = array();
@@ -76,8 +78,22 @@ class IndexList extends AbstractModel
         }
 
         $property = new PropertyGenerator('indexList', $resultIndexList, PropertyGenerator::FLAG_PROTECTED);
-        $property->setDocBlock($docblock);
 
-        $file->getClass()->addPropertyFromGenerator($property);
+        $body = preg_replace("#^(\\s*)protected #", "\\1", $property->generate()) . "\n";
+
+        $method = new MethodGenerator();
+        $method->setName('initIndexList');
+        $method->setVisibility(AbstractMemberGenerator::VISIBILITY_PUBLIC);
+        $method->setFinal(true);
+        $method->setDocBlock($docblock);
+
+        $method->setBody(<<<EOS
+$body
+\$this->indexList = \$indexList;
+\$this->setupIndexList();
+EOS
+        );
+
+        $file->getClass()->addMethodFromGenerator($method);
     }
 }

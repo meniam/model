@@ -698,6 +698,6 @@ class Column extends ArrayObject
      */
     public function getColumnDefault()
     {
-        return (string)$this['column_default'];
+        return $this['column_default'];
     }
 }

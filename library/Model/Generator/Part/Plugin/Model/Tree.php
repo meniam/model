@@ -37,7 +37,7 @@ class Tree extends AbstractModel
         $table = $part->getTable();
 
 
-        if (!$table->getColumn('parent_id')) {
+        if (!$table->isTree()) {
             return;
         }
     }

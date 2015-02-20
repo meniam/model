@@ -36,7 +36,7 @@ class Dockblock extends AbstractCollection
                              ),
                              array(
                                  'name'        => 'license',
-                                 'description' => 'New BSD',
+                                 'description' => 'MIT',
                              ),
                              array(
                                  'name'        => 'author',
@@ -45,6 +45,10 @@ class Dockblock extends AbstractCollection
                              array(
                                  'name'        => 'author',
                                  'description' => 'Eugene Myazin <meniam@gmail.com>',
+                             ),
+                             array(
+                                 'name'        => 'author',
+                                 'description' => 'Mikhail Rybalka <ruspanzer@gmail.ru>',
                              ),
                              array(
                                  'name'        => 'author',
@@ -59,7 +63,7 @@ class Dockblock extends AbstractCollection
         if ($file->getClass()->getDocblock()) {
             $file->getClass()->getDocblock()->setTags($tags);
         } else {
-            $docblock = new \Zend\Code\Generator\DocBlockGenerator('Абстракция набора данных ' .  $tableNameAsCamelCase);
+            $docblock = new \Zend\Code\Generator\DocBlockGenerator('Abstract collection ' .  $tableNameAsCamelCase);
             $docblock->setTags($tags);
             $file->getClass()->setDocblock($docblock);
         }

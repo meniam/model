@@ -27,6 +27,7 @@ use Zend\Log\Exception\RuntimeException;
  * Class Log
  *
  * @package Model\Generator
+ * @method static void info($message)
  */
 class Log
 {

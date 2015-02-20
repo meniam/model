@@ -204,6 +204,16 @@ class Table extends \ArrayIterator
     }
 
     /**
+     * Check table as tree
+     *
+     * @return bool
+     */
+    public function isTree()
+    {
+        return $this->getColumn('parent_id') && $this->getColumn('tree_path') && $this->getColumn('level') && $this->getColumn('pos');
+    }
+
+    /**
      * Есть ли уникальный индес для поле (точнее входит ли поле в уникальные ключи PRIMARY, UNIQUE и в составные)
      *
      * @param $field

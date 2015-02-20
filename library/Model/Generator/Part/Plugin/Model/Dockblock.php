@@ -42,7 +42,7 @@ class Dockblock extends AbstractModel
                              ),
                              array(
                                  'name'        => 'license',
-                                 'description' => 'New BSD',
+                                 'description' => 'MIT',
                              ),
                              array(
                                  'name'        => 'author',
@@ -51,6 +51,10 @@ class Dockblock extends AbstractModel
                              array(
                                  'name'        => 'author',
                                  'description' => 'Eugene Myazin <meniam@gmail.com>',
+                             ),
+                             array(
+                                 'name'        => 'author',
+                                 'description' => 'Mikhail Rybalka <ruspanzer@gmail.ru>',
                              ),
                              array(
                                  'name'        => 'author',
@@ -70,7 +74,7 @@ class Dockblock extends AbstractModel
         if ($file->getClass()->getDocblock()) {
             $file->getClass()->getDocblock()->setTags($tags);
         } else {
-            $docblock = new DocBlockGenerator('Абстрактная модель ' .  $tableNameAsCamelCase);
+            $docblock = new DocBlockGenerator('Abstract model ' .  $tableNameAsCamelCase);
             $docblock->setTags($tags);
             $file->getClass()->setDocblock($docblock);
         }

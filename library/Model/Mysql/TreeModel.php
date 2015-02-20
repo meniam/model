@@ -3,7 +3,7 @@
 namespace Model\Mysql;
 
 use Model\Collection\AbstractCollection;
-use Model\Cond\AbstractCond;
+use Model\Cond\AbstractCond as Cond;
 use Model\Cond\TreeCond;
 use Model\Db\Expr;
 use Model\Entity\AbstractEntity;
@@ -16,15 +16,14 @@ use Model\Result\Result;
  * @package    Mysql
  * @author     Eugene Myazin <meniam@gmail.com>
  * @since      14.12.12 13:21
- * @copyright  2008-2012 ООО "Америка"
  * @version    SVN: $Id$
  */
 class TreeModel extends AbstractModel
 {
-    public function beforePrepare($data, AbstractCond $cond = null)
+    public function beforePrepare($data, Cond $cond = null)
     {
         $cond = $this->prepareCond($cond);
-        if ($cond->checkWith('with_child_collection') && $cond->getWith('with_child_collection', $this->getRawName()) instanceof AbstractCond) {
+        if ($cond->checkWith('with_child_collection') && $cond->getWith('with_child_collection', $this->getRawName()) instanceof Cond) {
             if ($res = $this->getChildCollectionByData($data, $cond->getWith('with_child_collection', $this->getRawName()))) {
                 $data['_child_collection'] = $res;
             }
@@ -43,7 +42,7 @@ class TreeModel extends AbstractModel
             }
         }
 
-        if ($cond->checkWith('with_parent_collection') && $cond->getWith('with_parent_collection', $this->getRawName()) instanceof AbstractCond) {
+        if ($cond->checkWith('with_parent_collection') && $cond->getWith('with_parent_collection', $this->getRawName()) instanceof Cond) {
             if ($res = $this->getParentCollectionById($data['id'], $cond->getWith('with_parent_collection', $this->getRawName()))) {
                 $data['_parent_collection'] = $res;
             }
@@ -124,11 +123,11 @@ class TreeModel extends AbstractModel
 
     /**
      * @param              $data
-     * @param AbstractCond $cond
+     * @param Cond $cond
      *
      * @return null
      */
-    public function getChildCollectionByData($data, AbstractCond $cond = null)
+    public function getChildCollectionByData($data, Cond $cond = null)
     {
         if (isset($data['id'])) {
             $result = $this->getCollectionByParent($data['id'], $cond);
@@ -148,8 +147,13 @@ class TreeModel extends AbstractModel
      * Подобным образом работают следующие методы:
      *  - afterPrepareOnAdd - выполняется после обработки данных только при добавлении
      *  - afterPrepareOnUpdate - выполняется после обработки данных только при обновлении
+     *
+     * @param array $data
+     * @param Cond $cond
+     *
+     * @return array|void
      */
-    protected function afterPrepareOnAddOrUpdate(array $data = null, AbstractCond $cond = null)
+    protected function beforePrepareOnAddOrUpdate(array $data, Cond $cond = null)
     {
         if (isset($data['parent_id'])) {
             /** @var  $parent */
@@ -157,9 +161,11 @@ class TreeModel extends AbstractModel
 
             $data['level'] = $parent->getLevel() + 1;
         }
+
+        return $data;
     }
 
-    protected function afterAdd(Result $result, $data)
+    protected function afterAdd(Result $result, array $data, Cond $cond = null)
     {
         if (!$result->isError() && $result->getResult()) {
             $parentId = isset($data['parent_id']) ? $data['parent_id'] : null;
@@ -170,16 +176,18 @@ class TreeModel extends AbstractModel
 
             $this->updateById($updateData, $result->getResult());
         }
+
+        return $result;
     }
 
     /**
      * Get Direct child Collection
      *
      * @param $id
-     * @param AbstractCond $cond
+     * @param Cond $cond
      * @return array|mixed|AbstractCollection|\Model\Entity\AbstractEntity[]|null|string
      */
-    public function getChildCollection($id, AbstractCond $cond = null)
+    public function getChildCollection($id, Cond $cond = null)
     {
         $cond = $this->prepareCond($cond, $this->getRawName());
         $id = $this->getFirstIdFromMixed($id);
@@ -189,11 +197,11 @@ class TreeModel extends AbstractModel
 
     /**
      * @param $parent
-     * @param AbstractCond $cond
+     * @param Cond $cond
      * @return array|mixed|AbstractCollection|\Model\Entity\AbstractEntity[]|null|string
      * @throws \Model\Exception\ErrorException
      */
-    public function getCollectionByParent($parent, AbstractCond $cond = null)
+    public function getCollectionByParent($parent, Cond $cond = null)
     {
         $parentIds = $this->getIdsFromMixed($parent);
 

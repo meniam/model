@@ -742,7 +742,6 @@ abstract class AbstractCond
 	/**
 	 * @param $from
 	 *
-	 * @internal param mixed $order
 	 * @return AbstractCond
 	 */
     public function from($from)

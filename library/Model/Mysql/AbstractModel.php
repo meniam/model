@@ -9,8 +9,6 @@ use Model\Cond\AbstractCond as Cond;
 use Model\Db\Select;
 use Model\Db\Expr;
 use Model\Entity\AbstractEntity;
-use Model\Entity\EntityInterface as Entity;
-use Model\Collection\AbstractCollection as Collection;
 use Model\Model;
 use Model\Paginator\Adapter\ArraySet;
 use Model\Paginator\Paginator;
@@ -23,17 +21,16 @@ use Model\Result\Result;
  * @package    Mysql
  * @author     Eugene Myazin <meniam@gmail.com>
  * @since      14.12.12 13:21
- * @copyright  2008-2012 ООО "Америка"
  * @version    SVN: $Id$
  */
-class AbstractModel extends \Model\AbstractModel
+abstract class AbstractModel extends \Model\AbstractModel
 {
     /**
      * Индексы
      *
      * @var array
      */
-    protected $indexList = array();
+    protected $indexList = null;
 
     /**
      * Current DB adapter name
@@ -46,6 +43,40 @@ class AbstractModel extends \Model\AbstractModel
      * @var DbAdapter
      */
     protected $db;
+
+    /**
+     * @return array
+     */
+    public function getIndexList()
+    {
+        if (!$this->isInitIndexList()) {
+            $this->initIndexList();
+        }
+
+        return $this->indexList;
+    }
+
+    /**
+     * @return bool
+     */
+    protected function isInitIndexList()
+    {
+        return !is_null($this->indexList);
+    }
+
+    /**
+     * @return array
+     */
+    protected function initIndexList()
+    {
+        $this->indexList = array();
+    }
+
+    /**
+     * User defined indexList
+     */
+    protected function setupIndexList()
+    { }
 
     /**
      * @param      $data
@@ -354,7 +385,8 @@ class AbstractModel extends \Model\AbstractModel
 
         $uniqueKeyList = array(AbstractModel::INDEX_UNIQUE, AbstractModel::INDEX_PRIMARY);
         $availableIndexList = array();
-        foreach ($this->indexList as $index) {
+        $indexList = $this->getIndexList();
+        foreach ($indexList as $index) {
             if (!in_array($index['type'], $uniqueKeyList)) {
                 continue;
             }
@@ -362,7 +394,7 @@ class AbstractModel extends \Model\AbstractModel
             $indexColumnList = $index['column_list'];
 
             foreach ($indexColumnList as $column) {
-                if (!isset($data[$column])) {
+                if (!array_key_exists($column, $data)) {
                     continue(2);
                 }
             }
@@ -372,7 +404,7 @@ class AbstractModel extends \Model\AbstractModel
 
         if (!empty($availableIndexList)) {
             foreach ($availableIndexList as $availableIndex) {
-                $currentIndex = $this->indexList[$availableIndex];
+                $currentIndex = $indexList[$availableIndex];
 
                 $checkArray = array();
                 foreach ($currentIndex['column_list'] as $column) {
@@ -474,12 +506,11 @@ class AbstractModel extends \Model\AbstractModel
         }
         $values[] = $cond;
 
-        $columnAsComelCase = 'getBy' . implode('And', $entityList);
+        $columnAsCamelCase = 'getBy' . implode('And', $entityList);
 
-        if (method_exists($this, $columnAsComelCase)) {
-            return call_user_func_array(array($this, $columnAsComelCase), $values);
+        if (method_exists($this, $columnAsCamelCase)) {
+            return call_user_func_array(array($this, $columnAsCamelCase), $values);
         }
-
 
         foreach ($data as $k => $v) {
             $cond->where(array('`' . $this->getRawName() . '`.`' . $k . '`' => $v));
@@ -550,25 +581,6 @@ class AbstractModel extends \Model\AbstractModel
     }
 
     /**
-     * @param $data
-     * @return array
-     */
-    private function prepareData($data)
-    {
-        if (is_array($data)) {
-            return $data;
-        } elseif ($data instanceof Entity) {
-            $data = $data->toArray();
-        } elseif ($data instanceof Collection) {
-            $data = $data->current()->toArray();
-        } elseif (is_object($data) && method_exists($data, 'toArray')) {
-            $data = $data->toArray();
-        }
-
-        return (array)$data;
-    }
-
-    /**
      * @param Cond $cond
      *
      * @throws \Model\Exception\ErrorException
@@ -604,50 +616,6 @@ class AbstractModel extends \Model\AbstractModel
     }
 
     /**
-     * Подготавливаем данные перед добавлением
-     *
-     * @param      $data
-     * @param Cond $cond
-     *
-     * @throws \Model\Exception\ErrorException
-     * @return array
-     */
-    protected function prepareDataOnAdd($data, Cond $cond = null)
-    {
-        $data = $this->prepareData($data);
-        $cond = $this->prepareCond($cond);
-
-        if (method_exists($this, 'beforePrepareOnAdd')) {
-            $data = $this->beforePrepareOnAdd($data, $cond);
-        }
-
-        if (method_exists($this, 'beforePrepareOnAddOrUpdate')) {
-            $data = $this->beforePrepareOnAddOrUpdate($data, $cond);
-        }
-
-        // Применяем умолчания
-        $cond->checkCond(Cond::APPLY_DEFAULT_VALUES, true) && $data = $this->applyDefaultValues($data);
-
-        // Если каскад разрешен, то применяем его
-        $cond->checkCond(Cond::FILTER_CASCADE_ON_ADD, true) && $data = $this->applyFilterCascadeRules($data, $this->getFilterCascadeRulesOnAdd());
-
-        // Фильтруем входные данные
-        $cond->checkCond(Cond::FILTER_ON_ADD, true) && $data = $this->filterOnAdd($data);
-
-        if (method_exists($this, 'afterPrepareOnAdd')) {
-            // Вносить изменения в данные нельзя
-            $this->afterPrepareOnAdd($data, $cond);
-        }
-
-        if (method_exists($this, 'afterPrepareOnAddOrUpdate')) {
-            // Вносить изменения в данные нельзя
-            $this->afterPrepareOnAddOrUpdate($data, $cond);
-        }
-
-        return $data;
-    }
-
-    /**
      * Добавить сущьность в базу
      *
      * @param mixed $data
@@ -676,11 +644,8 @@ class AbstractModel extends \Model\AbstractModel
             // Получаем валидатор добавления
             $validator = $this->validateOnAdd($data);
 
-            // Проверяем данные и если есть ошибки
-            // то добавляем их в результат
-            if (!$isValid = $validator->isValid()) {
-                $result->setValidator($validator);
-            }
+            $result->setValidator($validator);
+            $isValid = $validator->isValid();
         }
 
         // Если валидация отключена (входим),
@@ -709,6 +674,11 @@ class AbstractModel extends \Model\AbstractModel
             $result = $this->runHookAfterAdd($result, $data, $cond);
         }
 
+        return $result;
+    }
+
+    protected function afterAdd(Result $result, array $data, Cond $cond = null)
+    {
         return $result;
     }
 
@@ -804,10 +774,10 @@ class AbstractModel extends \Model\AbstractModel
         if ($cond->checkCond(Cond::VALIDATE_ON_UPDATE, true)) {
             $validator = $this->validateOnUpdate($data);
 
+            $result->setValidator($validator);
             // Проверяем данные и если есть ошибки
             // то добавляем их в результат
             if (!$validator->isValid()) {
-                $result->setValidator($validator);
                 return $result;
             }
         }
@@ -1076,6 +1046,7 @@ class AbstractModel extends \Model\AbstractModel
                 $pager = new Paginator(new ArraySet($items));
                 $pager->setCurrentPageNumber($cond->getCond('page'));
                 $pager->setItemCountPerPage($cond->getCond('items_per_page'));
+                $pager->setTotalItemCount($this->fetchCount($cond));
             }
         } catch (\Exception $e) {
             $items = array();
@@ -1245,6 +1216,8 @@ class AbstractModel extends \Model\AbstractModel
             } else if ($cond->checkCond(Cond::OFFSET)) {
                 $select->limit(0, $cond->getCond(Cond::OFFSET));
             }
+        } else {
+            $select->limitPage($cond->getCond(Cond::PAGE), $cond->getCond(Cond::ITEMS_PER_PAGE));
         }
 
         return $select;
