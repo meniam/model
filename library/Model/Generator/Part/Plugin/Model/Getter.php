@@ -79,6 +79,44 @@ class Getter extends AbstractModel
             $indexColumn = 'id';
             $where = '';
 
+            $methodReturnTypePrefix = $table->getNameAsCamelCase();
+
+            $methodDocBlockName = 'get';
+            if (!isset($dbRegistry[$methodDocBlockName]) && !$file->getClass()->hasMethod($methodDocBlockName)) {
+                $file->getClass()->getDocBlock()->setTag(array(
+                    'name' => 'method',
+                    'description' => "{$methodReturnTypePrefix}Entity|mixed {$methodDocBlockName}(AbstractCond \$cond = null) get"
+                ));
+                $dbRegistry[$methodDocBlockName]=1;
+            }
+
+            $methodDocBlockName = 'getCollection';
+            if (!isset($dbRegistry[$methodDocBlockName]) && !$file->getClass()->hasMethod($methodDocBlockName)) {
+                $file->getClass()->getDocBlock()->setTag(array(
+                    'name' => 'method',
+                    'description' => "{$methodReturnTypePrefix}Collection|{$methodReturnTypePrefix}Entity[] {$methodDocBlockName}(AbstractCond \$cond = null) get collection"
+                ));
+                $dbRegistry[$methodDocBlockName]=1;
+            }
+
+            $methodDocBlockName = 'getById';
+            if (!isset($dbRegistry[$methodDocBlockName]) && !$file->getClass()->hasMethod($methodDocBlockName)) {
+                $file->getClass()->getDocBlock()->setTag(array(
+                    'name' => 'method',
+                    'description' => "{$methodReturnTypePrefix}Entity {$methodDocBlockName}(\$id, AbstractCond \$cond = null) get entity by id"
+                ));
+                $dbRegistry[$methodDocBlockName]=1;
+            }
+
+            $methodDocBlockName = 'getCollectionById';
+            if (!isset($dbRegistry[$methodDocBlockName]) && !$file->getClass()->hasMethod($methodDocBlockName)) {
+                $file->getClass()->getDocBlock()->setTag(array(
+                    'name' => 'method',
+                    'description' => "{$methodReturnTypePrefix}Collection|{$methodReturnTypePrefix}Entity[] {$methodDocBlockName}(\$id, AbstractCond \$cond = null) get collection by id"
+                ));
+                $dbRegistry[$methodDocBlockName]=1;
+            }
+
             foreach ($index as $column) {
                 $indexColumn = 'id';
                 if ($index->getName() == 'PRIMARY') {
@@ -100,45 +138,6 @@ class Getter extends AbstractModel
                 $paramNames[] = '$' . $indexColumnName;
                 $paramNamesStr = implode(', ', $paramNames);
                 $getBy[]  = $indexColumnNameAsCamelCase;
-
-                $methodDocBlockName = 'get';
-                if (!isset($dbRegistry[$methodDocBlockName]) && !$file->getClass()->hasMethod($methodDocBlockName)) {
-                    $methodReturnTypePrefix = $table->getNameAsCamelCase();
-                    $file->getClass()->getDocBlock()->setTag(array(
-                        'name' => 'method',
-                        'description' => "{$methodReturnTypePrefix}Entity|mixed {$methodDocBlockName}(Cond \$cond = null) get"
-                    ));
-                    $dbRegistry[$methodDocBlockName]=1;
-                }
-
-                $methodDocBlockName = 'getCollection';
-                if (!isset($dbRegistry[$methodDocBlockName]) && !$file->getClass()->hasMethod($methodDocBlockName)) {
-                    $methodReturnTypePrefix = $table->getNameAsCamelCase();
-                    $file->getClass()->getDocBlock()->setTag(array(
-                        'name' => 'method',
-                        'description' => "{$methodReturnTypePrefix}Collection|{$methodReturnTypePrefix}Entity[] {$methodDocBlockName}(Cond \$cond = null) get collection"
-                    ));
-                    $dbRegistry[$methodDocBlockName]=1;
-                }
-
-                $methodDocBlockName = 'getById';
-                if (!isset($dbRegistry[$methodDocBlockName]) && !$file->getClass()->hasMethod($methodDocBlockName)) {
-                    $file->getClass()->getDocBlock()->setTag(array(
-                        'name' => 'method',
-                        'description' => $table->getNameAsCamelCase() ."Entity {$methodDocBlockName}(\$id, Cond \$cond = null) get entity by id"
-                    ));
-                    $dbRegistry[$methodDocBlockName]=1;
-                }
-
-                $methodDocBlockName = 'getCollectionById';
-                if (!isset($dbRegistry[$methodDocBlockName]) && !$file->getClass()->hasMethod($methodDocBlockName)) {
-                    $methodReturnTypePrefix = $table->getNameAsCamelCase();
-                    $file->getClass()->getDocBlock()->setTag(array(
-                        'name' => 'method',
-                        'description' => "{$methodReturnTypePrefix}Collection|{$methodReturnTypePrefix}Entity[] {$methodDocBlockName}(\$id, Cond \$cond = null) get collection by id"
-                    ));
-                    $dbRegistry[$methodDocBlockName]=1;
-                }
 
                 $methodDocBlockName = 'getBy' . implode('And', $getBy);
                 if (!isset($dbRegistry[$methodDocBlockName]) && !$file->getClass()->hasMethod($methodDocBlockName)) {

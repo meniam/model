@@ -41,8 +41,6 @@ class Getter extends AbstractEntity
          */
         $table = $part->getTable();
 
-//        $tableNameAsCamelCase = $table->getNameAsCamelCase();
-
         /** @var $columnList Column[]  */
         $columnList = $table->getColumn();
 
@@ -51,13 +49,13 @@ class Getter extends AbstractEntity
             $columnComment = $column->getComment();
 
             if ($columnComment) {
-                $shortDescr = "Получить " . mb_strtolower($columnComment, 'UTF-8') . ' (' . $column->getTable()->getName() . '.' . $columnName . ')';
+                $shortDescription = "Get " . mb_strtolower($columnComment, 'UTF-8') . ' (' . $column->getTable()->getName() . '.' . $columnName . ')';
             } else {
-                $shortDescr = 'Получить ' . $column->getTable()->getName() . '.' . $columnName;
+                $shortDescription = 'Get ' . $column->getTable()->getName() . '.' . $columnName;
             }
 
-            $docblock = new DocBlockGenerator($shortDescr);
-            $docblock->setTags(array(
+            $docBlock = new DocBlockGenerator($shortDescription);
+            $docBlock->setTags(array(
                              array(
                                  'name'        => 'return',
                                  'description' => $column->getTypeAsPhp(),
@@ -68,7 +66,7 @@ class Getter extends AbstractEntity
             $method = new MethodGenerator();
             $method->setName('get' . $column->getNameAsCamelCase());
             $method->setVisibility(AbstractMemberGenerator::VISIBILITY_PUBLIC);
-            $method->setDocBlock($docblock);
+            $method->setDocBlock($docBlock);
 
             $method->setBody(<<<EOS
 return \$this->get('{$columnName}');

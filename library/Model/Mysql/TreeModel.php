@@ -75,8 +75,7 @@ class TreeModel extends AbstractModel
         $sort = $cond->getCond(TreeCond::COND_PARENT_LIST_REVERSE, false)  ? 'DESC' : 'ASC';
 
         $cond->where(array($this->qi('id') => $parentListIds))
-            ->order($this->qi('level') . ' ' . $sort)
-            ->showQuery(true);
+            ->order($this->qi('level') . ' ' . $sort);
 
         return $this->getCollection($cond);
     }

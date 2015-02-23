@@ -896,14 +896,14 @@ abstract class AbstractCond
      * @param null                $type
      *
      * @throws Exception\ErrorException
-     * @return AbstractCond
+     * @return $this
      */
     public function with($cond, $type = null)
     {
         if (is_scalar($cond)) {
             $cond = AbstractModel::condFactory($cond, $type);
         } elseif (!$cond instanceof AbstractCond) {
-            throw new ErrorException('Cond must be instance of Cond');
+            throw new ErrorException('Cond must be instance of AbstractCond');
         }
 
         $this->_params['with'][$cond->getName()] = $cond;
