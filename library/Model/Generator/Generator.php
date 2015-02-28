@@ -6,6 +6,7 @@ use Model\Cluster;
 use Model\Cluster\Schema;
 use Model\Cluster\Schema\Table;
 
+use Model\Config\Config;
 use Model\Db\Mysql;
 use Model\Exception\ErrorException;
 use Model\Db\Mysql as DbAdapter;
@@ -15,7 +16,6 @@ use Model\Generator\Part\Entity;
 
 use Zend\Console\ColorInterface;
 use Zend\Console\Console;
-use Zend\Console\RouteMatcher\DefaultRouteMatcher;
 
 /**
  * Base generator class
@@ -28,12 +28,6 @@ use Zend\Console\RouteMatcher\DefaultRouteMatcher;
  */
 class Generator
 {
-    /**
-     * Название базы данных
-     *
-     * @var string
-     */
-    protected $_dbName;
 
     /**
      * @var Cluster
@@ -41,25 +35,77 @@ class Generator
     protected $cluster;
 
     /**
-     * @var DbAdapter
-     */
-    protected $_db;
-
-    /**
      * @var
      */
-    protected $_outDir;
+    protected $outDir;
 
+    /**
+     * @var array
+     */
     protected $outDirArray = array();
 
     /**
      * @var
      */
-    protected $_deployDir;
+    protected $deployDir;
+
+    /**
+     * @var Config
+     */
+    private $config;
+
+    public function __construct(Config $config)
+    {
+        $outputDir = $config->getParameter('output-dir');
+        if (!$outputDir) {
+            $console = Console::getInstance();
+            $console->write("Unknown output dir. Use ./models --help\n", ColorInterface::RED);
+            exit();
+        }
+
+        if (!is_dir($outputDir) || !is_writeable($outputDir)) {
+            $console = Console::getInstance();
+            $console->write("Unknown output dir not exists or not writable. Use ./models --help\n", ColorInterface::RED);
+            exit();
+        }
+        $this->setOutDir($outputDir);
+
+        // Read Db Configuration
+        $dsn     = $config->getParameter('dsn', '');
+        $user = $config->getParameter('user', 'root');
+        $password = $config->getParameter('password', '');
+
+        $db  = new Mysql($dsn, $user, $password);
+
+        $this->cluster = new Cluster();
+        $this->cluster->addSchema((new Schema($db))->init());
+
+        $configPath = $config->getParameter('config', __DIR__ . '/models.json');
+        if (!is_file($configPath) || !is_readable($configPath)) {
+            $console = Console::getInstance();
+            $console->write("Config file not exists or not readable. Use ./models --help\n", ColorInterface::RED);
+            exit();
+        }
+        $generatorConfig = json_decode(file_get_contents($configPath), true);
+        if (!$generatorConfig) {
+            $console = Console::getInstance();
+            $console->write("Bad config file. Use ./models --help\n", ColorInterface::RED);
+            exit();
+        }
+        $this->setGeneratorConfig($generatorConfig);
+
+        // Register plugins
+        $plugins = isset($generatorConfig['plugins']) ? $generatorConfig['plugins'] : array();
+        if (!empty($plugins)) {
+            $this->registerPlugins($plugins);
+        }
+
+        $this->config = $config;
+    }
 
     private function setOutDir($outDir)
     {
-        $this->_outDir = rtrim($outDir, '/');
+        $this->outDir = rtrim($outDir, '/');
 
         if (!is_dir($outDir) || !is_writeable($outDir)) {
             throw new ErrorException('Directory is not writable: ' . $outDir);
@@ -87,22 +133,22 @@ class Generator
         }
     }
 
-    private $config = array();
+    private $generatorConfig = array();
 
     /**
      * @return array
      */
-    public function getConfig()
+    public function getGeneratorConfig()
     {
-        return $this->config;
+        return $this->generatorConfig;
     }
 
     /**
-     * @param array $config
+     * @param array $generatorConfig
      */
-    public function setConfig($config)
+    public function setGeneratorConfig($generatorConfig)
     {
-        $this->config = $config;
+        $this->generatorConfig = $generatorConfig;
     }
 
     /**
@@ -137,250 +183,44 @@ class Generator
             $outputFile .= 'Abstract';
         }
         $outputFile .= str_replace('Front', '', $aliasNameAsCamelCase . $partAsCameCase) . '.php';
-        $options = $aliasName ? array('alias' => $aliasName, 'config' => $this->getConfig()) : array('config' => $this->getConfig());
+        $options = $aliasName ? array('alias' => $aliasName, 'config' => $this->getGeneratorConfig()) : array('config' => $this->getGeneratorConfig());
 
         new $partClass($table, $this->getCluster(), $outputFile, $options);
     }
 
-    public function showUsage()
-    {
-        $shiftLen = 16;
-
-        $help = array(
-            "Models by Eugene Myazin <github.com/meniam/models>.",
-            ''
-        );
-
-        $this->showLine($help, ColorInterface::WHITE);
-
-        $this->showLine("Usage# ./models --deploy-dir=<dir> \\", ColorInterface::LIGHT_WHITE, $shiftLen);
-        $this->showLine("                --output-dir=<dir> \\", ColorInterface::LIGHT_WHITE, $shiftLen);
-        $this->showLine("               [--config=<file>] \\", ColorInterface::LIGHT_WHITE, $shiftLen);
-        $this->showLine("               [--db-host=<str>] \\", ColorInterface::LIGHT_WHITE, $shiftLen);
-        $this->showLine("               [--db-schema=<str>] \\", ColorInterface::LIGHT_WHITE, $shiftLen);
-        $this->showLine("               [--db-user=<str>] \\", ColorInterface::LIGHT_WHITE, $shiftLen);
-        $this->showLine("               [--db-password=<str>] \\", ColorInterface::LIGHT_WHITE, $shiftLen);
-        $this->showLine("               [--force] \\", ColorInterface::LIGHT_WHITE, $shiftLen);
-        $this->showLine("               [--verbose] \\", ColorInterface::LIGHT_WHITE, $shiftLen);
-        $this->showLine("               [--erase] \\", ColorInterface::LIGHT_WHITE, $shiftLen);
-        $this->showLine("               [--cache-dir=<dir>]", ColorInterface::LIGHT_WHITE, $shiftLen);
-
-        $this->showLine("");
-        $this->showParam("--deploy-dir=<dir>", "Directory for deployment models",
-                                         "In which the replacement copied abstract classes," . PHP_EOL .
-                                         "base classes are copied if there are not in folder." . PHP_EOL,
-            $shiftLen);
-
-        $this->showParam("--output-dir=<dir>", "The directory in which the generated model",
-            "cleaned before each run generation" . PHP_EOL,
-            8);
-
-        $this->showParam("[--config=<file>]", "Path to JSON config file",
-            "You can use your configuration file to generate models." . PHP_EOL.
-            "If you do not specify this option, it will be used default config - models.json" . PHP_EOL,
-            8);
-
-        $this->showParam("[--db-host=<str>]", "Адрес Mysql сервера",
-            "по умолчанию: localhost" . PHP_EOL,
-            8);
-
-        $this->showParam("[--db-schema=<str>]", "Имя базы данных",
-            "по умолчанию: test" . PHP_EOL,
-            8);
-
-        $this->showParam("[--db-user=<str>]", "Пользователь MySql",
-            "по умолчанию: root" . PHP_EOL,
-            8);
-
-        $this->showParam("[--db-password=<str>]", "Пароль MySql",
-            "по умолчанию: пустой" . PHP_EOL,
-            8);
-
-        $this->showParam("[--cache-dir=<str>]", "Директория для кеша",
-            "если указана директория кеш включается," . PHP_EOL .
-            "в обычном режиме кеша нет" . PHP_EOL,
-
-            8);
-
-        $this->showParam("[--verbose]", "Вывод действий на экран",
-            "показывает что происходит в режиме реального времени" . PHP_EOL,
-            8);
-
-        $this->showParam("[--force]", "Режим бога",
-            "в этом режиме скрипт игнорирует ошибки, все что может..." . PHP_EOL.
-            "кеш игнорируется" . PHP_EOL,
-            8);
-
-        $this->showParam("[--erase]", "Очистка output директори",
-            "очищает директорию output после выгрузки моделей" . PHP_EOL,
-            8);
-
-        return null;
-    }
-
     /**
-     * @param array $lines
-     * @param null  $color
-     * @param int   $shift
-     *
-     * @return null
-     */
-    public function showLine($lines = array(), $color = null, $shift = 0)
-    {
-        $console = Console::getInstance();
-        $shiftStr = str_repeat(" ", $shift);
-
-        if (!is_array($lines)) {
-            $descriptionArray = explode("\n", $lines);
-            foreach ($descriptionArray as $descriptionItem) {
-                $console->write($shiftStr . $descriptionItem . "\n", $color);
-            }
-        } else {
-            foreach ($lines as $line) {
-                $console->write($shiftStr . $line . PHP_EOL, $color);
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * @param $param
-     * @param $name
-     * @param $description
-     *
-     * @return null
-     */
-    public function showParam($param, $name, $description)
-    {
-        $console = Console::getInstance();
-
-        $shiftStr = str_repeat(" ", 8);
-
-        $paramName = str_pad($param, 22, " ", STR_PAD_LEFT);
-        $paramName = $console->colorize($paramName, ColorInterface::LIGHT_WHITE);
-        $paramName = preg_replace("#<(dir|str|file)>#", $console->colorize("<\\1>", ColorInterface::WHITE), $paramName);
-        $paramName = preg_replace("#(\\[\\-\\-.*?\\])#", $console->colorize("\\1", ColorInterface::WHITE), $paramName);
-
-        $console->write($shiftStr . $paramName . "  " . $console->colorize($name, ColorInterface::LIGHT_WHITE) . PHP_EOL);
-
-        $descriptionArray = array_map('trim', explode("\n", $description));
-        foreach ($descriptionArray as $descriptionItem) {
-            $console->write($shiftStr . str_repeat(" ", 24) . $descriptionItem . "\n");
-        }
-
-        return null;
-    }
-
-    public function initLog($isVerbose, $logfile)
-    {
-
-    }
-
-
-    /**
+     * @param $plugins
      * @throws \Exception
      */
-    public function run($commandString = array())
+    public function registerPlugins($plugins)
     {
-        if ($commandString) {
-            if (!is_array($commandString)) {
-                $commandString = 'models ' . $commandString;
-            }
-            $commandString = explode(' ', $commandString);
-        } else {
-            $commandString = $_SERVER['argv'];
-        }
+        foreach ($plugins as $partType => $pluginArray) {
+            if (isset($pluginArray['list'])) {
+                foreach ($pluginArray['list'] as $condPluginArray) {
+                    if ($pluginName = (isset($condPluginArray['name']) ? $condPluginArray['name'] : null)) {
+                        $partTypeAsCamelCase = implode('', array_map('ucfirst', explode('_', $partType)));
 
-        if (count($commandString) < 2) {
-            return $this->showUsage();
-        }
+                        $condPluginClassName = '\\Model\\Generator\\Part\\Plugin\\' . $partTypeAsCamelCase . '\\' . $pluginName;
+                        $partConst = constant('\\Model\\Generator\\Part\\AbstractPart::PART_' . strtoupper($partType));
 
-        $params = new DefaultRouteMatcher("[--output-dir=] "
-                                        . "[--deploy-dir=] "
-                                        . "[--config=] "
-                                        . "[--db-host=] "
-                                        . "[--db-schema=]  "
-                                        . "[--db-user=] "
-                                        . "[--db-password=] "
-                                        . "[--deploy=] "
-                                        . "[--verbose] "
-                                        . "[--help] "
-                                        . "[--force] "
-                                        . "[--erase] "
-                                        . "[--cache-dir=] ");
-        $argv   = $commandString;
-        array_shift($argv);
-        $consoleParams = $params->match($argv);
-
-        if (!isset($consoleParams['output-dir'])) {
-            $console = Console::getInstance();
-            $console->write("Unknown output dir. Use ./models --help\n", ColorInterface::RED);
-
-            $this->showUsage();
-            exit();
-        }
-
-        if (!is_dir($consoleParams['output-dir']) || !is_writeable($consoleParams['output-dir'])) {
-            $console = Console::getInstance();
-            $console->write("Unknown output dir not exists or not writable. Use ./models --help\n", ColorInterface::RED);
-            exit();
-        }
-
-        $this->setOutDir($consoleParams['output-dir']);
-
-        // Read Db Configuration
-
-        $host     = isset($consoleParams['db-host']) ? $consoleParams['db-host'] : '127.0.0.1';
-        $dbSchema = isset($consoleParams['db-schema']) ? $consoleParams['db-schema'] : 'test';
-        $user     = isset($consoleParams['db-user']) ? $consoleParams['db-user'] : 'root';
-        $password = isset($consoleParams['db-password']) ? $consoleParams['db-password'] : '';
-
-        $dsn = "mysql:host=" . $host . ';'
-               . 'dbname=' . $dbSchema . ';'
-               . 'charset=utf8';
-        $db  = new Mysql($dsn, $user, $password);
-
-        $this->cluster = new Cluster();
-        $this->cluster->addSchema((new Schema($dbSchema, $db))->init());
-
-        $configPath = isset($consoleParams['config']) ? $consoleParams['config'] : __DIR__ . '/models.json';
-        if (!is_file($configPath) || !is_readable($configPath)) {
-            $console = Console::getInstance();
-            $console->write("Config file not exists or not readable. Use ./models --help\n", ColorInterface::RED);
-            exit();
-        }
-        $config = json_decode(file_get_contents($configPath), true);
-        if (!$config) {
-            $console = Console::getInstance();
-            $console->write("Bad config file. Use ./models --help\n", ColorInterface::RED);
-            exit();
-        }
-        $this->setConfig($config);
-
-        // Register plugins
-        if (isset($config['plugins'])) {
-            foreach ($config['plugins'] as $partType => $pluginArray)
-                if (isset($pluginArray['list'])) {
-                    foreach ($pluginArray['list'] as $condPluginArray) {
-                        if ($pluginName = (isset($condPluginArray['name']) ? $condPluginArray['name'] : null)) {
-                            $partTypeAsCamelCase = implode('', array_map('ucfirst', explode('_', $partType)));
-
-                            $condPluginClassName = '\\Model\\Generator\\Part\\Plugin\\' . $partTypeAsCamelCase . '\\' . $pluginName;
-                            $partConst           = constant('\\Model\\Generator\\Part\\AbstractPart::PART_' . strtoupper($partType));
-
-                            AbstractPart::addPlugin(new $condPluginClassName(), $partConst);
-                        }
+                        AbstractPart::addPlugin(new $condPluginClassName(), $partConst);
                     }
                 }
+            }
         }
+    }
 
-        // Fields prepare
-
+    /**
+     * @return null
+     * @throws ErrorException
+     * @throws \Exception
+     */
+    public function run()
+    {
         /**
          * Generate Alias cond
          */
-        $classmap = '';
+        $classMap = '';
         foreach ($this->getCluster()->getTableList() as $table) {
             if (substr($table->getName(), 0, 1) == '_' || substr($table->getName(), -5) == '_link') {
                 continue;
@@ -391,7 +231,7 @@ class Generator
                 foreach ($aliasList as $aliasName => $tableName) {
                     $this->buildPart($this->getCluster()->getTable($tableName), 'front_cond', $aliasName);
                     $aliasAsCamelCase = implode('', array_map('ucfirst', explode('_', $aliasName)));
-                    $classmap .= "\t\t'Model\\\\Cond\\\\{$aliasAsCamelCase}Cond' => __DIR__ . '/cond/{$aliasAsCamelCase}Cond.php',\n";
+                    $classMap .= "\t\t'Model\\\\Cond\\\\{$aliasAsCamelCase}Cond' => __DIR__ . '/cond/{$aliasAsCamelCase}Cond.php',\n";
                 }
             }
 
@@ -405,28 +245,29 @@ class Generator
             $this->buildPart($table, 'front_model');
 
             $tableNameAsCamelCase = $table->getNameAsCamelCase();
-            $classmap .= "\t\t'Model\\\\Abstract{$tableNameAsCamelCase}Model' => __DIR__ . '/abstract/Abstract{$tableNameAsCamelCase}Model.php',\n";
-            $classmap .= "\t\t'Model\\\\{$tableNameAsCamelCase}Model' => __DIR__ . '/{$tableNameAsCamelCase}Model.php',\n";
-            $classmap .= "\t\t'Model\\\\Entity\\\\{$tableNameAsCamelCase}Entity' => __DIR__ . '/entities/{$tableNameAsCamelCase}Entity.php',\n";
-            $classmap .= "\t\t'Model\\\\Entity\\\\Abstract{$tableNameAsCamelCase}Entity' => __DIR__ . '/entities/abstract/Abstract{$tableNameAsCamelCase}Entity.php',\n";
-            $classmap .= "\t\t'Model\\\\Collection\\\\Abstract{$tableNameAsCamelCase}Collection' => __DIR__ . '/collections/abstract/Abstract{$tableNameAsCamelCase}Collection.php',\n";
-            $classmap .= "\t\t'Model\\\\Collection\\\\{$tableNameAsCamelCase}Collection' => __DIR__ . '/collections/{$tableNameAsCamelCase}Collection.php',\n";
-            $classmap .= "\t\t'Model\\\\Cond\\\\Abstract{$tableNameAsCamelCase}Cond' => __DIR__ . '/cond/abstract/Abstract{$tableNameAsCamelCase}Cond.php',\n";
-            $classmap .= "\t\t'Model\\\\Cond\\\\{$tableNameAsCamelCase}Cond' => __DIR__ . '/cond/{$tableNameAsCamelCase}Cond.php',\n";
+            $classMap .= "\t\t'Model\\\\Abstract{$tableNameAsCamelCase}Model' => __DIR__ . '/abstract/Abstract{$tableNameAsCamelCase}Model.php',\n";
+            $classMap .= "\t\t'Model\\\\{$tableNameAsCamelCase}Model' => __DIR__ . '/{$tableNameAsCamelCase}Model.php',\n";
+            $classMap .= "\t\t'Model\\\\Entity\\\\{$tableNameAsCamelCase}Entity' => __DIR__ . '/entities/{$tableNameAsCamelCase}Entity.php',\n";
+            $classMap .= "\t\t'Model\\\\Entity\\\\Abstract{$tableNameAsCamelCase}Entity' => __DIR__ . '/entities/abstract/Abstract{$tableNameAsCamelCase}Entity.php',\n";
+            $classMap .= "\t\t'Model\\\\Collection\\\\Abstract{$tableNameAsCamelCase}Collection' => __DIR__ . '/collections/abstract/Abstract{$tableNameAsCamelCase}Collection.php',\n";
+            $classMap .= "\t\t'Model\\\\Collection\\\\{$tableNameAsCamelCase}Collection' => __DIR__ . '/collections/{$tableNameAsCamelCase}Collection.php',\n";
+            $classMap .= "\t\t'Model\\\\Cond\\\\Abstract{$tableNameAsCamelCase}Cond' => __DIR__ . '/cond/abstract/Abstract{$tableNameAsCamelCase}Cond.php',\n";
+            $classMap .= "\t\t'Model\\\\Cond\\\\{$tableNameAsCamelCase}Cond' => __DIR__ . '/cond/{$tableNameAsCamelCase}Cond.php',\n";
         }
 
-        file_put_contents($this->_outDir . '/_autoload_classmap.php', "<?php\nreturn array(\n" . $classmap . ");\n");
+        file_put_contents($this->outDir . '/_autoload_classmap.php', "<?php\nreturn array(\n" . $classMap . ");\n");
 
-        if (isset($consoleParams['deploy-dir'])) {
-            if (!is_dir($consoleParams['deploy-dir'])) {
-                echo "Deploy dir doesn't exists: ". $consoleParams['deploy-dir'] . "\n";
+        if ($deployDir = $this->config->getParameter('deploy-dir')) {
+            if (!is_dir($deployDir)) {
+                $console = Console::getInstance();
+                $console->write("Deploy dir doesn't exists: ". $deployDir . "\n", ColorInterface::RED);
                 exit();
 
             }
-            $this->deploy($consoleParams['deploy-dir']);
+            $this->deploy($deployDir);
         }
 
-        if (isset($consoleParams['erase']) && $consoleParams['erase']) {
+        if ($this->config->getParameter('erase')) {
             $this->eraseFolders();
         }
 
@@ -435,71 +276,64 @@ class Generator
 
     public function deploy($outDir)
     {
-        $this->_deployDir = rtrim($outDir, '/');
+        $this->deployDir = rtrim($outDir, '/');
 
         if (!is_dir($outDir) || !is_writeable($outDir)) {
             throw new ErrorException ('Directory is not writable: ' . $outDir);
         }
 
         foreach ($this->outDirArray as $dir) {
-            $dir = str_replace($this->_outDir, $this->_deployDir, $dir);
+            $dir = str_replace($this->outDir, $this->deployDir, $dir);
             @mkdir($dir);
         }
 
-        foreach (glob($this->_outDir . '/abstract/*.php') as $filename) {
-            $deployFile = $this->_deployDir . '/abstract/' . basename($filename);
+        foreach (glob($this->outDir . '/abstract/*.php') as $filename) {
+            $deployFile = $this->deployDir . '/abstract/' . basename($filename);
             copy($filename, $deployFile);
         }
 
-        @unlink($this->_deployDir . '/_autoload_classmap.php');
-        foreach (glob($this->_outDir . '/*.php') as $filename) {
-            $deployFile = $this->_deployDir . '/' . basename($filename);
-            //echo $deployFile;
+        @unlink($this->deployDir . '/_autoload_classmap.php');
+        foreach (glob($this->outDir . '/*.php') as $filename) {
+            $deployFile = $this->deployDir . '/' . basename($filename);
 
             if (!is_file($deployFile)) {
                 copy($filename, $deployFile);
             }
         }
 
-        foreach (glob($this->_outDir . '/cond/abstract/*.php') as $filename) {
-            $deployFile = $this->_deployDir . '/cond/abstract/' . basename($filename);
-            //echo $deployFile;
+        foreach (glob($this->outDir . '/cond/abstract/*.php') as $filename) {
+            $deployFile = $this->deployDir . '/cond/abstract/' . basename($filename);
             copy($filename, $deployFile);
         }
 
-        foreach (glob($this->_outDir . '/cond/*.php') as $filename) {
-            $deployFile = $this->_deployDir . '/cond/' . basename($filename);
-            //echo $deployFile;
+        foreach (glob($this->outDir . '/cond/*.php') as $filename) {
+            $deployFile = $this->deployDir . '/cond/' . basename($filename);
 
             if (!is_file($deployFile)) {
                 copy($filename, $deployFile);
             }
         }
 
-        foreach (glob($this->_outDir . '/collections/abstract/*.php') as $filename) {
-            $deployFile = $this->_deployDir . '/collections/abstract/' . basename($filename);
-            //echo $deployFile;
+        foreach (glob($this->outDir . '/collections/abstract/*.php') as $filename) {
+            $deployFile = $this->deployDir . '/collections/abstract/' . basename($filename);
             copy($filename, $deployFile);
         }
 
-        foreach (glob($this->_outDir . '/collections/*.php') as $filename) {
-            $deployFile = $this->_deployDir . '/collections/' . basename($filename);
-            //echo $deployFile;
+        foreach (glob($this->outDir . '/collections/*.php') as $filename) {
+            $deployFile = $this->deployDir . '/collections/' . basename($filename);
 
             if (!is_file($deployFile)) {
                 copy($filename, $deployFile);
             }
         }
 
-        foreach (glob($this->_outDir . '/entities/abstract/*.php') as $filename) {
-            $deployFile = $this->_deployDir . '/entities/abstract/' . basename($filename);
-            //echo $deployFile;
+        foreach (glob($this->outDir . '/entities/abstract/*.php') as $filename) {
+            $deployFile = $this->deployDir . '/entities/abstract/' . basename($filename);
             copy($filename, $deployFile);
         }
 
-        foreach (glob($this->_outDir . '/entities/*.php') as $filename) {
-            $deployFile = $this->_deployDir . '/entities/' . basename($filename);
-            //echo $deployFile;
+        foreach (glob($this->outDir . '/entities/*.php') as $filename) {
+            $deployFile = $this->deployDir . '/entities/' . basename($filename);
 
             if (!is_file($deployFile)) {
                 copy($filename, $deployFile);

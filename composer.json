@@ -35,7 +35,8 @@
         "zendframework/zend-console": "2.3.*",
         "zendframework/zend-code": "2.3.*",
         "zendframework/zend-uri": "2.3.*",
-        "zendframework/zend-log": "2.3.*"
+        "zendframework/zend-log": "2.3.*",
+        "zendframework/zend-cache": "2.3.*"
     },
     "require-dev": {
         "zendframework/zend-validator": "2.3.*",

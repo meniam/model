@@ -106,6 +106,29 @@ class Mysql
         return $this;
     }
 
+    public function getDbName()
+    {
+        return $this->getDsnValue('dbname');
+    }
+
+    /**
+     * @param string $dsnParameter
+     * @param string|null $default
+     * @throws ErrorException
+     * @return string|null
+     */
+    private function getDsnValue($dsnParameter, $default = null)
+    {
+        $pattern = sprintf('~%s=([^;]*)(?:;|$)~', preg_quote($dsnParameter, '~'));
+
+        $result = preg_match($pattern, $this->dsn, $matches);
+        if ($result === false) {
+            throw new ErrorException('Regular expression matching failed unexpectedly.');
+        }
+
+        return $result ? $matches[1] : $default;
+    }
+
     /**
      * @return Mysql
      */

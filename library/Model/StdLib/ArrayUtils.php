@@ -92,4 +92,20 @@ abstract class ArrayUtils
         return $hashMethod(serialize($arr));
     }
 
+    /**
+     * @param array $data
+     * @param array $original
+     * @return array
+     */
+    public static function filterByOriginalArray(array $data, array $original)
+    {
+        $result = array();
+        foreach ($data as $key => $value) {
+            if (in_array($key, $original)) {
+                $result[$key] = $value;
+            }
+        }
+        return $result;
+    }
+
 }
