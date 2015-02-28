@@ -57,13 +57,13 @@ class Schema extends \ArrayIterator
      */
     protected $_tableByTableNameRegistry = array();
     
-    public function __construct($name, DbAdapter $dbAdapter, $dbAdapterName = 'db')
+    public function __construct(DbAdapter $dbAdapter, $dbAdapterName = 'db')
     {
         if ($dbAdapter) {
             $this->_db = $dbAdapter;
         }
         
-        $this->_name = preg_replace('#[^a-z0-9\_\-]#si', '', $name);
+        $this->_name = preg_replace('#[^a-z0-9\_\-]#si', '', $dbAdapter->getDbName());
 
         $this->setDbAdapterName($dbAdapterName);
     }
@@ -182,7 +182,7 @@ class Schema extends \ArrayIterator
 
         $name = $data['@attributes']['name'];
 
-        $schema = new Schema($name, $db);
+        $schema = new Schema($db);
 
         foreach ($data['tables']['table'] as $tableArray) {
             $table = Table::fromXml($tableArray, $schema);
