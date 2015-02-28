@@ -1,7 +1,7 @@
 {
     "name": "meniam/model",
     "type": "library",
-    "version": "v0.1.0-dev",
+    "version": "v0.1.1-dev",
     "description": "Database models for MySql",
     "keywords": [
         "model",
