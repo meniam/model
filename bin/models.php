@@ -19,4 +19,4 @@ if (!defined('MODELS_COMPOSER_INSTALL')) {
 
 require MODELS_COMPOSER_INSTALL;
 
-(new \Model\Generator)->run();
+(new \Model\StandaloneGenerator)->run();
