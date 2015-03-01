@@ -10,6 +10,7 @@ namespace Model\Generator;
 
 
 use Model\Config\Config;
+use Model\Db\Mysql;
 use Model\Stdlib\ArrayUtils;
 use Zend\Console\ColorInterface;
 use Zend\Console\Console;
@@ -197,15 +198,12 @@ class Standalone
             'erase',
             'force',
         ));
-        $configParams = array_merge($configParams, array(
-            'dsn' => $dsn,
-            'user' => $user,
-            'password' => $password
-        ));
 
         $config = new Config($configParams);
 
-        $generator = new Generator($config);
+        $db  = new Mysql($dsn, $user, $password);
+
+        $generator = new Generator($config, $db);
         $generator->run();
     }
 }

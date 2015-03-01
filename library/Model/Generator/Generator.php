@@ -54,7 +54,7 @@ class Generator
      */
     private $config;
 
-    public function __construct(Config $config)
+    public function __construct(Config $config, $db)
     {
         $outputDir = $config->getParameter('output-dir');
         if (!$outputDir) {
@@ -69,13 +69,6 @@ class Generator
             exit();
         }
         $this->setOutDir($outputDir);
-
-        // Read Db Configuration
-        $dsn     = $config->getParameter('dsn', '');
-        $user = $config->getParameter('user', 'root');
-        $password = $config->getParameter('password', '');
-
-        $db  = new Mysql($dsn, $user, $password);
 
         $this->cluster = new Cluster();
         $this->cluster->addSchema((new Schema($db))->init());
