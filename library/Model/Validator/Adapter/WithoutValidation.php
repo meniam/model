@@ -21,7 +21,7 @@ class WithoutValidation extends AbstractAdapter
      */
     public function getValidatorInstance($class, array $args = array(), array $namespaces = array())
     {
-        return null;
+        return new \stdClass();
     }
 
     /**
@@ -48,7 +48,7 @@ class WithoutValidation extends AbstractAdapter
      */
     public function getNotEmptyValidator()
     {
-        return null;
+        return new \stdClass();
     }
 
     /**

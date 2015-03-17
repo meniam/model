@@ -59,7 +59,8 @@ abstract class Model
             self::addDb(new Mysql($connection['dsn'], $connection['user'], $connection['password'], $params), $name, $isDefault);
         }
 
-        self::initializeValidatorAdapter(self::$config['validator_adapter']);
+        $validationAdapter = isset(self::$config['validator_adapter']) ? self::$config['validator_adapter'] : '\\Model\Validator\Adapter\\WithoutValidation';
+        self::initializeValidatorAdapter($validationAdapter);
 
         return self::$config;
     }
@@ -70,7 +71,7 @@ abstract class Model
      * @return object
      * @throws ErrorException
      */
-    protected static function initializeValidatorAdapter($adapterClass = '\\Model\Validator\Adapter\\WithoutValidation')
+    protected static function initializeValidatorAdapter($adapterClass)
     {
         $_validatorAdapter = new \ReflectionClass($adapterClass);
 
