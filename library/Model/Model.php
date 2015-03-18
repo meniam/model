@@ -59,7 +59,7 @@ abstract class Model
             self::addDb(new Mysql($connection['dsn'], $connection['user'], $connection['password'], $params), $name, $isDefault);
         }
 
-        $validationAdapter = isset(self::$config['validator_adapter']) ? self::$config['validator_adapter'] : '\\Model\Validator\Adapter\\WithoutValidation';
+        $validationAdapter = !empty(self::$config['validator_adapter']) ? self::$config['validator_adapter'] : '\\Model\Validator\Adapter\\WithoutValidation';
         self::initializeValidatorAdapter($validationAdapter);
 
         return self::$config;
