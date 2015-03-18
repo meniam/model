@@ -227,7 +227,7 @@ class Schema extends \ArrayIterator
                     FROM `information_schema`.`STATISTICS`
                     WHERE `TABLE_SCHEMA` = '{$schemaName}'
                         AND `TABLE_NAME` = '{$tableName}'
-                    ORDER BY `SEQ_IN_INDEX`";
+                    ORDER BY LENGTH(`INDEX_NAME`), `COLUMN_NAME`";
 
             $tableIndexes =  $this->getDb()->fetchAll($sql);
 
@@ -409,7 +409,7 @@ class Schema extends \ArrayIterator
                         OR  (k.`REFERENCED_TABLE_SCHEMA` = '{$schemaName}'
                             AND k.`REFERENCED_TABLE_NAME` = '{$tableName}'))
                         AND c.CONSTRAINT_TYPE = 'FOREIGN KEY'
-                    ORDER BY k.ORDINAL_POSITION";
+                    ORDER BY k.CONSTRAINT_NAME";
 
             $result = $this->getDb()->fetchAll($sql);
 
