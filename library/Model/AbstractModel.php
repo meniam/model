@@ -240,6 +240,7 @@ abstract class AbstractModel extends Singleton
     protected function initRelation()
     {
         $this->relation = array();
+        $this->setupRelation();
     }
 
     /**
